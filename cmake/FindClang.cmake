@@ -1,89 +1,49 @@
-# CREDIT: https://github.com/rizsotto/Constantine
+# Find Clang
 #
-#
-# output:
-#   CLANG_FOUND
-#   CLANG_INCLUDE_DIRS
-#   CLANG_DEFINITIONS
-#   CLANG_EXECUTABLE
+# It defines the following variables
+# CLANG_FOUND        - True if Clang found.
+# CLANG_INCLUDE_DIRS - where to find Clang include files
+# CLANG_LIBS         - list of clang libs
 
-function(set_clang_definitions config_cmd)
-  execute_process(
-    COMMAND ${config_cmd} --cppflags
-    OUTPUT_VARIABLE llvm_cppflags
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCHALL "(-D[^ ]*)" dflags ${llvm_cppflags})
-  string(REGEX MATCHALL "(-U[^ ]*)" uflags ${llvm_cppflags})
-  list(APPEND cxxflags ${dflags})
-  list(APPEND cxxflags ${uflags})
-  list(APPEND cxxflags -fno-rtti)
-  list(APPEND cxxflags -fno-exceptions)
+if (NOT LLVM_INCLUDE_DIRS OR NOT LLVM_LIBRARY_DIRS)
+   message(FATAL_ERROR "No LLVM and Clang support requires LLVM")
+else (NOT LLVM_INCLUDE_DIRS OR NOT LLVM_LIBRARY_DIRS)
 
-  set(CLANG_DEFINITIONS ${cxxflags} PARENT_SCOPE)
-endfunction()
+MACRO(FIND_AND_ADD_CLANG_LIB _libname_)
+find_library(CLANG_${_libname_}_LIB ${_libname_} ${LLVM_LIBRARY_DIRS} ${CLANG_LIBRARY_DIRS})
+if (CLANG_${_libname_}_LIB)
+   set(CLANG_LIBS ${CLANG_LIBS} ${CLANG_${_libname_}_LIB})
+endif (CLANG_${_libname_}_LIB)
+ENDMACRO(FIND_AND_ADD_CLANG_LIB)
 
-function(is_clang_installed config_cmd)
-  execute_process(
-    COMMAND ${config_cmd} --includedir
-    OUTPUT_VARIABLE include_dirs
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(
-    COMMAND ${config_cmd} --src-root
-    OUTPUT_VARIABLE llvm_src_dir
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(FIND ${include_dirs} ${llvm_src_dir} result)
+# Clang shared library provides just the limited C interface, so it
+# can not be used.  We look for the static libraries.
+FIND_AND_ADD_CLANG_LIB(clangFrontend)
+FIND_AND_ADD_CLANG_LIB(clangDriver)
+FIND_AND_ADD_CLANG_LIB(clangCodeGen)
+FIND_AND_ADD_CLANG_LIB(clangEdit)
+FIND_AND_ADD_CLANG_LIB(clangSema)
+FIND_AND_ADD_CLANG_LIB(clangChecker)
+FIND_AND_ADD_CLANG_LIB(clangAnalysis)
+FIND_AND_ADD_CLANG_LIB(clangRewrite)
+FIND_AND_ADD_CLANG_LIB(clangAST)
+FIND_AND_ADD_CLANG_LIB(clangParse)
+FIND_AND_ADD_CLANG_LIB(clangLex)
+FIND_AND_ADD_CLANG_LIB(clangBasic)
 
-  set(CLANG_INSTALLED ${result} PARENT_SCOPE)
-endfunction()
+find_path(CLANG_INCLUDE_DIRS clang/Basic/Version.h HINTS ${LLVM_INCLUDE_DIRS})
 
-function(set_clang_include_dirs config_cmd)
-  is_clang_installed(${config_cmd})
-  if(CLANG_INSTALLED)
-    execute_process(
-      COMMAND ${config_cmd} --includedir
-      OUTPUT_VARIABLE include_dirs
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  else()
-    execute_process(
-      COMMAND ${config_cmd} --src-root
-      OUTPUT_VARIABLE llvm_src_dir
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(
-      COMMAND ${config_cmd} --obj-root
-      OUTPUT_VARIABLE llvm_obj_dir
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    list(APPEND include_dirs "${llvm_src_dir}/include")
-    list(APPEND include_dirs "${llvm_obj_dir}/include")
-    list(APPEND include_dirs "${llvm_src_dir}/tools/clang/include")
-    list(APPEND include_dirs "${llvm_obj_dir}/tools/clang/include")
-  endif()
+if (CLANG_LIBS AND CLANG_INCLUDE_DIRS)
+  MESSAGE(STATUS "Clang libs: " ${CLANG_LIBS})
+  set(CLANG_FOUND TRUE)
+endif (CLANG_LIBS AND CLANG_INCLUDE_DIRS)
 
-  set(CLANG_INCLUDE_DIRS ${include_dirs} PARENT_SCOPE)
-endfunction()
+if (CLANG_FOUND)
+  message(STATUS "Found Clang: ${CLANG_INCLUDE_DIRS}")
+else (CLANG_FOUND)
+  if (CLANG_FIND_REQUIRED)
+    message(FATAL_ERROR "Could NOT find Clang")
+  endif (CLANG_FIND_REQUIRED)
+endif (CLANG_FOUND)
 
-
-find_program(LLVM_CONFIG
-  NAMES llvm-config-5.0 llvm-config-4.0 llvm-config
-  PATHS ENV LLVM_PATH)
-if(LLVM_CONFIG)
-  message(STATUS "llvm-config found : ${LLVM_CONFIG}")
-else()
-  message(FATAL_ERROR "Can't found program: llvm-config")
-endif()
-
-find_program(CLANG_EXECUTABLE
-  NAMES clang-5.0 clang-4.0 clang
-  PATHS ENV LLVM_PATH)
-if(CLANG_EXECUTABLE)
-  message(STATUS "clang found : ${CLANG_EXECUTABLE}")
-else()
-  message(FATAL_ERROR "Can't found program: clang")
-endif()
-
-set_clang_definitions(${LLVM_CONFIG})
-set_clang_include_dirs(${LLVM_CONFIG})
-
-message(STATUS "llvm-config filtered cpp flags : ${CLANG_DEFINITIONS}")
-message(STATUS "llvm-config filtered include dirs : ${CLANG_INCLUDE_DIRS}")
-
-set(CLANG_FOUND 1)
+endif (NOT LLVM_INCLUDE_DIRS OR NOT LLVM_LIBRARY_DIRS)
