@@ -3,4 +3,5 @@ add_executable(bond
 
 target_link_libraries(bond
   stdc++fs
-  ${LLVM_LIBS})
+  ${LLVM_LIBS}
+  ${CLANG_LIBS})

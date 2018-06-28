@@ -5,13 +5,16 @@ include(GNUInstallDirs)
 
 project(Bond CXX)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+#set(CMAKE_C_COMPILER "/usr/local/bin/clang")
+#set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
+
 #set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(LLVM REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIR})
 link_directories(${LLVM_LIB_DIR})
-add_definitions(${LLVM_DEFINITIONS})
 set(LLVM_LIBS
   LLVMLTO
   LLVMPasses
@@ -148,15 +151,35 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using LLVM libs: ${LLVM_LIBS}")
 
 find_package(Clang REQUIRED)
+find_package(Clang REQUIRED clangTooling libClang)
+include_directories(${CLANG_INCLUDE_DIRS})
+link_directories(${CLANG_LIB_DIR})
+set(CLANG_LIBS
+  clangAST
+  clangASTMatchers
+  clangAnalysis
+  clangBasic
+  clangDriver
+  clangEdit
+  clangFrontend
+  clangFrontendTool
+  clangLex
+  clangParse
+  clangSema
+  clangEdit
+  clangRewrite
+  clangRewriteFrontend
+  clangStaticAnalyzerFrontend
+  clangStaticAnalyzerCheckers
+  clangStaticAnalyzerCore
+  clangSerialization
+  clangToolingCore
+  clangTooling
+  clangFormat
+)
 
+add_definitions(${CLANG_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-fno-rtti -std=c++17)
-#add_definitions(${CLANG_DEFINITIONS})
-#add_definitions(-std=c++17)
-
-#message(STATUS "using LLVM LDFLAGS: ${LLVM_LDFLAGS}")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
-#set(CMAKE_C_COMPILER "/usr/local/bin/clang")
-#set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
 
 add_subdirectory(src)
