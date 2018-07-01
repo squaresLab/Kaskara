@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include <fmt/format.h>
 
@@ -14,6 +15,7 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 
 #include "util.h"
+#include "FunctionDB.h"
 
 using namespace std;
 using namespace clang;
@@ -26,18 +28,20 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 class FindNamedClassVisitor
   : public RecursiveASTVisitor<FindNamedClassVisitor> {
 public:
-  explicit FindNamedClassVisitor(ASTContext *Context, llvm::StringRef in_file)
-    : Context(Context),
-      SM(Context->getSourceManager()),
-      in_file(in_file)
+  explicit FindNamedClassVisitor(ASTContext *ctx,
+                                 llvm::StringRef in_file,
+                                 bond::FunctionDB &db_function)
+    : ctx(ctx),
+      SM(ctx->getSourceManager()),
+      in_file(in_file),
+      db_function(db_function)
   {}
 
-  bool VisitFunctionDecl(FunctionDecl *decl)
+  bool VisitFunctionDecl(FunctionDecl const *decl)
   {
     // d.isPure()
 
-    FullSourceLoc loc = Context->getFullLoc(decl->getLocStart());
-
+    FullSourceLoc loc = ctx->getFullLoc(decl->getLocStart());
     string name = decl->getNameInfo().getName().getAsString();
 
     if (!decl->isThisDeclarationADefinition() ||
@@ -50,26 +54,25 @@ public:
       return true;
     }
 
-    string loc_str = bond::build_loc_str(decl->getSourceRange(), Context);
-    llvm::outs() << "FUNCTION: "
-                 << name
-                 << " at "
-                 << loc_str
-                 << "\n";
-
+    // register function
+    string loc_str = bond::build_loc_str(decl->getSourceRange(), ctx);
+    db_function.add(name, loc_str);
     return true;
   }
 
 private:
-  ASTContext *Context;
+  ASTContext *ctx;
   SourceManager const &SM;
   string const in_file;
+  bond::FunctionDB &db_function;
 };
 
 class FindNamedClassConsumer : public clang::ASTConsumer {
 public:
-  explicit FindNamedClassConsumer(ASTContext *ctx, llvm::StringRef in_file)
-    : visitor(ctx, in_file) {}
+  explicit FindNamedClassConsumer(ASTContext *ctx,
+                                  llvm::StringRef in_file,
+                                  bond::FunctionDB &db_function)
+    : visitor(ctx, in_file, db_function) {}
 
   virtual void HandleTranslationUnit(clang::ASTContext &ctx) {
     visitor.TraverseDecl(ctx.getTranslationUnitDecl());
@@ -80,6 +83,10 @@ private:
 
 class FindNamedClassAction : public clang::ASTFrontendAction {
 public:
+  FindNamedClassAction(bond::FunctionDB &db_function)
+    : db_function(db_function), clang::ASTFrontendAction()
+  { }
+
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
     clang::CompilerInstance &compiler, llvm::StringRef in_file)
   {
@@ -87,13 +94,43 @@ public:
                  << in_file
                  << "\n";
     return std::unique_ptr<clang::ASTConsumer>(
-        new FindNamedClassConsumer(&compiler.getASTContext(), in_file));
+        new FindNamedClassConsumer(&compiler.getASTContext(),
+          in_file, db_function));
   }
+
+private:
+  bond::FunctionDB &db_function;
+};
+
+std::unique_ptr<FrontendActionFactory> lando(bond::FunctionDB &db_function)
+{
+  class CoolJellyDog : public FrontendActionFactory
+  {
+  public:
+    CoolJellyDog(bond::FunctionDB &db_function) :
+      db_function(db_function), FrontendActionFactory()
+    { };
+
+    clang::FrontendAction *create() override {
+      return new FindNamedClassAction(db_function);
+    }
+  private:
+    bond::FunctionDB &db_function;
+  };
+  return std::unique_ptr<FrontendActionFactory>(new CoolJellyDog(db_function));
 };
 
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
-  return Tool.run(newFrontendActionFactory<FindNamedClassAction>().get());
+
+  std::unique_ptr<bond::FunctionDB> db_function(
+      new bond::FunctionDB);
+  auto res = Tool.run(lando(*db_function).get());
+
+  // dump
+  db_function->dump();
+
+  return res;
 }

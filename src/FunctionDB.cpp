@@ -24,7 +24,9 @@ void FunctionDB::add(std::string const &name,
 void FunctionDB::dump() const
 {
   for (auto &e : contents) {
-    std::cout << "FUNCTION:" << e.name << "\n";
+    std::cout << "FUNCTION: " << e.name << " ["
+      << e.location
+      << "]\n";
   }
 }
 
