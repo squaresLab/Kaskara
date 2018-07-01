@@ -56,7 +56,8 @@ public:
 
     // register function
     string loc_str = bond::build_loc_str(decl->getSourceRange(), ctx);
-    db_function.add(name, loc_str);
+    string return_type = decl->getReturnType().getAsString();
+    db_function.add(name, loc_str, return_type);
     return true;
   }
 
