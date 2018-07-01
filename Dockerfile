@@ -54,3 +54,4 @@ COPY --from=bond /usr/local/lib/clang/5.0.0/include /opt/bond/clang
 ENV CLANG_INCLUDE_PATH /opt/bond/clang
 ENV C_INCLUDE_PATH "${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
 ENV CPLUS_INCLUDE_PATH "${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
+COPY test.sh .
