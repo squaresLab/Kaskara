@@ -6,6 +6,9 @@ include(GNUInstallDirs)
 project(Bond CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+set(BUILD_SHARED_LIBRARIES OFF)
+set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++")
+
 #set(CMAKE_C_COMPILER "/usr/local/bin/clang")
 #set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
 
