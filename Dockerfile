@@ -18,8 +18,16 @@ RUN cd /tmp \
  && rm -rf /tmp/*
 
 # install nlohmann/json
-RUN cd /usr/include && \
-    wget https://github.com/nlohmann/json/releases/download/v2.1.1/json.hpp
+RUN cd /tmp \
+ && wget -nv https://github.com/nlohmann/json/archive/v3.1.2.tar.gz \
+ && tar -xf v3.1.2.tar.gz \
+ && cd json* \
+ && mkdir build \
+ && cd build \
+ && cmake .. \
+ && make -j4 \
+ && make install \
+ && rm -rf /tmp/*
 
 ## portable, internal gcov
 #RUN apt-get install -y flex && \
