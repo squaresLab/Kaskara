@@ -16,16 +16,19 @@ public:
   public:
     Entry(std::string const &name,
           std::string const &location,
-          std::string const &return_type);
+          std::string const &return_type,
+          bool const &pure);
 
     std::string const name;
     std::string const location;
     std::string const return_type;
+    bool const pure;
   }; // Entry
 
   void add(std::string const &name,
            std::string const &location,
-           std::string const &return_type);
+           std::string const &return_type,
+           bool const &pure);
   void dump() const;
 
 private:

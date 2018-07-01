@@ -12,17 +12,20 @@ FunctionDB::~FunctionDB()
 
 FunctionDB::Entry::Entry(std::string const &name,
                          std::string const &location,
-                         std::string const &return_type)
+                         std::string const &return_type,
+                         bool const &pure)
   : name(name),
     location(location),
-    return_type(return_type)
+    return_type(return_type),
+    pure(pure)
 { }
 
 void FunctionDB::add(std::string const &name,
                      std::string const &location,
-                     std::string const &return_type)
+                     std::string const &return_type,
+                     bool const &pure)
 {
-  contents.emplace_back(name, location, return_type);
+  contents.emplace_back(name, location, return_type, pure);
 }
 
 void FunctionDB::dump() const
@@ -32,7 +35,9 @@ void FunctionDB::dump() const
       << e.location
       << "] ("
       << e.return_type
-      << ")\n";
+      << ") "
+      << (e.pure ? "[PURE]" : "[UNPURE]")
+      << "\n";
   }
 }
 
