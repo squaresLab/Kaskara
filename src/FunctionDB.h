@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 namespace bond {
 
 class FunctionDB
@@ -23,6 +25,8 @@ public:
     std::string const location;
     std::string const return_type;
     bool const pure;
+
+    nlohmann::json const to_json() const;
   }; // Entry
 
   void add(std::string const &name,

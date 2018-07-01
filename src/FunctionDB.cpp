@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using json = nlohmann::json;
+
 namespace bond {
 
 FunctionDB::FunctionDB() : contents()
@@ -20,6 +22,17 @@ FunctionDB::Entry::Entry(std::string const &name,
     pure(pure)
 { }
 
+json const FunctionDB::Entry::to_json() const
+{
+  json j = {
+    {"name", name},
+    {"location", location},
+    {"return-type", return_type},
+    {"pure", pure}
+  };
+  return j;
+}
+
 void FunctionDB::add(std::string const &name,
                      std::string const &location,
                      std::string const &return_type,
@@ -30,7 +43,10 @@ void FunctionDB::add(std::string const &name,
 
 void FunctionDB::dump() const
 {
+  json j = json::array();
   for (auto &e : contents) {
+    j.push_back(e.to_json());
+    /*
     std::cout << "FUNCTION: " << e.name << " ["
       << e.location
       << "] ("
@@ -38,7 +54,9 @@ void FunctionDB::dump() const
       << ") "
       << (e.pure ? "[PURE]" : "[UNPURE]")
       << "\n";
+    */
   }
+  std::cout << std::setw(2) << j << std::endl;
 }
 
 } // bond
