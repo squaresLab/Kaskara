@@ -17,7 +17,7 @@ def find_loops(client_bugzoo: BugZooClient,
     loop_bodies = []  # type: List[FileLocationRange]
 
     out_fn = "loops.json"
-    cmd = "shuriken-loop-finder {}".format(' '.join(files))
+    cmd = "kaskara-loop-finder {}".format(' '.join(files))
     workdir = "/ros_ws"
     outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
 

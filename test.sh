@@ -185,4 +185,4 @@ FILES=(
   "src/image_pipeline/image_proc/src/nodelets/rectify.cpp"
   "src/image_pipeline/image_proc/src/nodelets/resize.cpp"
 )
-/opt/shuriken/shuriken-loop-finder ${FILES[@]}
+/opt/kaskara/kaskara-loop-finder ${FILES[@]}

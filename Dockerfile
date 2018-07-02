@@ -1,5 +1,5 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
-FROM christimperley/clang as shuriken
+FROM christimperley/clang as kaskara
 
 # install compile-time dependencies
 RUN apt-get update && \
@@ -48,21 +48,21 @@ RUN cd /tmp \
 #    rm -rf /opt/gcov/bin /opt/gcov/include /opt/gcov/lib* /opt/gcov/share
 #VOLUME /opt/gcov
 
-ADD . /tmp/shuriken
-RUN mkdir /tmp/shuriken/build && \
-    cd /tmp/shuriken/build && \
+ADD . /tmp/kaskara
+RUN mkdir /tmp/kaskara/build && \
+    cd /tmp/kaskara/build && \
     cmake .. && \
     make -j $(nproc)
 
 # add clang C files
 FROM cmumars/cp2:backup as test
 # FROM cmumars/cp2:base as test
-RUN mkdir -p /opt/shuriken
-COPY --from=shuriken /tmp/shuriken/build/cpp/shuriken /opt/shuriken/shuriken
-COPY --from=shuriken /tmp/shuriken/build/cpp/shuriken-loop-finder /opt/shuriken/shuriken-loop-finder
-COPY --from=shuriken /usr/local/lib/clang/5.0.0/include /opt/shuriken/clang
-ENV CLANG_INCLUDE_PATH /opt/shuriken/clang
+RUN mkdir -p /opt/kaskara
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara /opt/kaskara/kaskara
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/kaskara-loop-finder
+COPY --from=kaskara /usr/local/lib/clang/5.0.0/include /opt/kaskara/clang
+ENV CLANG_INCLUDE_PATH /opt/kaskara/clang
 ENV C_INCLUDE_PATH "${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
 ENV CPLUS_INCLUDE_PATH "${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
-ENV PATH "/opt/shuriken:${PATH}"
+ENV PATH "/opt/kaskara:${PATH}"
 COPY test.sh .

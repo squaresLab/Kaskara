@@ -1,5 +1,7 @@
 bugzood.log
 
+*.egg-info
+dist
 Pipfile
 *.pyc
 *.pyo
