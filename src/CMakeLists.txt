@@ -1,5 +1,7 @@
 set(BOND_SOURCES
   util.cpp
+  FunctionDB.cpp
+  LoopDB.cpp
   main.cpp
 )
 
