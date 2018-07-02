@@ -1,0 +1,22 @@
+language: python
+sudo: required
+services:
+- docker
+python:
+- '3.5'
+- '3.6'
+install:
+- pip install mypy
+- pip install .
+script:
+- mypy python
+notifications:
+  email: false
+deploy:
+  - provider: pypi
+    user: ChrisTimperley
+    password:
+      secure: "vWbHluiA0s7lYMnxEg9e2e3FAb/IyMOmxo0ytp+DQ278bgIYvzhGhnyiylCqbGxeyt6ET7l3lyh/QkgmmYIbixswOKlBIWRwAgFBE8dviL+Sn21w4mkZTbw/YlMnmCKAQXeiqwQZ4QWhx30J4goEW+7dQ+qWIby3iSjgkwlJXkQD0EZ8wASoyo/WVqqALCNXN9264wdsaxu5mMV3pt47S359tc1toVnnwV7WedssJEF4JbjgqpjBBwWrP0U3HxRLTNQdH7f1Xol8tYjwnTulo6JqWEgefIiearZdzhqxxgKgrdAdWekur7sIVjidHpS0vn+xxDa9o8O9LLPQ5QjTV/m79CGGCXTTic3PAI9QNNdjSlq3B8ECZBPnPH/L2gJp+yDPYvaSnRg9vhpVgwWhxTR6jN68xhV9HPAnNGgvhsVrUGz8LR6bT8FiPGpapQGvv+Zw2tdoKlfrznqluw/YDpd7EOjll7zYex7vffQwt3VPlCaXvJ0eyB3AJe32M9WIcYMLJdC63tHoFKJ3ey8Kgz/A4j25FSRPwWZ6lXDwn4zak8AWsi88SQJQoGQVsyFVvzqwehjX+eY1+gRTSH9cPDQVWW7ov1wRORLt3MazPxJLU03c4hjs5lDFXRoX1bLm7c3vmwIZKH4DhQWsn8fN0Ms3kBVPda9gVhA3B9WWmuE="
+    on:
+      tags: true
+      python: 3.5
