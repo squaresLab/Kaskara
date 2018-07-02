@@ -19,10 +19,12 @@ public:
   class Entry {
   public:
     Entry(std::string const &kind,
-          std::string const &location);
+          std::string const &location,
+          std::string const &body);
 
     std::string const location;
     std::string const kind;
+    std::string const body;
 
     nlohmann::json const to_json() const;
   }; // Entry
