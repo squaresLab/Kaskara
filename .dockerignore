@@ -3,3 +3,5 @@
 !cmake
 !cpp
 !test.sh
+!python
+!setup.py
