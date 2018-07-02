@@ -74,12 +74,11 @@ public:
     : visitor(ctx, in_file, db_loop)
   {}
 
-
-
   virtual void HandleTranslationUnit(clang::ASTContext &ctx)
   {
     visitor.TraverseDecl(ctx.getTranslationUnitDecl());
   }
+
 private:
   FindLoopVisitor visitor;
 };
@@ -118,6 +117,7 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> loopFinderFactory(
     {
       return new FindLoopAction(db_loop);
     }
+
   private:
     LoopDB &db_loop;
   };
@@ -137,6 +137,7 @@ int main(int argc, const char **argv)
   auto res = Tool.run(loopFinderFactory(*db_loop).get());
 
   db_loop->dump();
+  db_loop->to_file("loops.json");
 
   return res;
 }

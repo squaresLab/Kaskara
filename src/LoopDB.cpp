@@ -1,6 +1,7 @@
 #include "LoopDB.h"
 
 #include <iostream>
+#include <fstream>
 
 #include "util.h"
 
@@ -55,13 +56,23 @@ void LoopDB::add(clang::ASTContext *ctx, clang::CXXForRangeStmt const *stmt)
 }
 */
 
-void LoopDB::dump() const
+json LoopDB::to_json() const
 {
   json j = json::array();
-  for (auto &e : contents) {
+  for (auto &e : contents)
     j.push_back(e.to_json());
-  }
-  std::cout << std::setw(2) << j << std::endl;
+  return j;
+}
+
+void LoopDB::dump() const
+{
+  std::cout << std::setw(2) << to_json() << std::endl;
+}
+
+void LoopDB::to_file(const std::string &fn) const
+{
+  std::ofstream o(fn);
+  o << std::setw(2) << to_json() << std::endl;
 }
 
 } // bond
