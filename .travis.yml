@@ -9,6 +9,6 @@ install:
 - pip install mypy
 - pip install .
 script:
-- mypy src
+- mypy python
 notifications:
   email: false
