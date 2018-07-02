@@ -21,7 +21,7 @@ def analyze(client_bugzoo: BugZooClient,
     try:
         container = client_bugzoo.containers.provision(snapshot)
         loop_bodies = find_loops(client_bugzoo, snapshot, container)
-        function_bodies = []
+        function_bodies = []  # type: List[FileLocationRange]
         analysis = Analysis(loop_bodies, function_bodies)
         analysis.dump()
     finally:
