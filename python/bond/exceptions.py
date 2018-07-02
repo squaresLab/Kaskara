@@ -1,0 +1,2 @@
+class BondException(Exception):
+    pass
