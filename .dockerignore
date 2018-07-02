@@ -1,3 +1,5 @@
-build
-*.swp
-*.swo
+**
+!CMakeLists.txt
+!cmake
+!cpp
+!test.sh

@@ -1,5 +1,5 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
-FROM christimperley/clang as bond
+FROM christimperley/clang as shuriken
 
 # install compile-time dependencies
 RUN apt-get update && \
@@ -48,20 +48,21 @@ RUN cd /tmp \
 #    rm -rf /opt/gcov/bin /opt/gcov/include /opt/gcov/lib* /opt/gcov/share
 #VOLUME /opt/gcov
 
-ADD . /tmp/bond
-RUN mkdir /tmp/bond/build && \
-    cd /tmp/bond/build && \
+ADD . /tmp/shuriken
+RUN mkdir /tmp/shuriken/build && \
+    cd /tmp/shuriken/build && \
     cmake .. && \
     make -j $(nproc)
 
 # add clang C files
-FROM cmumars/cp2:base as test
-RUN mkdir -p /opt/bond
-COPY --from=bond /tmp/bond/build/src/bond /opt/bond/bond
-COPY --from=bond /tmp/bond/build/src/bond-loop-finder /opt/bond/bond-loop-finder
-COPY --from=bond /usr/local/lib/clang/5.0.0/include /opt/bond/clang
-ENV CLANG_INCLUDE_PATH /opt/bond/clang
+FROM cmumars/cp2:backup as test
+# FROM cmumars/cp2:base as test
+RUN mkdir -p /opt/shuriken
+COPY --from=shuriken /tmp/shuriken/build/cpp/shuriken /opt/shuriken/shuriken
+COPY --from=shuriken /tmp/shuriken/build/cpp/shuriken-loop-finder /opt/shuriken/shuriken-loop-finder
+COPY --from=shuriken /usr/local/lib/clang/5.0.0/include /opt/shuriken/clang
+ENV CLANG_INCLUDE_PATH /opt/shuriken/clang
 ENV C_INCLUDE_PATH "${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
 ENV CPLUS_INCLUDE_PATH "${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
-ENV PATH "/opt/bond:${PATH}"
+ENV PATH "/opt/shuriken:${PATH}"
 COPY test.sh .

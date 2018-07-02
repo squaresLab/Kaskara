@@ -185,4 +185,4 @@ add_definitions(${CLANG_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-fno-rtti -std=c++17)
 
-add_subdirectory(src)
+add_subdirectory(cpp)
