@@ -3,7 +3,7 @@ include(CheckLibraryExists)
 include(CheckIncludeFiles)
 include(GNUInstallDirs)
 
-project(Bond CXX)
+project(shuriken CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 set(BUILD_SHARED_LIBRARIES OFF)
