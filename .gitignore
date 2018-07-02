@@ -1,3 +1,7 @@
+Pipfile
+*.pyc
+*.pyo
+
 *.swp
 *.swo
 
