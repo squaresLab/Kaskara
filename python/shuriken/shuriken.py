@@ -81,7 +81,7 @@ def find_loops(client_bugzoo: BugZooClient,
         # "src/navigation/costmap_2d/src/costmap_math.cpp",
         # "src/navigation/costmap_2d/src/footprint.cpp"
     ]
-    cmd = "bond-loop-finder {}"
+    cmd = "shuriken-loop-finder {}"
     cmd = cmd.format(' '.join(files))
     workdir = "/ros_ws"
     outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
