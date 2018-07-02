@@ -58,8 +58,10 @@ RUN mkdir /tmp/bond/build && \
 FROM cmumars/cp2:base as test
 RUN mkdir -p /opt/bond
 COPY --from=bond /tmp/bond/build/src/bond /opt/bond/bond
+COPY --from=bond /tmp/bond/build/src/bond-loop-finder /opt/bond/bond-loop-finder
 COPY --from=bond /usr/local/lib/clang/5.0.0/include /opt/bond/clang
 ENV CLANG_INCLUDE_PATH /opt/bond/clang
 ENV C_INCLUDE_PATH "${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
 ENV CPLUS_INCLUDE_PATH "${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
+ENV PATH "/opt/bond:${PATH}"
 COPY test.sh .
