@@ -1,41 +1,10 @@
-from typing import Optional, List, Dict
-import json
-
 import bugzoo.server
-from bugzoo.client import Client as BugZooClient
-from bugzoo.core.bug import Bug as Snapshot
-from bugzoo.core.container import Container
-from boggart.core.location import FileLocationRange
-
-import orchestrator.snapshot
 
 from .analysis import Analysis
-from .exceptions import BondException
 
 
-def analyze(client_bugzoo: BugZooClient,
-            snapshot: Snapshot
-            ) -> None:
-    # FIXME assumes binaries are already present in container
-    container = None  # type: Optional[Container]
-    try:
-        container = client_bugzoo.containers.provision(snapshot)
-        loop_bodies = find_loops(client_bugzoo, snapshot, container)
-        function_bodies = []  # type: List[FileLocationRange]
-        analysis = Analysis(loop_bodies, function_bodies)
-        analysis.dump()
-    finally:
-        if container:
-            del client_bugzoo.containers[container.uid]
-
-
-def find_loops(client_bugzoo: BugZooClient,
-               snapshot: Snapshot,
-               container: Container
-               ) -> List[FileLocationRange]:
-    loop_bodies = []  # type: List[FileLocationRange]
-
-    out_fn = "loops.json"
+def test() -> None:
+    import orchestrator.snapshot
     files = [
         "src/geometry/tf/src/transform_broadcaster.cpp",
         "src/geometry/tf/src/transform_listener.cpp",
@@ -81,27 +50,6 @@ def find_loops(client_bugzoo: BugZooClient,
         # "src/navigation/costmap_2d/src/costmap_math.cpp",
         # "src/navigation/costmap_2d/src/footprint.cpp"
     ]
-    cmd = "shuriken-loop-finder {}"
-    cmd = cmd.format(' '.join(files))
-    workdir = "/ros_ws"
-    outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
-    # print("executed: {}".format(outcome.output))
-
-    if outcome.code != 0:
-        msg = "loop finder exited with non-zero code: {}"
-        msg = msg.format(outcome.code)
-        raise BondException(msg)
-
-    output = client_bugzoo.files.read(container, out_fn)
-    jsn = json.loads(output)  # type: List[Dict[str, str]]
-    for loop_info in jsn:
-        loc = FileLocationRange.from_string(loop_info['body'])
-        loop_bodies.append(loc)
-
-    return loop_bodies
-
-
-def test() -> None:
     with bugzoo.server.ephemeral() as client_bugzoo:
         snapshot = orchestrator.snapshot.fetch_baseline_snapshot(client_bugzoo)
-        analyze(client_bugzoo, snapshot)
+        analysis = Analysis.build(client_bugzoo, snapshot, files)

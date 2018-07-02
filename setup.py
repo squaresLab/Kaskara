@@ -25,6 +25,6 @@ setuptools.setup(
     packages=['shuriken'],
     package_dir={'': 'python'},
     entry_points = {
-        'console_scripts': [ 'shuriken-test = shuriken.shuriken:test' ]
+        'console_scripts': [ 'shuriken-test = shuriken.test:test' ]
     }
 )
