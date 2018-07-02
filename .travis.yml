@@ -1,0 +1,14 @@
+language: python
+sudo: required
+services:
+- docker
+python:
+- '3.5'
+- '3.6'
+install:
+- pip install mypy
+- pip install .
+script:
+- mypy src
+notifications:
+  email: false
