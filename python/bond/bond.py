@@ -9,16 +9,21 @@ from boggart.core.location import FileLocationRange
 
 import orchestrator.snapshot
 
+from .analysis import Analysis
 from .exceptions import BondException
 
 
 def analyze(client_bugzoo: BugZooClient,
-            snapshot: Snapshot) -> None:
+            snapshot: Snapshot
+            ) -> None:
     # FIXME assumes binaries are already present in container
     container = None  # type: Optional[Container]
     try:
         container = client_bugzoo.containers.provision(snapshot)
-        find_loops(client_bugzoo, snapshot, container)
+        loop_bodies = find_loops(client_bugzoo, snapshot, container)
+        function_bodies = []
+        analysis = Analysis(loop_bodies, function_bodies)
+        analysis.dump()
     finally:
         if container:
             del client_bugzoo.containers[container.uid]
@@ -27,7 +32,7 @@ def analyze(client_bugzoo: BugZooClient,
 def find_loops(client_bugzoo: BugZooClient,
                snapshot: Snapshot,
                container: Container
-               ) -> None:
+               ) -> List[FileLocationRange]:
     loop_bodies = []  # type: List[FileLocationRange]
 
     out_fn = "loops.json"
@@ -93,7 +98,7 @@ def find_loops(client_bugzoo: BugZooClient,
         loc = FileLocationRange.from_string(loop_info['body'])
         loop_bodies.append(loc)
 
-    print(loop_bodies)
+    return loop_bodies
 
 
 def test() -> None:

@@ -16,3 +16,9 @@ class Analysis(object):
 
     def is_inside_function(self, location: FileLocation) -> bool:
         return location in self.__location_functions
+
+    def is_inside_void_function(self, location: FileLocation) -> bool:
+        raise NotImplementedError
+
+    def dump(self) -> None:
+        print(self.__location_bodies)
