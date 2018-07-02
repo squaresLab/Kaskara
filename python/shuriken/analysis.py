@@ -3,6 +3,7 @@ __all__ = ['Analysis']
 from typing import List, Optional
 
 from bugzoo.core.bug import Bug as Snapshot
+from bugzoo.core.container import Container
 from bugzoo.client import Client as BugZooClient
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
