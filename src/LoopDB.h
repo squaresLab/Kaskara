@@ -5,6 +5,8 @@
 #include <string>
 
 #include <nlohmann/json.hpp>
+#include <clang/AST/Stmt.h>
+#include <clang/AST/ASTContext.h>
 
 namespace bond {
 
@@ -16,14 +18,18 @@ public:
 
   class Entry {
   public:
-    Entry(std::string const &location);
+    Entry(std::string const &kind,
+          std::string const &location);
 
     std::string const location;
+    std::string const kind;
 
     nlohmann::json const to_json() const;
   }; // Entry
 
-  void add(std::string const &location);
+  void add(clang::ASTContext *ctx, clang::WhileStmt const *stmt);
+  void add(clang::ASTContext *ctx, clang::ForStmt const *stmt);
+  // void add(clang::ASTContext *ctx, clang::CXXForRangeStmt const *stmt);
   void dump() const;
 
 private:
