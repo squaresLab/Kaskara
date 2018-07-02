@@ -46,15 +46,6 @@ void FunctionDB::dump() const
   json j = json::array();
   for (auto &e : contents) {
     j.push_back(e.to_json());
-    /*
-    std::cout << "FUNCTION: " << e.name << " ["
-      << e.location
-      << "] ("
-      << e.return_type
-      << ") "
-      << (e.pure ? "[PURE]" : "[UNPURE]")
-      << "\n";
-    */
   }
   std::cout << std::setw(2) << j << std::endl;
 }
