@@ -1,4 +1,4 @@
-__all__ ['FileLocation', 'FileLocationRange', 'FileLocationRangeSet']
+__all__ = ['FileLocation', 'FileLocationRange', 'FileLocationRangeSet']
 
 from typing import Dict, List, Iterable
 
