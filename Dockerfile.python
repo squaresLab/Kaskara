@@ -1,4 +1,4 @@
 FROM alpine:3.7
-WORKDIR /opt/shuriken
-COPY python /opt/shuriken/python
-COPY setup.py /opt/shuriken
+WORKDIR /opt/kaskara
+COPY python /opt/kaskara/python
+COPY setup.py /opt/kaskara

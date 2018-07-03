@@ -48,6 +48,8 @@ RUN cd /tmp \
 #    rm -rf /opt/gcov/bin /opt/gcov/include /opt/gcov/lib* /opt/gcov/share
 #VOLUME /opt/gcov
 
+# add scripts
+ADD scripts /opt/kaskara/scripts
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
     cd /tmp/kaskara/build && \
@@ -58,11 +60,8 @@ RUN mkdir /tmp/kaskara/build && \
 FROM cmumars/cp2:backup as test
 # FROM cmumars/cp2:base as test
 RUN mkdir -p /opt/kaskara
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara /opt/kaskara/kaskara
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/kaskara-loop-finder
+COPY --from=kaskara /opt/kaskara/scripts /opt/kaskara/scripts
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin/kaskara-loop-finder
 COPY --from=kaskara /usr/local/lib/clang/5.0.0/include /opt/kaskara/clang
-ENV CLANG_INCLUDE_PATH /opt/kaskara/clang
-ENV C_INCLUDE_PATH "${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
-ENV CPLUS_INCLUDE_PATH "${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
-ENV PATH "/opt/kaskara:${PATH}"
+ENV PATH "/opt/kaskara/scripts:${PATH}"
 COPY test.sh .
