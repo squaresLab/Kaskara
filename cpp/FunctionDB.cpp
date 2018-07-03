@@ -4,7 +4,7 @@
 
 using json = nlohmann::json;
 
-namespace bond {
+namespace kaskara {
 
 FunctionDB::FunctionDB() : contents()
 { }
@@ -50,4 +50,4 @@ void FunctionDB::dump() const
   std::cout << std::setw(2) << j << std::endl;
 }
 
-} // bond
+} // kaskara

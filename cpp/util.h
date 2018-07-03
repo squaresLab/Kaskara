@@ -6,11 +6,11 @@
 #include <clang/Basic/SourceLocation.h>
 #include <clang/AST/ASTContext.h>
 
-namespace bond {
+namespace kaskara {
 
 std::string const build_loc_str(clang::SourceRange const &range,
                                 clang::ASTContext const *ctx);
 
-}; // bond
+}; // kaskara
 
 #endif // H_UTIL

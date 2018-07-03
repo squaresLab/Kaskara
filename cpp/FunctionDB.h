@@ -6,7 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace bond {
+namespace kaskara {
 
 class FunctionDB
 {
@@ -39,6 +39,6 @@ private:
   std::vector<Entry> contents;
 }; // FunctionDB
 
-} // bond
+} // kaskara
 
 #endif // H_FUNCTION_DB

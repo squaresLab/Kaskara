@@ -30,7 +30,7 @@ class FindNamedClassVisitor
 public:
   explicit FindNamedClassVisitor(ASTContext *ctx,
                                  llvm::StringRef in_file,
-                                 bond::FunctionDB &db_function)
+                                 kaskara::FunctionDB &db_function)
     : ctx(ctx),
       SM(ctx->getSourceManager()),
       in_file(in_file),
@@ -55,7 +55,7 @@ public:
     }
 
     // register function
-    string loc_str = bond::build_loc_str(decl->getSourceRange(), ctx);
+    string loc_str = kaskara::build_loc_str(decl->getSourceRange(), ctx);
     string return_type = decl->getReturnType().getAsString();
     db_function.add(name, loc_str, return_type, decl->isPure());
     return true;
@@ -65,14 +65,14 @@ private:
   ASTContext *ctx;
   SourceManager const &SM;
   string const in_file;
-  bond::FunctionDB &db_function;
+  kaskara::FunctionDB &db_function;
 };
 
 class FindNamedClassConsumer : public clang::ASTConsumer {
 public:
   explicit FindNamedClassConsumer(ASTContext *ctx,
                                   llvm::StringRef in_file,
-                                  bond::FunctionDB &db_function)
+                                  kaskara::FunctionDB &db_function)
     : visitor(ctx, in_file, db_function) {}
 
   virtual void HandleTranslationUnit(clang::ASTContext &ctx) {
@@ -84,7 +84,7 @@ private:
 
 class FindNamedClassAction : public clang::ASTFrontendAction {
 public:
-  FindNamedClassAction(bond::FunctionDB &db_function)
+  FindNamedClassAction(kaskara::FunctionDB &db_function)
     : db_function(db_function), clang::ASTFrontendAction()
   { }
 
@@ -100,15 +100,15 @@ public:
   }
 
 private:
-  bond::FunctionDB &db_function;
+  kaskara::FunctionDB &db_function;
 };
 
-std::unique_ptr<FrontendActionFactory> lando(bond::FunctionDB &db_function)
+std::unique_ptr<FrontendActionFactory> lando(kaskara::FunctionDB &db_function)
 {
   class CoolJellyDog : public FrontendActionFactory
   {
   public:
-    CoolJellyDog(bond::FunctionDB &db_function) :
+    CoolJellyDog(kaskara::FunctionDB &db_function) :
       db_function(db_function), FrontendActionFactory()
     { };
 
@@ -116,7 +116,7 @@ std::unique_ptr<FrontendActionFactory> lando(bond::FunctionDB &db_function)
       return new FindNamedClassAction(db_function);
     }
   private:
-    bond::FunctionDB &db_function;
+    kaskara::FunctionDB &db_function;
   };
   return std::unique_ptr<FrontendActionFactory>(new CoolJellyDog(db_function));
 };
@@ -126,8 +126,8 @@ int main(int argc, const char **argv) {
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  std::unique_ptr<bond::FunctionDB> db_function(
-      new bond::FunctionDB);
+  std::unique_ptr<kaskara::FunctionDB> db_function(
+      new kaskara::FunctionDB);
   auto res = Tool.run(lando(*db_function).get());
 
   // dump

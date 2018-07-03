@@ -6,9 +6,9 @@
 #include "util.h"
 
 using json = nlohmann::json;
-using namespace bond;
+using namespace kaskara;
 
-namespace bond {
+namespace kaskara {
 
 LoopDB::LoopDB() : contents()
 { }
@@ -75,4 +75,4 @@ void LoopDB::to_file(const std::string &fn) const
   o << std::setw(2) << to_json() << std::endl;
 }
 
-} // bond
+} // kaskara

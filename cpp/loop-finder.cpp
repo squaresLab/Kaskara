@@ -14,7 +14,7 @@
 #include "util.h"
 #include "LoopDB.h"
 
-using namespace bond;
+using namespace kaskara;
 
 static llvm::cl::OptionCategory MyToolCategory("my-tool options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
@@ -62,7 +62,7 @@ private:
   clang::ASTContext *ctx;
   clang::SourceManager const &SM;
   std::string const in_file;
-  bond::LoopDB &db_loop;
+  kaskara::LoopDB &db_loop;
 };
 
 class FindLoopConsumer : public clang::ASTConsumer

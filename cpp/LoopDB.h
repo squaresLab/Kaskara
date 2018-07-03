@@ -8,7 +8,7 @@
 #include <clang/AST/Stmt.h>
 #include <clang/AST/ASTContext.h>
 
-namespace bond {
+namespace kaskara {
 
 class LoopDB
 {
@@ -42,6 +42,6 @@ private:
   std::vector<Entry> contents;
 }; // LoopDB
 
-} // bond
+} // kaskara
 
 #endif // H_LOOP_DB
