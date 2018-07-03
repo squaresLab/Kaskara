@@ -34,9 +34,11 @@ public:
 
   bool VisitFunctionDecl(clang::FunctionDecl const *decl)
   {
+    if (!decl->isThisDeclarationADefinition())
+      return true;
+
     clang::FullSourceLoc loc = ctx->getFullLoc(decl->getLocStart());
     std::string filename = SM.getFilename(loc);
-
     if (filename == in_file)
       db.add(ctx, decl);
 

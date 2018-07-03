@@ -20,13 +20,17 @@ public:
   public:
     Entry(std::string const &name,
           std::string const &location,
+          std::string const &body,
           std::string const &return_type,
-          bool const &pure);
+          bool const &pure,
+          bool const &global);
 
     std::string const name;
     std::string const location;
+    std::string const body;
     std::string const return_type;
     bool const pure;
+    bool const global;
 
     nlohmann::json const to_json() const;
   }; // Entry
