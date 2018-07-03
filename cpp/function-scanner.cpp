@@ -11,6 +11,10 @@
 #include <clang/Tooling/Tooling.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 
+#include <clang/AST/DeclBase.h>
+#include <clang/AST/DeclLookups.h>
+#include <clang/AST/Decl.h>
+
 #include "util.h"
 #include "FunctionDB.h"
 
@@ -39,9 +43,25 @@ public:
 
     clang::FullSourceLoc loc = ctx->getFullLoc(decl->getLocStart());
     std::string filename = SM.getFilename(loc);
-    if (filename == in_file)
-      db.add(ctx, decl);
+    if (filename != in_file) {
+      return true;
+    }
 
+    // TODO get scope info
+    llvm::outs() << "SCOPE: ";
+    std::vector<std::string> visible;
+    for (auto d : decl->getDeclContext()->lookups()) {
+      for (auto dd : d) {
+        std::string name = dd->getNameAsString();
+        visible.push_back(name);
+        llvm::outs() << " " << name;
+      }
+    }
+    llvm::outs() << "\n";
+
+    // dump
+
+    db.add(ctx, decl);
     return true;
   }
 
