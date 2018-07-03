@@ -1,4 +1,5 @@
 import bugzoo.server
+from boggart.core.location import FileLocation
 
 from .analysis import Analysis
 
@@ -7,11 +8,11 @@ def test() -> None:
     import orchestrator.snapshot
     files = [
         "src/geometry/tf/src/transform_broadcaster.cpp",
-        "src/geometry/tf/src/transform_listener.cpp",
-        "src/geometry2/tf2/src/buffer_core.cpp",
-        "src/geometry2/tf2/src/cache.cpp",
-        "src/geometry2/tf2/src/static_cache.cpp",
-        "src/geometry2/tf2_ros/src/buffer.cpp",
+        # "src/geometry/tf/src/transform_listener.cpp",
+        # "src/geometry2/tf2/src/buffer_core.cpp",
+        # "src/geometry2/tf2/src/cache.cpp",
+        # "src/geometry2/tf2/src/static_cache.cpp",
+        # "src/geometry2/tf2_ros/src/buffer.cpp",
         # "src/geometry2/tf2_ros/src/buffer_client.cpp",
         # "src/geometry2/tf2_ros/src/buffer_server.cpp",
         # "src/geometry2/tf2_ros/src/static_transform_broadcaster.cpp",
@@ -53,3 +54,10 @@ def test() -> None:
     with bugzoo.server.ephemeral() as client_bugzoo:
         snapshot = orchestrator.snapshot.fetch_baseline_snapshot(client_bugzoo)
         analysis = Analysis.build(client_bugzoo, snapshot, files)
+
+    analysis.dump()
+
+    floc = FileLocation.from_string("../../src/geometry/tf/src/transform_broadcaster.cpp@51:1")
+    print("INSIDE FUNCTION? {}".format(analysis.is_inside_function(floc)))
+    print("INSIDE VOID FUNCTION? {}".format(analysis.is_inside_void_function(floc)))
+    print("INSIDE LOOP? {}".format(analysis.is_inside_loop(floc)))
