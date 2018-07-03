@@ -51,4 +51,6 @@ class Analysis(object):
         return location in self.__location_void_functions
 
     def dump(self) -> None:
-        print(self.__location_functions)
+        print("FUNCTIONS: {}".format(self.__location_functions))
+        print("VOID FUNCTIONS: {}".format(self.__location_void_functions))
+        print("LOOPS: {}".format(self.__location_bodies))
