@@ -8,7 +8,7 @@ from bugzoo.client import Client as BugZooClient
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
 from .loops import find_loops
-from .functions import find_functions
+from .functions import FunctionDB
 
 
 class Analysis(object):
@@ -21,36 +21,35 @@ class Analysis(object):
         container = None  # type: Optional[Container]
         try:
             container = client_bugzoo.containers.provision(snapshot)
-            loop_bodies = find_loops(client_bugzoo, snapshot, files, container)
-            function_bodies, void_function_bodies = \
-                find_functions(client_bugzoo, snapshot, files, container)
-            return Analysis(loop_bodies,
-                            function_bodies,
-                            void_function_bodies)
+            loop_bodies = \
+                find_loops(client_bugzoo, snapshot, files, container)
+            db_function = \
+                FunctionDB.build(client_bugzoo, snapshot, files, container)
+            return Analysis(loop_bodies, db_function)
         finally:
             if container:
                 del client_bugzoo.containers[container.uid]
 
     def __init__(self,
                  loop_bodies: List[FileLocationRange],
-                 function_bodies: List[FileLocationRange],
-                 void_function_bodies: List[FileLocationRange],
+                 db_function: FunctionDB
                  ) -> None:
         self.__location_bodies = FileLocationRangeSet(loop_bodies)
-        self.__location_functions = FileLocationRangeSet(function_bodies)
-        self.__location_void_functions = \
-            FileLocationRangeSet(void_function_bodies)
+        self.__db_function = db_function
+
+    @property
+    def functions(self) -> FunctionDB:
+        return self.__db_function
 
     def is_inside_loop(self, location: FileLocation) -> bool:
         return location in self.__location_bodies
 
     def is_inside_function(self, location: FileLocation) -> bool:
-        return location in self.__location_functions
+        return self.__db_function.encloses(location) is not None
 
     def is_inside_void_function(self, location: FileLocation) -> bool:
-        return location in self.__location_void_functions
+        f = self.__db_function.encloses(location)
+        return f is not None and f.return_type == 'void'
 
     def dump(self) -> None:
-        print("FUNCTIONS: {}".format(self.__location_functions))
-        print("VOID FUNCTIONS: {}".format(self.__location_void_functions))
         print("LOOPS: {}".format(self.__location_bodies))
