@@ -33,9 +33,7 @@ public:
   void add(clang::ASTContext *ctx, clang::ForStmt const *stmt);
   // void add(clang::ASTContext *ctx, clang::CXXForRangeStmt const *stmt);
   void dump() const;
-
   nlohmann::json to_json() const;
-
   void to_file(const std::string &fn) const;
 
 private:

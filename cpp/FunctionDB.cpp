@@ -1,6 +1,9 @@
 #include "FunctionDB.h"
 
 #include <iostream>
+#include <fstream>
+
+#include "util.h"
 
 using json = nlohmann::json;
 
@@ -33,21 +36,32 @@ json const FunctionDB::Entry::to_json() const
   return j;
 }
 
-void FunctionDB::add(std::string const &name,
-                     std::string const &location,
-                     std::string const &return_type,
-                     bool const &pure)
+void FunctionDB::add(clang::ASTContext *ctx, clang::FunctionDecl const *decl)
 {
-  contents.emplace_back(name, location, return_type, pure);
+  std::string name = decl->getNameInfo().getName().getAsString();
+  std::string loc_str = build_loc_str(decl->getSourceRange(), ctx);
+  std::string return_type = decl->getReturnType().getAsString();
+  bool pure = decl->isPure();
+  contents.emplace_back(name, loc_str, return_type, pure);
+}
+
+json FunctionDB::to_json() const
+{
+  json j = json::array();
+  for (auto &e : contents)
+    j.push_back(e.to_json());
+  return j;
 }
 
 void FunctionDB::dump() const
 {
-  json j = json::array();
-  for (auto &e : contents) {
-    j.push_back(e.to_json());
-  }
-  std::cout << std::setw(2) << j << std::endl;
+  std::cout << std::setw(2) << to_json() << std::endl;
+}
+
+void FunctionDB::to_file(const std::string &fn) const
+{
+  std::ofstream o(fn);
+  o << std::setw(2) << to_json() << std::endl;
 }
 
 } // kaskara

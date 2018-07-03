@@ -62,6 +62,7 @@ FROM cmumars/cp2:backup as test
 RUN mkdir -p /opt/kaskara
 COPY --from=kaskara /opt/kaskara/scripts /opt/kaskara/scripts
 COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin/kaskara-loop-finder
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin/kaskara-function-scanner
 COPY --from=kaskara /usr/local/lib/clang/5.0.0/include /opt/kaskara/clang
 ENV PATH "/opt/kaskara/scripts:${PATH}"
 COPY test.sh .

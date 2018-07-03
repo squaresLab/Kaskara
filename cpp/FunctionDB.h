@@ -5,6 +5,8 @@
 #include <string>
 
 #include <nlohmann/json.hpp>
+#include <clang/AST/ASTContext.h>
+#include <clang/AST/Decl.h>
 
 namespace kaskara {
 
@@ -29,11 +31,10 @@ public:
     nlohmann::json const to_json() const;
   }; // Entry
 
-  void add(std::string const &name,
-           std::string const &location,
-           std::string const &return_type,
-           bool const &pure);
+  void add(clang::ASTContext *ctx, clang::FunctionDecl const *decl);
   void dump() const;
+  nlohmann::json to_json() const;
+  void to_file(const std::string &fn) const;
 
 private:
   std::vector<Entry> contents;

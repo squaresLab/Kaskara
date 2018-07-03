@@ -1,0 +1,5 @@
+#!/bin/bash
+export CLANG_INCLUDE_PATH="/opt/kaskara/clang"
+export C_INCLUDE_PATH="${C_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
+export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}:${CLANG_INCLUDE_PATH}"
+/opt/kaskara/bin/kaskara-function-scanner "$@"
