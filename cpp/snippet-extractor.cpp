@@ -15,7 +15,9 @@ using namespace clang::tooling;
 static llvm::cl::OptionCategory MyToolCategory("kaskara-snippet-extractor options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
 
-// returnStmt
+StatementMatcher GuardedVoidReturnMatcher =
+  ifStmt(hasThen(returnStmt(unless(hasReturnValue(anything())))),
+         unless(hasElse(anything()))).bind("if-stmt");
 
 StatementMatcher GuardedBreakMatcher =
   ifStmt(hasThen(breakStmt()), unless(hasElse(anything()))).bind("if-stmt");
@@ -40,7 +42,7 @@ int main(int argc, const char **argv)
 
   MatchFinder finder;
   SnippetFinder snippet_finder;
-  finder.addMatcher(GuardedBreakMatcher, &snippet_finder);
+  finder.addMatcher(GuardedVoidReturnMatcher, &snippet_finder);
 
   auto res = Tool.run(newFrontendActionFactory(&finder).get());
   return res;
