@@ -22,6 +22,10 @@ SnippetDB::Entry::Entry(std::string const &kind,
     contents(contents)
 { }
 
+SnippetDB::Entry::Entry(SnippetDB::Entry const &other)
+  : kind(other.kind), contents(other.contents)
+{ }
+
 json const SnippetDB::Entry::to_json() const
 {
   json j = {
@@ -39,14 +43,20 @@ void SnippetDB::add(std::string const &kind,
 {
   std::string txt = stmt_to_source(*ctx, stmt);
   std::string location = build_loc_str(stmt->getSourceRange(), ctx);
-  contents.emplace_back(kind, txt);
+
+  Entry snippet = Entry(kind, txt);
+
+  // TODO does this snippet already exist?
+  contents.emplace(std::make_pair(txt, snippet));
 }
 
 json SnippetDB::to_json() const
 {
   json j = json::array();
-  for (auto &e : contents)
-    j.push_back(e.to_json());
+  for (auto const &item : contents) {
+    SnippetDB::Entry const &entry = item.second;
+    j.push_back(entry.to_json());
+  }
   return j;
 }
 

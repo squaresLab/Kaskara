@@ -1,7 +1,7 @@
 #ifndef H_SNIPPET_DB
 #define H_SNIPPET_DB
 
-#include <vector>
+#include <unordered_map>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -20,6 +20,7 @@ public:
   public:
     Entry(std::string const &kind,
           std::string const &contents);
+    Entry(Entry const &other);
 
     std::string const kind;
     std::string const contents;
@@ -35,7 +36,7 @@ public:
   void to_file(const std::string &fn) const;
 
 private:
-  std::vector<Entry> contents;
+  std::unordered_map<std::string, Entry> contents;
 }; // SnippetDB
 
 } // kaskara
