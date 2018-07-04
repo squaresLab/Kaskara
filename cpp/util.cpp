@@ -32,4 +32,10 @@ std::string read_source(clang::SourceManager const &SM,
   return llvm::StringRef(buff, length + 1).str();
 }
 
+std::string read_source(clang::ASTContext const &ctx,
+                        clang::SourceRange const &range)
+{
+  return read_source(ctx.getSourceManager(), range);
+}
+
 } // kaskara

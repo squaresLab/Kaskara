@@ -15,6 +15,9 @@ std::string const build_loc_str(clang::SourceRange const &range,
 std::string read_source(clang::SourceManager const &SM,
                         clang::SourceRange const &range);
 
+std::string read_source(clang::ASTContext const &ctx,
+                        clang::SourceRange const &range);
+
 }; // kaskara
 
 #endif // H_UTIL
