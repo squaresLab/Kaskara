@@ -4,6 +4,7 @@
 #include <llvm/ADT/StringRef.h>
 #include <clang/Basic/LangOptions.h>
 #include <clang/Lex/Lexer.h>
+#include <clang/AST/Stmt.h>
 
 namespace kaskara {
 
@@ -22,6 +23,19 @@ std::string const build_loc_str(clang::SourceRange const &range,
                               loc_end.getSpellingLineNumber(),
                               loc_end.getSpellingColumnNumber());
   return s;
+}
+
+clang::SourceRange stmt_to_range(clang::ASTContext const &ctx,
+                                 clang::Stmt const *stmt)
+{
+  return expand_range_to_token_end(ctx.getSourceManager(),
+                                   stmt->getSourceRange());
+}
+
+std::string stmt_to_source(clang::ASTContext const &ctx,
+                           clang::Stmt const *stmt)
+{
+  return read_source(ctx, stmt_to_range(ctx, stmt));
 }
 
 clang::SourceRange expand_range_to_token_end(clang::SourceManager const &SM,

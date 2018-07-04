@@ -12,6 +12,12 @@ namespace kaskara {
 std::string const build_loc_str(clang::SourceRange const &range,
                                 clang::ASTContext const *ctx);
 
+clang::SourceRange stmt_to_range(clang::ASTContext const &ctx,
+                                 clang::Stmt const *stmt);
+
+std::string stmt_to_source(clang::ASTContext const &ctx,
+                           clang::Stmt const *stmt);
+
 clang::SourceRange expand_range_to_token_end(clang::SourceManager const &SM,
                                              clang::SourceRange const &range);
 
