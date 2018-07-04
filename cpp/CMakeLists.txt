@@ -8,6 +8,11 @@ add_executable(kaskara-function-scanner
   util.cpp
   function-scanner.cpp)
 
+add_executable(kaskara-snippet-extractor
+  SnippetDB.cpp
+  util.cpp
+  snippet-extractor.cpp)
+
 set(KASKARA_LIBS
   fmt
   stdc++fs
@@ -16,3 +21,4 @@ set(KASKARA_LIBS
 
 target_link_libraries(kaskara-function-scanner ${KASKARA_LIBS})
 target_link_libraries(kaskara-loop-finder ${KASKARA_LIBS})
+target_link_libraries(kaskara-snippet-extractor ${KASKARA_LIBS})
