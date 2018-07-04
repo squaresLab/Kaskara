@@ -28,14 +28,18 @@ static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpM
 
 
 StatementMatcher VoidCallMatcher =
-  callExpr(argumentCountIs(0)).bind("stmt");
+  callExpr(isExpansionInMainFile(),
+           argumentCountIs(0)).bind("stmt");
 
 StatementMatcher GuardedVoidReturnMatcher =
-  ifStmt(hasThen(returnStmt(unless(hasReturnValue(anything())))),
+  ifStmt(isExpansionInMainFile(),
+         hasThen(returnStmt(unless(hasReturnValue(anything())))),
          unless(hasElse(anything()))).bind("stmt");
 
 StatementMatcher GuardedBreakMatcher =
-  ifStmt(hasThen(breakStmt()), unless(hasElse(anything()))).bind("stmt");
+  ifStmt(isExpansionInMainFile(),
+         hasThen(breakStmt()),
+         unless(hasElse(anything()))).bind("stmt");
 
 
 class SnippetFinder : public MatchFinder::MatchCallback
