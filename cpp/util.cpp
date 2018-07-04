@@ -1,6 +1,7 @@
 #include "util.h"
 
 #include <fmt/format.h>
+#include <llvm/ADT/StringRef.h>
 
 namespace kaskara {
 
@@ -19,6 +20,16 @@ std::string const build_loc_str(clang::SourceRange const &range,
                               loc_end.getSpellingLineNumber(),
                               loc_end.getSpellingColumnNumber());
   return s;
+}
+
+std::string read_source(clang::SourceManager const &SM,
+                        clang::SourceRange const &range)
+{
+  clang::SourceLocation loc_start = range.getBegin();
+  clang::SourceLocation loc_end = range.getEnd();
+  int length = SM.getFileOffset(loc_end) - SM.getFileOffset(loc_start);
+  const char *buff = SM.getCharacterData(loc_start);
+  return llvm::StringRef(buff, length + 1).str();
 }
 
 } // kaskara
