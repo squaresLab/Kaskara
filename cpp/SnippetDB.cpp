@@ -26,7 +26,9 @@ json const SnippetDB::Entry::to_json() const
 {
   json j = {
     {"kind", kind},
-    {"contents", contents}
+    {"contents", contents},
+    {"reads", json::array()},
+    {"writes", json::array()}
   };
   return j;
 }
@@ -35,8 +37,7 @@ void SnippetDB::add(std::string const &kind,
                     clang::ASTContext const *ctx,
                     clang::Stmt const *stmt)
 {
-  // FIXME
-  std::string txt = "hahaha";
+  std::string txt = stmt_to_source(*ctx, stmt);
   std::string location = build_loc_str(stmt->getSourceRange(), ctx);
   contents.emplace_back(kind, txt);
 }
