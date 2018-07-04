@@ -2,6 +2,8 @@
 
 #include <fmt/format.h>
 #include <llvm/ADT/StringRef.h>
+#include <clang/Basic/LangOptions.h>
+#include <clang/Lex/Lexer.h>
 
 namespace kaskara {
 
@@ -22,6 +24,13 @@ std::string const build_loc_str(clang::SourceRange const &range,
   return s;
 }
 
+clang::SourceLocation end_of_range(clang::SourceManager const &SM,
+                                   clang::SourceRange const &range)
+{
+  static const clang::LangOptions opts;
+  return clang::Lexer::getLocForEndOfToken(range.getEnd(), 0, SM, opts);
+}
+
 std::string read_source(clang::SourceManager const &SM,
                         clang::SourceRange const &range)
 {
@@ -31,6 +40,14 @@ std::string read_source(clang::SourceManager const &SM,
   const char *buff = SM.getCharacterData(loc_start);
   return llvm::StringRef(buff, length + 1).str();
 }
+
+/*
+std::string read_source(clang::SourceManager const &SM,
+                        clang::SourceRange const &range)
+{
+  return read_source(SM, SM.getExpansionRange(range));
+}
+*/
 
 std::string read_source(clang::ASTContext const &ctx,
                         clang::SourceRange const &range)
