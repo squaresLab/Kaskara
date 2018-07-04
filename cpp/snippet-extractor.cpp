@@ -1,6 +1,8 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
 #include <vector>
 
+#include <llvm/Support/raw_ostream.h>
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendAction.h>
 #include <clang/Frontend/FrontendActions.h>
@@ -13,9 +15,13 @@
 #include <clang/ASTMatchers/ASTMatchers.h>
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 
+#include "SnippetDB.h"
+
 using namespace clang;
 using namespace clang::ast_matchers;
 using namespace clang::tooling;
+
+using namespace kaskara;
 
 static llvm::cl::OptionCategory MyToolCategory("kaskara-snippet-extractor options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
@@ -32,57 +38,23 @@ StatementMatcher GuardedBreakMatcher =
   ifStmt(hasThen(breakStmt()), unless(hasElse(anything()))).bind("stmt");
 
 
-class ReadWriteAnalyzer
-  : public clang::ConstStmtVisitor<ReadWriteAnalyzer>
-{
-public:
-  explicit ReadWriteAnalyzer(clang::ASTContext const *ctx)
-    : ctx(ctx)
-  { }
-
-  void VisitStmt(clang::Stmt const *stmt)
-  {
-    //stmt->dumpPretty(*ctx);
-    //llvm::outs() << "\n";
-    for (clang::Stmt const *c : stmt->children()) {
-      if (!c) {
-        continue;
-      }
-      Visit(c);
-    }
-  }
-
-  /*
-  void VisitExpr(clang::Expr const *expr)
-  {
-    llvm::outs() << expr->getStmtClassName() << "\n";
-    VisitStmt(llvm::dyn_cast<Stmt>(expr));
-  }
-  */
-
-  void VisitDeclRefExpr(clang::DeclRefExpr const *expr)
-  {
-    llvm::outs() << "REF: " << expr->getNameInfo().getAsString() << "\n";
-  }
-
-private:
-  clang::ASTContext const *ctx;
-  std::vector<std::string> reads;
-};
-
 class SnippetFinder : public MatchFinder::MatchCallback
 {
 public:
+  SnippetFinder(SnippetDB &db) : db(db)
+  { }
+
   virtual void run(const MatchFinder::MatchResult &result)
   {
     if (const Stmt *stmt = result.Nodes.getNodeAs<clang::Stmt>("stmt")) {
-      ReadWriteAnalyzer analyzer = ReadWriteAnalyzer(result.Context);
-      stmt->dumpPretty(*result.Context);
-      llvm::outs() << "\n";
-      analyzer.Visit(stmt);
-      llvm::outs() << "\n";
+      // stmt->dumpPretty(*result.Context);
+      // llvm::outs() << "\n";
+      db.add("guarded-return", result.Context, stmt);
     }
   }
+
+private:
+  SnippetDB &db;
 };
 
 int main(int argc, const char **argv)
@@ -91,11 +63,15 @@ int main(int argc, const char **argv)
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
+  SnippetDB db;
   MatchFinder finder;
-  SnippetFinder snippet_finder;
+  SnippetFinder snippet_finder = SnippetFinder(db);
   // finder.addMatcher(VoidCallMatcher, &snippet_finder);
   finder.addMatcher(GuardedVoidReturnMatcher, &snippet_finder);
 
   auto res = Tool.run(newFrontendActionFactory(&finder).get());
+
+  db.dump();
+
   return res;
 }
