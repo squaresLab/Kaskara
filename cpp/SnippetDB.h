@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 #include <clang/AST/Stmt.h>
@@ -18,13 +19,16 @@ public:
 
   class Entry {
   public:
+    Entry(); // FIXME
     Entry(std::string const &kind,
           std::string const &contents);
     Entry(Entry const &other);
 
-    std::string const kind;
-    std::string const contents;
+    std::string kind;
+    std::string contents;
+    std::unordered_set<std::string> locations;
 
+    void observe(std::string const &location);
     nlohmann::json const to_json() const;
   }; // Entry
 

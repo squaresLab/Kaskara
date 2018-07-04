@@ -16,21 +16,40 @@ SnippetDB::SnippetDB() : contents()
 SnippetDB::~SnippetDB()
 { }
 
+SnippetDB::Entry::Entry()
+  : kind(""), contents(""), locations()
+{ }
+
 SnippetDB::Entry::Entry(std::string const &kind,
                         std::string const &contents)
   : kind(kind),
-    contents(contents)
+    contents(contents),
+    locations()
 { }
 
 SnippetDB::Entry::Entry(SnippetDB::Entry const &other)
-  : kind(other.kind), contents(other.contents)
-{ }
+  : kind(other.kind), contents(other.contents), locations()
+{
+  for (std::string const &loc : other.locations) {
+    locations.emplace(loc);
+  }
+}
+
+void SnippetDB::Entry::observe(std::string const &location)
+{
+  locations.emplace(location);
+}
 
 json const SnippetDB::Entry::to_json() const
 {
+  json j_locations = json::array();
+  for (std::string const &loc : locations) {
+    j_locations.push_back(loc);
+  }
   json j = {
     {"kind", kind},
     {"contents", contents},
+    {"locations", j_locations},
     {"reads", json::array()},
     {"writes", json::array()}
   };
@@ -41,13 +60,17 @@ void SnippetDB::add(std::string const &kind,
                     clang::ASTContext const *ctx,
                     clang::Stmt const *stmt)
 {
-  std::string txt = stmt_to_source(*ctx, stmt);
-  std::string location = build_loc_str(stmt->getSourceRange(), ctx);
+  clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
+  std::string txt = read_source(*ctx, source_range);
+  std::string location = build_loc_str(source_range, ctx);
 
-  Entry snippet = Entry(kind, txt);
+  // create an entry if one doesn't already exist
+  if (contents.find(txt) == contents.end()) {
+    contents.emplace(std::make_pair(txt, Entry(kind, txt)));
+  }
 
-  // TODO does this snippet already exist?
-  contents.emplace(std::make_pair(txt, snippet));
+  // record the snippet location
+  contents[txt].observe(location);
 }
 
 json SnippetDB::to_json() const
