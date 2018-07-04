@@ -21,12 +21,14 @@ public:
   public:
     Entry(); // FIXME
     Entry(std::string const &kind,
-          std::string const &contents);
+          std::string const &contents,
+          std::unordered_set<std::string> const &reads);
     Entry(Entry const &other);
 
     std::string kind;
     std::string contents;
     std::unordered_set<std::string> locations;
+    std::unordered_set<std::string> reads;
 
     void observe(std::string const &location);
     nlohmann::json const to_json() const;
