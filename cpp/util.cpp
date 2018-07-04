@@ -24,6 +24,13 @@ std::string const build_loc_str(clang::SourceRange const &range,
   return s;
 }
 
+clang::SourceRange expand_range_to_token_end(clang::SourceManager const &SM,
+                                             clang::SourceRange const &range)
+{
+  return clang::SourceRange(range.getBegin(),
+                            end_of_range(SM, range.getEnd()));
+}
+
 clang::SourceLocation end_of_range(clang::SourceManager const &SM,
                                    clang::SourceRange const &range)
 {
