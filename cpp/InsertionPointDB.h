@@ -26,9 +26,9 @@ public:
     std::unordered_set<std::string> visible;
 
     nlohmann::json const to_json() const;
-  private:
-    std::string location;
-    std::unordered_set<std::string> visible;
+//  private:
+//    std::string location;
+//    std::unordered_set<std::string> visible;
   }; // Entry
 
   void add(std::string const &location,

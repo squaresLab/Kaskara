@@ -15,7 +15,7 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 //#include <clang/AST/LexicallyOrderedRecursiveASTVisitor.h>
 
-#include "FunctionDB.h"
+#include "InsertionPointDB.h"
 
 using namespace kaskara;
 
@@ -29,8 +29,9 @@ class InsertionPointVisitor
   : public clang::RecursiveASTVisitor<InsertionPointVisitor>
 {
 public:
-  explicit InsertionPointVisitor(clang::ASTContext *ctx)
-    : ctx(ctx)
+  explicit InsertionPointVisitor(clang::ASTContext *ctx,
+                                 InsertionPointDB &db)
+    : ctx(ctx), db(db)
   { }
 
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
@@ -63,6 +64,8 @@ public:
         return true;
     }
 
+    // add to database
+
     llvm::outs() << "NICE: ";
     stmt->dumpPretty(*ctx);
     llvm::outs() << "\n\n";
@@ -90,15 +93,18 @@ public:
     */
     return true;
   }
+
 private:
   clang::ASTContext *ctx;
+  InsertionPointDB &db;
 };
 
 class InsertionPointConsumer : public clang::ASTConsumer
 {
 public:
-  explicit InsertionPointConsumer(clang::ASTContext *ctx)
-    : visitor(ctx)
+  explicit InsertionPointConsumer(clang::ASTContext *ctx,
+                                  InsertionPointDB &db)
+    : visitor(ctx, db)
   {}
 
   virtual void HandleTranslationUnit(clang::ASTContext &ctx)
@@ -113,39 +119,44 @@ private:
 class InsertionPointAction : public clang::ASTFrontendAction
 {
 public:
-  InsertionPointAction()
-    : clang::ASTFrontendAction()
+  InsertionPointAction(InsertionPointDB &db)
+    : db(db), clang::ASTFrontendAction()
   { }
 
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
     clang::CompilerInstance &compiler, llvm::StringRef in_file)
   {
     return std::unique_ptr<clang::ASTConsumer>(
-        new InsertionPointConsumer(&compiler.getASTContext()));
+        new InsertionPointConsumer(&compiler.getASTContext(), db));
   }
+
+private:
+  InsertionPointDB &db;
 };
 
-std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory()
+std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
+  InsertionPointDB &db)
 {
   class InsertionPointActionFactory
     : public clang::tooling::FrontendActionFactory
   {
   public:
-    InsertionPointActionFactory()
-      : clang::tooling::FrontendActionFactory()
+    InsertionPointActionFactory(InsertionPointDB db)
+      : db(db), clang::tooling::FrontendActionFactory()
     { }
 
     clang::FrontendAction *create() override
     {
-      return new InsertionPointAction;
+      return new InsertionPointAction(db);
     }
+
+  private:
+    InsertionPointDB &db;
   };
 
   return std::unique_ptr<clang::tooling::FrontendActionFactory>(
-      new InsertionPointActionFactory());
+      new InsertionPointActionFactory(db));
 };
-
-
 
 int main(int argc, const char **argv)
 {
@@ -153,9 +164,8 @@ int main(int argc, const char **argv)
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
+  InsertionPointDB db;
 
-  int res = Tool.run(functionFinderFactory().get());
-
-  //int res = Tool.run(newFrontendActionFactory<InsertionPointAction>());
+  int res = Tool.run(functionFinderFactory(db).get());
   return res;
 }
