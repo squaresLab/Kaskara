@@ -14,6 +14,7 @@ add_executable(kaskara-snippet-extractor
   snippet-extractor.cpp)
 
 add_executable(kaskara-insertion-point-finder
+  InsertionPointDB.cpp
   util.cpp
   insertion-point-finder.cpp)
 
