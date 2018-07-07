@@ -63,6 +63,8 @@ RUN mkdir -p /opt/kaskara
 COPY --from=kaskara /opt/kaskara/scripts /opt/kaskara/scripts
 COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin/kaskara-loop-finder
 COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin/kaskara-function-scanner
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-snippet-extractor /opt/kaskara/bin/kaskara-snippet-extractor
+COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-insertion-point-finder /opt/kaskara/bin/kaskara-insertion-point-finder
 COPY --from=kaskara /usr/local/lib/clang/5.0.0/include /opt/kaskara/clang
 ENV PATH "/opt/kaskara/scripts:${PATH}"
 COPY test.sh .

@@ -13,6 +13,10 @@ add_executable(kaskara-snippet-extractor
   util.cpp
   snippet-extractor.cpp)
 
+add_executable(kaskara-insertion-point-finder
+  util.cpp
+  insertion-point-finder.cpp)
+
 set(KASKARA_LIBS
   fmt
   stdc++fs
@@ -22,3 +26,4 @@ set(KASKARA_LIBS
 target_link_libraries(kaskara-function-scanner ${KASKARA_LIBS})
 target_link_libraries(kaskara-loop-finder ${KASKARA_LIBS})
 target_link_libraries(kaskara-snippet-extractor ${KASKARA_LIBS})
+target_link_libraries(kaskara-insertion-point-finder ${KASKARA_LIBS})
