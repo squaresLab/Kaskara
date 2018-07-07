@@ -11,6 +11,8 @@
 #include <clang/Tooling/Tooling.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 
+#include <clang/AST/ASTTypeTraits.h>
+
 #include <clang/AST/DeclBase.h>
 #include <clang/AST/DeclLookups.h>
 #include <clang/AST/Decl.h>
@@ -25,6 +27,7 @@ using namespace kaskara;
 
 using namespace clang;
 using namespace clang::tooling;
+using namespace clang::ast_type_traits;
 
 static llvm::cl::OptionCategory MyToolCategory("kaskara-insertion-point-finder options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
@@ -52,26 +55,31 @@ public:
     }
   }
 
-  // ignore null statements
-  bool TraverseNullStmt(clang::NullStmt const *stmt)
-  {
-    return true;
-  }
-
   bool VisitStmt(clang::Stmt *stmt)
   {
-    // FIXME assignments are handled incorrectly
-    // FIXME case statements
-    // only visit "top-level" statements
-    for (auto const &p : ctx->getParents(*stmt)) {
-      if (p.get<clang::ReturnStmt>() || p.get<clang::Expr>() || p.get<clang::IfStmt>())
-        return true;
+    // determine the node type
+    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef();
+    if (kind == "CompoundStmt" ||
+        kind == "BreakStmt" ||
+        kind == "DefaultStmt" ||
+        kind == "ContinueStmt" ||
+        kind == "ReturnStmt" ||
+        kind == "CaseStmt" ||
+        kind == "ImplicitCastExpr" ||
+        kind == "NullStmt") {
+      return true;
     }
 
-    // FIXME don't insert after the following:
-    // - return statement
-    // - throw statement
-    // - break statement
+    // only visit "top-level" statements
+    for (auto const &p : ctx->getParents(*stmt)) {
+      if (p.get<clang::ReturnStmt>() ||
+          p.get<clang::Expr>() ||
+          p.get<clang::IfStmt>() ||
+          p.get<clang::CaseStmt>() ||
+          p.get<clang::Decl>() ||
+          p.get<clang::DeclStmt>())
+        return true;
+    }
 
     // ignore bad locations
     FullSourceLoc loc_insertion = ctx->getFullLoc(stmt->getLocEnd());
@@ -99,9 +107,9 @@ public:
     // record insertion point
     db->add(location, visible);
 
-    // llvm::outs() << "NICE: ";
-    // stmt->dumpPretty(*ctx);
-    // llvm::outs() << "\n\n";
+    llvm::outs() << "NICE [" << kind << "]: ";
+    stmt->dumpPretty(*ctx);
+    llvm::outs() << "\n\n";
 
     return true;
   }
