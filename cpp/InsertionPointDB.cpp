@@ -35,7 +35,7 @@ json const InsertionPointDB::Entry::to_json() const
 }
 
 void InsertionPointDB::add(std::string const &location,
-         std::unordered_set<std::string> const &visible)
+                           std::unordered_set<std::string> const &visible)
 {
   contents.emplace_back(location, visible);
 }

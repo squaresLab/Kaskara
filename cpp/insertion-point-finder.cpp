@@ -34,7 +34,7 @@ class InsertionPointVisitor
 {
 public:
   explicit InsertionPointVisitor(clang::ASTContext *ctx,
-                                 InsertionPointDB &db)
+                                 InsertionPointDB *db)
     : ctx(ctx), SM(ctx->getSourceManager()), db(db), visible()
   { }
 
@@ -96,13 +96,8 @@ public:
                   loc_insertion.getSpellingLineNumber(),
                   loc_insertion.getSpellingColumnNumber());
 
-    // DEBUG check scope
-    llvm::outs() << "SCOPE [" << location << "]: ";
-    for (auto &sym : visible)
-      llvm::outs() << " " << sym;
-    llvm::outs() << "\n";
-
-    // db.add(location, visible);
+    // record insertion point
+    db->add(location, visible);
 
     // llvm::outs() << "NICE: ";
     // stmt->dumpPretty(*ctx);
@@ -131,7 +126,7 @@ public:
 private:
   clang::ASTContext *ctx;
   clang::SourceManager &SM;
-  InsertionPointDB &db;
+  InsertionPointDB *db;
   std::unordered_set<std::string> visible;
 };
 
@@ -139,7 +134,7 @@ class InsertionPointConsumer : public clang::ASTConsumer
 {
 public:
   explicit InsertionPointConsumer(clang::ASTContext *ctx,
-                                  InsertionPointDB &db)
+                                  InsertionPointDB *db)
     : visitor(ctx, db)
   {}
 
@@ -155,7 +150,7 @@ private:
 class InsertionPointAction : public clang::ASTFrontendAction
 {
 public:
-  InsertionPointAction(InsertionPointDB &db)
+  InsertionPointAction(InsertionPointDB *db)
     : db(db), clang::ASTFrontendAction()
   { }
 
@@ -167,17 +162,17 @@ public:
   }
 
 private:
-  InsertionPointDB &db;
+  InsertionPointDB *db;
 };
 
 std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
-  InsertionPointDB &db)
+  InsertionPointDB *db)
 {
   class InsertionPointActionFactory
     : public clang::tooling::FrontendActionFactory
   {
   public:
-    InsertionPointActionFactory(InsertionPointDB db)
+    InsertionPointActionFactory(InsertionPointDB *db)
       : db(db), clang::tooling::FrontendActionFactory()
     { }
 
@@ -187,7 +182,7 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
     }
 
   private:
-    InsertionPointDB &db;
+    InsertionPointDB *db;
   };
 
   return std::unique_ptr<clang::tooling::FrontendActionFactory>(
@@ -200,8 +195,8 @@ int main(int argc, const char **argv)
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  InsertionPointDB db;
-  int res = Tool.run(functionFinderFactory(db).get());
-  db.to_file("insertion-points.json");
+  std::unique_ptr<InsertionPointDB> db(new InsertionPointDB);
+  int res = Tool.run(functionFinderFactory(db.get()).get());
+  db->to_file("insertion-points.json");
   return res;
 }
