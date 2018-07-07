@@ -1,6 +1,9 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
 // https://github.com/eschulte/clang-mutate/blob/master/ASTMutate.cpp
 #include <vector>
+#include <unordered_set>
+
+#include <fmt/format.h>
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendAction.h>
@@ -15,6 +18,7 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 //#include <clang/AST/LexicallyOrderedRecursiveASTVisitor.h>
 
+#include "util.h"
 #include "InsertionPointDB.h"
 
 using namespace kaskara;
@@ -31,7 +35,7 @@ class InsertionPointVisitor
 public:
   explicit InsertionPointVisitor(clang::ASTContext *ctx,
                                  InsertionPointDB &db)
-    : ctx(ctx), db(db)
+    : ctx(ctx), SM(ctx->getSourceManager()), db(db), visible()
   { }
 
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
@@ -64,11 +68,45 @@ public:
         return true;
     }
 
-    // add to database
+    // FIXME don't insert after the following:
+    // - return statement
+    // - throw statement
+    // - break statement
 
-    llvm::outs() << "NICE: ";
-    stmt->dumpPretty(*ctx);
-    llvm::outs() << "\n\n";
+    // ignore bad locations
+    FullSourceLoc loc_insertion = ctx->getFullLoc(stmt->getLocEnd());
+    if (loc_insertion.isInvalid())
+      return true;
+
+    // add to database
+    // FIXME get insertion location
+    clang::FileID file_id = loc_insertion.getFileID();
+    clang::FileEntry const *file_entry = SM.getFileEntryForID(file_id);
+    if (!file_entry) {
+      llvm::outs() << "BAD LOCATION:\n";
+      loc_insertion.dump();
+      llvm::outs() << "\n";
+      return true;
+    }
+
+    std::string filename = file_entry->tryGetRealPathName();
+    std::string location =
+      fmt::format(fmt("{0}@{1}:{2}"),
+                  filename,
+                  loc_insertion.getSpellingLineNumber(),
+                  loc_insertion.getSpellingColumnNumber());
+
+    // DEBUG check scope
+    llvm::outs() << "SCOPE [" << location << "]: ";
+    for (auto &sym : visible)
+      llvm::outs() << " " << sym;
+    llvm::outs() << "\n";
+
+    // db.add(location, visible);
+
+    // llvm::outs() << "NICE: ";
+    // stmt->dumpPretty(*ctx);
+    // llvm::outs() << "\n\n";
 
     return true;
   }
@@ -80,23 +118,21 @@ public:
       return true;
     }
 
-    /*
-    llvm::outs() << "SCOPE: ";
+    visible.clear();
     for (auto d : decl_ctx->lookups()) {
       for (auto dd : d) {
         std::string name = dd->getNameAsString();
-        // visible.push_back(name);
-        llvm::outs() << " " << name;
+        visible.emplace(name);
       }
     }
-    llvm::outs() << "\n";
-    */
     return true;
   }
 
 private:
   clang::ASTContext *ctx;
+  clang::SourceManager &SM;
   InsertionPointDB &db;
+  std::unordered_set<std::string> visible;
 };
 
 class InsertionPointConsumer : public clang::ASTConsumer
@@ -165,7 +201,7 @@ int main(int argc, const char **argv)
                  OptionsParser.getSourcePathList());
 
   InsertionPointDB db;
-
   int res = Tool.run(functionFinderFactory(db).get());
+  db.to_file("insertion-points.json");
   return res;
 }
