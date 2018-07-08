@@ -1,5 +1,5 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
-FROM christimperley/clang as kaskara
+FROM christimperley/clang as cpp
 
 # install compile-time dependencies
 RUN apt-get update && \
@@ -29,42 +29,27 @@ RUN cd /tmp \
  && make install \
  && rm -rf /tmp/*
 
-## portable, internal gcov
-#RUN apt-get install -y flex && \
-#    cd /tmp && \
-#    wget -q https://github.com/gcc-mirror/gcc/archive/gcc-6_3_0-release.tar.gz && \
-#    tar -xf gcc-6_3_0-release.tar.gz && \
-#    mv gcc-gcc-6_3_0-release gcc && \
-#    cd gcc && \
-#    ./contrib/download_prerequisites && \
-#    mkdir -p /tmp/gcc-build && \
-#    cd /tmp/gcc-build && \
-#    /tmp/gcc/configure --prefix=/opt/gcov --enable-languages=c,c++ --disable-multilib && \
-#    make -j8 && \
-#    make install -j8 && \
-#    cd / && \
-#    rm -rf /tmp/*
-#RUN mv /opt/gcov/bin/gcov /opt/gcov/gcov && \
-#    rm -rf /opt/gcov/bin /opt/gcov/include /opt/gcov/lib* /opt/gcov/share
-#VOLUME /opt/gcov
-
-# add scripts
-ADD scripts /opt/kaskara/scripts
+# build and install
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
     cd /tmp/kaskara/build && \
     cmake .. && \
     make -j $(nproc)
+RUN mkdir -p /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/cpp/kaskara-insertion-point-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/cpp/kaskara-snippet-extractor /opt/kaskara/bin
+RUN mkdir -p /opt/kaskara/clang \
+ && cp -r /usr/local/lib/clang/5.0.0/include/* /opt/kaskara/clang
 
-# add clang C files
-FROM cmumars/cp2:backup as test
-# FROM cmumars/cp2:base as test
-RUN mkdir -p /opt/kaskara
-COPY --from=kaskara /opt/kaskara/scripts /opt/kaskara/scripts
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin/kaskara-loop-finder
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin/kaskara-function-scanner
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-snippet-extractor /opt/kaskara/bin/kaskara-snippet-extractor
-COPY --from=kaskara /tmp/kaskara/build/cpp/kaskara-insertion-point-finder /opt/kaskara/bin/kaskara-insertion-point-finder
-COPY --from=kaskara /usr/local/lib/clang/5.0.0/include /opt/kaskara/clang
+# install scripts
+ADD scripts /opt/kaskara/scripts
+
+FROM alpine:3.7 as python
+COPY --from=cpp /opt/kaskara /opt/kaskara
+WORKDIR /opt/kaskara
+COPY python /opt/kaskara/python
+COPY setup.py /opt/kaskara
 ENV PATH "/opt/kaskara/scripts:${PATH}"
-COPY test.sh .
+VOLUME /opt/kaskara

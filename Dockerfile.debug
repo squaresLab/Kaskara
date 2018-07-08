@@ -1,0 +1,4 @@
+FROM cmumars/cp2:backup as test
+COPY --from=squareslab/kaskara /opt/kaskara /opt/kaskara
+ENV PATH "/opt/kaskara/scripts:${PATH}"
+ADD test.sh .
