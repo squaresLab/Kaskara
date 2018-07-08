@@ -66,6 +66,7 @@ public:
         kind == "ReturnStmt" ||
         kind == "CaseStmt" ||
         kind == "ImplicitCastExpr" ||
+        kind == "CXXCatchStmt" ||
         kind == "NullStmt") {
       return true;
     }
@@ -77,25 +78,25 @@ public:
           p.get<clang::IfStmt>() ||
           p.get<clang::CaseStmt>() ||
           p.get<clang::Decl>() ||
+          p.get<clang::SwitchStmt>() ||
           p.get<clang::DeclStmt>())
         return true;
     }
 
-    // ignore bad locations
-    FullSourceLoc loc_insertion = ctx->getFullLoc(stmt->getLocEnd());
+    // determine the insertion point
+    SourceRange stmt_range =
+      expand_range_to_token_end(SM, stmt->getSourceRange());
+    FullSourceLoc loc_insertion = ctx->getFullLoc(stmt_range.getEnd());
+
+    // ignore bad insertion points
     if (loc_insertion.isInvalid())
       return true;
 
     // add to database
-    // FIXME get insertion location
     clang::FileID file_id = loc_insertion.getFileID();
     clang::FileEntry const *file_entry = SM.getFileEntryForID(file_id);
-    if (!file_entry) {
-      llvm::outs() << "BAD LOCATION:\n";
-      loc_insertion.dump();
-      llvm::outs() << "\n";
+    if (!file_entry)
       return true;
-    }
 
     std::string filename = file_entry->tryGetRealPathName();
     std::string location =
@@ -107,9 +108,8 @@ public:
     // record insertion point
     db->add(location, visible);
 
-    llvm::outs() << "NICE [" << kind << "]: ";
-    stmt->dumpPretty(*ctx);
-    llvm::outs() << "\n\n";
+    // std::string src = read_source(SM, stmt_range);
+    // llvm::outs() << "NICE [" << kind << "]: " << src << "\n\n";
 
     return true;
   }
@@ -121,6 +121,7 @@ public:
       return true;
     }
 
+    // FIXME visit parent decl contexts instead!
     visible.clear();
     for (auto d : decl_ctx->lookups()) {
       for (auto dd : d) {
