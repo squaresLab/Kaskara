@@ -38,7 +38,11 @@ class InsertionPointVisitor
 public:
   explicit InsertionPointVisitor(clang::ASTContext *ctx,
                                  InsertionPointDB *db)
-    : ctx(ctx), SM(ctx->getSourceManager()), db(db), visible()
+    : ctx(ctx),
+      SM(ctx->getSourceManager()),
+      current_decl_ctx(nullptr),
+      db(db),
+      visible()
   { }
 
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
@@ -114,27 +118,44 @@ public:
     return true;
   }
 
-  bool VisitDecl(clang::Decl *decl)
+  void CollectVisibleDecls(clang::DeclContext const *dctx)
   {
-    clang::DeclContext const *decl_ctx = decl->getDeclContext();
-    if (!decl_ctx) {
-      return true;
+    if (!dctx)
+      return;
+
+    for (clang::Decl const *d : dctx->decls()) {
+      if (!d)
+        continue;
+
+      clang::NamedDecl const *nd = DynTypedNode::create(*d).get<clang::NamedDecl>();
+      if (!nd || !nd->getIdentifier())
+        continue;
+
+      // FIXME getQualifiedNameAsString // getName
+      std::string name = nd->getQualifiedNameAsString();
+      visible.emplace(name);
     }
 
-    // FIXME visit parent decl contexts instead!
-    visible.clear();
-    for (auto d : decl_ctx->lookups()) {
-      for (auto dd : d) {
-        std::string name = dd->getNameAsString();
-        visible.emplace(name);
-      }
+    CollectVisibleDecls(dctx->getLexicalParent());
+  }
+
+  bool VisitDecl(clang::Decl *decl)
+  {
+    // avoid rebuilding the same context multiple times
+    clang::DeclContext const *decl_ctx = decl->getDeclContext();
+    if (!decl_ctx || decl_ctx == current_decl_ctx) {
+      return true;
     }
+    current_decl_ctx = decl_ctx;
+    visible.clear();
+    CollectVisibleDecls(decl_ctx);
     return true;
   }
 
 private:
   clang::ASTContext *ctx;
   clang::SourceManager &SM;
+  clang::DeclContext const *current_decl_ctx;
   InsertionPointDB *db;
   std::unordered_set<std::string> visible;
 };
