@@ -9,6 +9,7 @@ from bugzoo.client import Client as BugZooClient
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
 from .loops import find_loops
 from .functions import FunctionDB
+from .insertions import InsertionPointDB
 
 
 class Analysis(object):
@@ -25,21 +26,30 @@ class Analysis(object):
                 find_loops(client_bugzoo, snapshot, files, container)
             db_function = \
                 FunctionDB.build(client_bugzoo, snapshot, files, container)
-            return Analysis(loop_bodies, db_function)
+            db_insertion = \
+                InsertionPointDB.build(client_bugzoo, snapshot, files, container)
+            return Analysis(loop_bodies, db_function, db_insertion)
         finally:
             if container:
                 del client_bugzoo.containers[container.uid]
 
     def __init__(self,
                  loop_bodies: List[FileLocationRange],
-                 db_function: FunctionDB
+                 db_function: FunctionDB,
+                 db_insertion: InsertionPointDB
+
                  ) -> None:
         self.__location_bodies = FileLocationRangeSet(loop_bodies)
         self.__db_function = db_function
+        self.__db_insertion = db_insertion
 
     @property
     def functions(self) -> FunctionDB:
         return self.__db_function
+
+    @property
+    def insertions(self) -> InsertionPointDB:
+        return self.__db_insertion
 
     def is_inside_loop(self, location: FileLocation) -> bool:
         return location in self.__location_bodies
@@ -53,3 +63,4 @@ class Analysis(object):
 
     def dump(self) -> None:
         print("LOOPS: {}".format(self.__location_bodies))
+        print("INSERTIONS: {}".format([i for i in self.insertions]))
