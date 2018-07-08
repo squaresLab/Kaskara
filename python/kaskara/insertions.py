@@ -24,7 +24,7 @@ class InsertionPoint(object):
         return InsertionPoint(location, visible)
 
     def __repr__(self) -> str:
-        fmt = "InsertionPoint('{}', {{}})"
+        fmt = "InsertionPoint('{}', [{}])"
         return fmt.format(self.location, ', '.join(self.visible))
 
     def to_dict(self) -> Dict[str, str]:
