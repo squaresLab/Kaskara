@@ -64,7 +64,8 @@ class FunctionDB(object):
         return FunctionDB(funcs)
 
     def __init__(self, functions: Iterable[FunctionDesc]) -> None:
-        self.__filename_to_functions = {}  # type: Dict[str, FunctionDesc]
+        self.__filename_to_functions = \
+            {}  # type: Dict[str, List[FunctionDesc]]
         for f in functions:
             if f.filename not in self.__filename_to_functions:
                 self.__filename_to_functions[f.filename] = []

@@ -1,6 +1,6 @@
 __all__ = ['InsertionPointDB', 'InsertionPoint']
 
-from typing import FrozenSet, Iterable, Iterator, Dict, List
+from typing import FrozenSet, Iterable, Iterator, Dict, List, Any
 import json
 import attr
 
@@ -27,7 +27,7 @@ class InsertionPoint(object):
         fmt = "InsertionPoint('{}', [{}])"
         return fmt.format(self.location, ', '.join(self.visible))
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> Dict[str, Any]:
         return {'location': str(self.location),
                 'visible': [sym for sym in self.visible]}
 
@@ -61,7 +61,7 @@ class InsertionPointDB(Iterable[InsertionPoint]):
         return InsertionPointDB.from_dict(jsn)
 
     @staticmethod
-    def from_dict(d: List[Dict[str, str]]) -> 'InsertionPointDB':
+    def from_dict(d: List[Dict[str, Any]]) -> 'InsertionPointDB':
         contents = [InsertionPoint.from_dict(dd) for dd in d]
         return InsertionPointDB(contents)
 
