@@ -31,7 +31,13 @@ static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpM
 
 StatementMatcher VoidCallMatcher =
   callExpr(isExpansionInMainFile(),
-           argumentCountIs(0)).bind("stmt");
+           argumentCountIs(0),
+           unless(anyOf(hasParent(expr()),
+                        hasParent(whileStmt()),
+                        hasParent(forStmt()),
+                        hasParent(ifStmt()),
+                        hasParent(switchStmt()),
+                        hasParent(cxxForRangeStmt())))).bind("stmt");
 
 StatementMatcher GuardedVoidReturnMatcher =
   ifStmt(isExpansionInMainFile(),
