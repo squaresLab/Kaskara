@@ -132,7 +132,8 @@ public:
         continue;
 
       // FIXME getQualifiedNameAsString // getName
-      std::string name = nd->getQualifiedNameAsString();
+      // std::string name = nd->getQualifiedNameAsString();
+      std::string name = nd->getName();
       visible.emplace(name);
     }
 

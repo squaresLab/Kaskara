@@ -1,5 +1,6 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
 #include <vector>
+#include <memory>
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -16,6 +17,7 @@
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 
 #include "SnippetDB.h"
+#include "util.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -41,24 +43,37 @@ StatementMatcher GuardedBreakMatcher =
          hasThen(breakStmt()),
          unless(hasElse(anything()))).bind("stmt");
 
-
 class SnippetFinder : public MatchFinder::MatchCallback
 {
 public:
-  SnippetFinder(SnippetDB &db) : db(db)
+  SnippetFinder(std::string const &kind, SnippetDB *db)
+    : kind(kind), db(db)
   { }
 
   virtual void run(const MatchFinder::MatchResult &result)
   {
+    SourceManager const *SM = result.SourceManager;
     if (const Stmt *stmt = result.Nodes.getNodeAs<clang::Stmt>("stmt")) {
-      // stmt->dumpPretty(*result.Context);
-      // llvm::outs() << "\n";
-      db.add("guarded-return", result.Context, stmt);
+      if (!stmt || stmt->getSourceRange().isInvalid())
+        return;
+
+      if (!SM->isInMainFile(stmt->getLocStart()))
+          return;
+
+      FileID fid = SM->getFileID(stmt->getLocStart());
+      FileEntry const *fe = SM->getFileEntryForID(fid);
+      if (!fe)
+        return;
+
+      std::string loc = build_loc_str(stmt->getSourceRange(), result.Context);
+      // llvm::outs() << "found match [" << kind << "]: " << loc << "\n";
+      db->add(kind, result.Context, stmt);
     }
   }
 
 private:
-  SnippetDB &db;
+  SnippetDB *db;
+  std::string kind;
 };
 
 int main(int argc, const char **argv)
@@ -67,15 +82,22 @@ int main(int argc, const char **argv)
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  SnippetDB db;
+  std::unique_ptr<SnippetDB> db(new SnippetDB);
   MatchFinder finder;
-  SnippetFinder snippet_finder = SnippetFinder(db);
-  // finder.addMatcher(VoidCallMatcher, &snippet_finder);
-  finder.addMatcher(GuardedVoidReturnMatcher, &snippet_finder);
+
+  /*
+  SnippetFinder finder_return = SnippetFinder("guarded-return", db.get());
+  finder.addMatcher(GuardedVoidReturnMatcher, &finder_return);
+
+  SnippetFinder finder_break = SnippetFinder("guarded-break", db.get());
+  finder.addMatcher(GuardedBreakMatcher, &finder_break);
+  */
+
+  SnippetFinder finder_void_call = SnippetFinder("void-call", db.get());
+  finder.addMatcher(VoidCallMatcher, &finder_void_call);
 
   auto res = Tool.run(newFrontendActionFactory(&finder).get());
-
-  db.dump();
-
+  db->dump();
+  db->to_file("snippets.json");
   return res;
 }
