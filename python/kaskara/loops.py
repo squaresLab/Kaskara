@@ -7,6 +7,7 @@ from bugzoo.core.container import Container
 
 from .core import FileLocationRange
 from .exceptions import BondException
+from .util import abs_to_rel_flocrange
 
 
 def find_loops(client_bugzoo: BugZooClient,
@@ -30,6 +31,7 @@ def find_loops(client_bugzoo: BugZooClient,
     jsn = json.loads(output)  # type: List[Dict[str, str]]
     for loop_info in jsn:
         loc = FileLocationRange.from_string(loop_info['body'])
+        loc = abs_to_rel_flocrange(snapshot.source_dir, loc)
         loop_bodies.append(loc)
 
     return loop_bodies

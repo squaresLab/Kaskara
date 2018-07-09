@@ -10,6 +10,7 @@ from bugzoo.core.container import Container
 
 from .core import FileLocationRange, FileLocation
 from .exceptions import BondException
+from .util import abs_to_rel_flocrange
 
 
 @attr.s(frozen=True)
@@ -22,10 +23,13 @@ class FunctionDesc(object):
     is_pure = attr.ib(type=bool)
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> 'FunctionDesc':
+    def from_dict(d: Dict[str, Any],
+                  snapshot: Snapshot) -> 'FunctionDesc':
         name = d['name']
         location = FileLocationRange.from_string(d['location'])
+        location = abs_to_rel_flocrange(snapshot.source_dir, location)
         body = FileLocationRange.from_string(d['body'])
+        body = abs_to_rel_flocrange(snapshot.source_dir, body)
         return_type = d['return-type']
         is_global = d['global']
         is_pure = d['pure']
@@ -60,7 +64,7 @@ class FunctionDB(object):
 
         output = client_bugzoo.files.read(container, out_fn)
         jsn = json.loads(output)  # type: List[Dict[str, Any]]
-        funcs = [FunctionDesc.from_dict(d) for d in jsn]
+        funcs = [FunctionDesc.from_dict(d, snapshot) for d in jsn]
         return FunctionDB(funcs)
 
     def __init__(self, functions: Iterable[FunctionDesc]) -> None:
