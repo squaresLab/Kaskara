@@ -33,6 +33,7 @@ StatementMatcher VoidCallMatcher =
   callExpr(isExpansionInMainFile(),
            argumentCountIs(0),
            unless(anyOf(hasParent(expr()),
+                        hasParent(decl()),
                         hasParent(whileStmt()),
                         hasParent(forStmt()),
                         hasParent(ifStmt()),
@@ -42,12 +43,28 @@ StatementMatcher VoidCallMatcher =
 StatementMatcher GuardedVoidReturnMatcher =
   ifStmt(isExpansionInMainFile(),
          hasThen(returnStmt(unless(hasReturnValue(anything())))),
-         unless(hasElse(anything()))).bind("stmt");
+         unless(anyOf(
+             hasElse(anything()),
+             hasParent(expr()),
+             hasParent(decl()),
+             hasParent(whileStmt()),
+             hasParent(ifStmt()),
+             hasParent(switchStmt()),
+             hasParent(cxxForRangeStmt())
+         ))).bind("stmt");
 
 StatementMatcher GuardedBreakMatcher =
   ifStmt(isExpansionInMainFile(),
          hasThen(breakStmt()),
-         unless(hasElse(anything()))).bind("stmt");
+         unless(anyOf(
+             hasElse(anything()),
+             hasParent(expr()),
+             hasParent(decl()),
+             hasParent(whileStmt()),
+             hasParent(ifStmt()),
+             hasParent(switchStmt()),
+             hasParent(cxxForRangeStmt())
+         ))).bind("stmt");
 
 class SnippetFinder : public MatchFinder::MatchCallback
 {
@@ -91,13 +108,11 @@ int main(int argc, const char **argv)
   std::unique_ptr<SnippetDB> db(new SnippetDB);
   MatchFinder finder;
 
-  /*
   SnippetFinder finder_return = SnippetFinder("guarded-return", db.get());
   finder.addMatcher(GuardedVoidReturnMatcher, &finder_return);
 
   SnippetFinder finder_break = SnippetFinder("guarded-break", db.get());
   finder.addMatcher(GuardedBreakMatcher, &finder_break);
-  */
 
   SnippetFinder finder_void_call = SnippetFinder("void-call", db.get());
   finder.addMatcher(VoidCallMatcher, &finder_void_call);
