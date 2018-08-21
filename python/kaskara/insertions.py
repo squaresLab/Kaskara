@@ -60,7 +60,7 @@ class InsertionPointDB(Iterable[InsertionPoint]):
               ) -> 'InsertionPointDB':
         out_fn = "insertion-points.json"
         cmd = "kaskara-insertion-point-finder {}".format(' '.join(files))
-        workdir = "/ros_ws"
+        workdir = snapshot.source_dir
         outcome = client_bugzoo.containers.exec(container,
                                                 cmd,
                                                 context=workdir)
