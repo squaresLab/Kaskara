@@ -54,7 +54,7 @@ class FunctionDB(object):
               ) -> 'FunctionDB':
         out_fn = "functions.json"
         cmd = "kaskara-function-scanner {}".format(' '.join(files))
-        workdir = "/ros_ws"
+        workdir = snapshot.source_dir
         outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
 
         if outcome.code != 0:
