@@ -51,9 +51,9 @@ class FunctionDesc(object):
         return {'name': self.name,
                 'location': str(loc),
                 'body': str(body),
-                'return_type': self.return_type,
-                'is_global': self.is_global,
-                'is_pure': self.is_pure}
+                'return-type': self.return_type,
+                'global': self.is_global,
+                'pure': self.is_pure}
 
 
 class FunctionDB(object):
