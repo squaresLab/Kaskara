@@ -10,7 +10,7 @@ from bugzoo.core.container import Container
 
 from .core import FileLocationRange, FileLocation
 from .exceptions import BondException
-from .util import abs_to_rel_flocrange
+from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 
 
 @attr.s(frozen=True)
@@ -45,9 +45,12 @@ class FunctionDesc(object):
     def filename(self) -> str:
         return self.location.filename
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
+        loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
+        body = rel_to_abs_flocrange(snapshot.source_dir, self.body)
         return {'name': self.name,
-                'location': str(self.location),
+                'location': str(loc),
+                'body': str(body),
                 'return_type': self.return_type,
                 'is_global': self.is_global,
                 'is_pure': self.is_pure}
@@ -107,5 +110,9 @@ class FunctionDB(object):
         """
         yield from self.__filename_to_functions.get(filename, [])
 
-    def to_dict(self) -> List[Dict[str, Any]]:
-        return [d.to_dict() for d in self.__filename_to_functions.values()]
+    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
+        d = []  # type: List[Dict[str, Any]]
+        for descs in self.__filename_to_functions.values():
+            for desc in descs:
+                d.append(desc.to_dict(snapshot))
+        return d
