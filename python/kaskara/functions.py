@@ -48,7 +48,6 @@ class FunctionDesc(object):
     def to_dict(self) -> Dict[str, Any]:
         return {'name': self.name,
                 'location': str(self.location),
-                'body': str(self.body),
                 'return_type': self.return_type,
                 'is_global': self.is_global,
                 'is_pure': self.is_pure}
