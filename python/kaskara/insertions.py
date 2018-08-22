@@ -4,6 +4,7 @@ from typing import FrozenSet, Iterable, Iterator, Dict, List, Any
 import logging
 import json
 import attr
+import os
 
 from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
@@ -11,7 +12,7 @@ from bugzoo.core.container import Container
 
 from .core import FileLocation, FileLine
 from .exceptions import BondException
-from .util import abs_to_rel_floc
+from .util import abs_to_rel_floc, rel_to_abs_floc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -35,8 +36,9 @@ class InsertionPoint(object):
         fmt = "InsertionPoint('{}', [{}])"
         return fmt.format(self.location, ', '.join(self.visible))
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {'location': str(self.location),
+    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
+        loc = rel_to_abs_floc(snapshot.source_dir, self.location)
+        return {'location': str(loc),
                 'visible': [sym for sym in self.visible]}
 
 
@@ -64,8 +66,6 @@ class InsertionPointDB(Iterable[InsertionPoint]):
         outcome = client_bugzoo.containers.exec(container,
                                                 cmd,
                                                 context=workdir)
-
-        print(outcome.output)
 
         if outcome.code != 0:
             msg = "kaskara-insertion-point-finder exited with non-zero code: {}"
@@ -106,3 +106,6 @@ class InsertionPointDB(Iterable[InsertionPoint]):
                 logger.debug("found insertion point at line [%s]: %s",
                              str(line), ins)
                 yield ins
+
+    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
+        return [i.to_dict(snapshot) for i in self]
