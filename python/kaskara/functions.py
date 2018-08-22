@@ -24,7 +24,8 @@ class FunctionDesc(object):
 
     @staticmethod
     def from_dict(d: Dict[str, Any],
-                  snapshot: Snapshot) -> 'FunctionDesc':
+                  snapshot: Snapshot
+                  ) -> 'FunctionDesc':
         name = d['name']
         location = FileLocationRange.from_string(d['location'])
         location = abs_to_rel_flocrange(snapshot.source_dir, location)
@@ -44,8 +45,22 @@ class FunctionDesc(object):
     def filename(self) -> str:
         return self.location.filename
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {'name': self.name,
+                'location': str(self.location),
+                'body': str(self.body),
+                'return_type': self.return_type,
+                'is_global': self.is_global,
+                'is_pure': self.is_pure}
+
 
 class FunctionDB(object):
+    @staticmethod
+    def from_dict(d: List[Dict[str, Any]],
+                  snapshot: Snapshot
+                  ) -> 'FunctionDB':
+        return FunctionDB(FunctionDesc.from_dict(desc, snapshot) for desc in d)
+
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
@@ -92,3 +107,6 @@ class FunctionDB(object):
         contained within a given file.
         """
         yield from self.__filename_to_functions.get(filename, [])
+
+    def to_dict(self) -> List[Dict[str, Any]]:
+        return [d.to_dict() for d in self.__filename_to_functions.values()]
