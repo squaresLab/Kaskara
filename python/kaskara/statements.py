@@ -1,4 +1,10 @@
-from typing import FrozenSet, Dict, Any
+from typing import FrozenSet, Dict, Any, List
+import json
+import attr
+import logging
+
+logger = logging.getLogger(__name__)  # type: logging.Logger
+logger.setLevel(logging.DEBUG)
 
 
 @attr.s(frozen=True)
@@ -24,3 +30,24 @@ class Statement(object):
                 'location': str(loc),
                 'reads': [v for v in self.reads],
                 'writes': [v for v in self.writes]}
+
+
+class StatementDB(object):
+    @staticmethod
+    def from_file(fn: str) -> 'StatementDB':
+        logger.debug("reading statement database from file: %s", fn)
+        with open(fn, 'r') as f:
+            d = json.load(f)
+        db = StatementDB.from_dict(d)
+        logger.debug("read statement database from file: %s", fn)
+        return db
+
+    @staticmethod
+    def from_dict(d: List[Dict[str, Any]],
+                  snapshot: Snapshot
+                  ) -> 'StatementDB':
+        statements = [Statement.from_dict(dd, snapshot) for dd in d]
+        return StatementDB(statements)
+
+    def __init__(self, statements: List[Statement]) -> None:
+        self.__statements = statements
