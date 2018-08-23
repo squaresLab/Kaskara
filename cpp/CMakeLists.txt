@@ -3,6 +3,11 @@ add_executable(kaskara-loop-finder
   util.cpp
   loop-finder.cpp)
 
+add_executable(kaskara-statement-finder
+  StatementDB.cpp
+  util.cpp
+  statement-finder.cpp)
+
 add_executable(kaskara-function-scanner
   FunctionDB.cpp
   util.cpp
@@ -26,5 +31,6 @@ set(KASKARA_LIBS
 
 target_link_libraries(kaskara-function-scanner ${KASKARA_LIBS})
 target_link_libraries(kaskara-loop-finder ${KASKARA_LIBS})
+target_link_libraries(kaskara-statement-finder ${KASKARA_LIBS})
 target_link_libraries(kaskara-snippet-extractor ${KASKARA_LIBS})
 target_link_libraries(kaskara-insertion-point-finder ${KASKARA_LIBS})

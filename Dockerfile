@@ -37,6 +37,7 @@ RUN mkdir /tmp/kaskara/build && \
     make -j $(nproc)
 RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/cpp/kaskara-statement-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin \
  && cp /tmp/kaskara/build/cpp/kaskara-insertion-point-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/cpp/kaskara-snippet-extractor /opt/kaskara/bin
