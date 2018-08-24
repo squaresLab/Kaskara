@@ -8,7 +8,7 @@ from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 
-from .core import FileLocationRange, FileLocation
+from .core import FileLocationRange, FileLocation, FileLine
 from .exceptions import BondException
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 from .insertions import InsertionPointDB, InsertionPoint
@@ -101,7 +101,9 @@ class StatementDB(object):
             if filename not in self.__file_to_statements:
                 self.__file_to_statements[filename] = []
             self.__file_to_statements[filename].append(statement)
-        logger.debug("indexed statements by file")
+        summary = ["  {}: {} statements".format(fn, len(stmts))
+                   for (fn, stmts) in self.__file_to_statements.items()]
+        logger.debug("indexed statements by file:\n%s", '\n'.join(summary))
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
@@ -111,6 +113,14 @@ class StatementDB(object):
         Returns an iterator over all of the statements belonging to a file.
         """
         yield from self.__file_to_statements.get(fn, [])
+
+    def at_line(self, line: FileLine) -> Iterator[Statement]:
+        """
+        Returns an iterator over all of the statements located at a given line.
+        """
+        for stmt in self.in_file(line.filename):
+            if line == stmt.location.start.line:
+                yield stmt
 
     def insertions(self) -> InsertionPointDB:
         logger.debug("computing insertion points")
