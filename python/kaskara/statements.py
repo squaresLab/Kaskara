@@ -1,4 +1,4 @@
-from typing import FrozenSet, Dict, Any, List
+from typing import FrozenSet, Dict, Any, List, Iterator
 import json
 import attr
 import logging
