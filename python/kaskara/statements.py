@@ -8,7 +8,9 @@ from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 
-from .core import FileLocationRange
+from .core import FileLocationRange, FileLocation
+from .exceptions import BondException
+from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
@@ -66,7 +68,7 @@ class StatementDB(object):
         logger.debug("reading statement analysis results from file: %s", out_fn)
         output = client_bugzoo.files.read(container, out_fn)
         jsn = json.loads(output)  # type: List[Dict[str, Any]]
-        db = StatementDB.from_dict(jsn)
+        db = StatementDB.from_dict(jsn, snapshot)
         logger.debug("finished reading statement analysis results")
         return db
 
