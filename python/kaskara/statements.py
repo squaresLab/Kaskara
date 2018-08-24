@@ -8,6 +8,8 @@ from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 
+from .core import FileLocationRange
+
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
 
