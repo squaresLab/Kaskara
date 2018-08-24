@@ -94,9 +94,23 @@ class StatementDB(object):
 
     def __init__(self, statements: List[Statement]) -> None:
         self.__statements = statements
+        logger.debug("indexing statements by file")
+        self.__file_to_statements = {}  # type: Dict[str, List[Statement]]
+        for statement in statements:
+            filename = statement.location.filename
+            if filename not in self.__file_to_statements:
+                self.__file_to_statements[filename] = []
+            self.__file_to_statements[filename].append(statement)
+        logger.debug("indexed statements by file")
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
+
+    def in_file(self, fn: str) -> Iterator[Statement]:
+        """
+        Returns an iterator over all of the statements belonging to a file.
+        """
+        yield from self.__file_to_statements.get(fn, [])
 
     def insertions(self) -> InsertionPointDB:
         logger.debug("computing insertion points")
