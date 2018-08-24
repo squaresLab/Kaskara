@@ -54,3 +54,13 @@ class StatementDB(object):
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
+
+    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
+        return [stmt.to_dict(snapshot) for stmt in self.__statements]
+
+    def to_file(self, fn: str, snapshot: Snapshot) -> None:
+        logger.debug("writing statement database to file: %s", fn)
+        d = self.to_dict(snapshot)
+        with open(fn, 'w') as f:
+            json.dump(d, f)
+        logger.debug("wrote statement database to file: %s", fn)
