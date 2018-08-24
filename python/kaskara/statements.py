@@ -34,7 +34,7 @@ class Statement(object):
                          location,
                          frozenset(d['reads']),
                          frozenset(d['writes']),
-                         frozenset())  # FIXME implement
+                         frozenset(d['visible']))
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)

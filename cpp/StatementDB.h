@@ -26,11 +26,13 @@ public:
     std::string content;
     std::unordered_set<std::string> writes;
     std::unordered_set<std::string> reads;
+    std::unordered_set<std::string> visible;
 
     nlohmann::json const to_json() const;
   }; // Entry
 
-  void add(clang::ASTContext const *ctx, clang::Stmt const *stmt);
+  void add(clang::ASTContext const *ctx,
+           clang::Stmt const *stmt);
   void dump() const;
   nlohmann::json to_json() const;
   void to_file(const std::string &fn) const;
