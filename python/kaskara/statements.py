@@ -3,6 +3,11 @@ import json
 import attr
 import logging
 
+from bugzoo.util import indent
+from bugzoo.client import Client as BugZooClient
+from bugzoo.core.bug import Bug as Snapshot
+from bugzoo.core.container import Container
+
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
 
@@ -33,6 +38,36 @@ class Statement(object):
 
 
 class StatementDB(object):
+    @staticmethod
+    def build(client_bugzoo: BugZooClient,
+              snapshot: Snapshot,
+              files: List[str],
+              container: Container
+              ) -> 'StatementDB':
+        out_fn = "statements.json"
+        logger.debug("building statement database for snapshot [%s]",
+                     snapshot.name)
+        logger.debug("fetching statements from files: %s", ', '.join(files))
+
+        cmd = "kaskara-statement-finder {}".format(' '.join(files))
+        workdir = snapshot.source_dir
+        logger.debug("executing statement finder [%s]: %s", workdir, cmd)
+        outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
+        logger.debug("executed statement finder [%d]:\n%s",
+                     outcome.code, indent(outcome.output, 2))
+
+        if outcome.code != 0:
+            msg = "kaskara-statement-finder exited with non-zero code: {}"
+            msg = msg.format(outcome.code)
+            raise BondException(msg)  # FIXME
+
+        logger.debug("reading statement analysis results from file: %s", out_fn)
+        output = client_bugzoo.files.read(container, out_fn)
+        jsn = json.loads(output)  # type: List[Dict[str, Any]]
+        db = StatementDB.from_dict(jsn)
+        logger.debug("finished reading statement analysis results")
+        return db
+
     @staticmethod
     def from_file(fn: str) -> 'StatementDB':
         logger.debug("reading statement database from file: %s", fn)
