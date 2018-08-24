@@ -42,10 +42,11 @@ class Analysis(object):
                 find_loops(client_bugzoo, snapshot, files, container)
             db_function = \
                 FunctionDB.build(client_bugzoo, snapshot, files, container)
-            db_insertion = \
-                InsertionPointDB.build(client_bugzoo, snapshot, files, container)
+            # db_insertion = \
+            #     InsertionPointDB.build(client_bugzoo, snapshot, files, container)
             db_statements = \
                 StatementDB.build(client_bugzoo, snapshot, files, container)
+            db_insertion = db_statements.insertions()
             return Analysis(loop_bodies,
                             db_function,
                             db_insertion,

@@ -11,6 +11,7 @@ from bugzoo.core.container import Container
 from .core import FileLocationRange, FileLocation
 from .exceptions import BondException
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
+from .insertions import InsertionPointDB, InsertionPoint
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
@@ -22,6 +23,7 @@ class Statement(object):
     location = attr.ib(type=FileLocationRange)
     reads = attr.ib(type=FrozenSet[str])
     writes = attr.ib(type=FrozenSet[str])
+    visible = attr.ib(type=FrozenSet[str])
 
     @staticmethod
     def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Statement':
@@ -31,14 +33,16 @@ class Statement(object):
         return Statement(d['content'],
                          location,
                          frozenset(d['reads']),
-                         frozenset(d['writes']))
+                         frozenset(d['writes']),
+                         frozenset())  # FIXME implement
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
         return {'content': self.content,
                 'location': str(loc),
                 'reads': [v for v in self.reads],
-                'writes': [v for v in self.writes]}
+                'writes': [v for v in self.writes],
+                'visible': [v for v in self.visible]}
 
 
 class StatementDB(object):
@@ -93,6 +97,21 @@ class StatementDB(object):
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
+
+    def insertions(self) -> InsertionPointDB:
+        logger.debug("computing insertion points")
+        points = []  # type: List[InsertionPoint]
+        for stmt in self:
+            location = FileLocation(stmt.location.filename,
+                                    stmt.location.stop)
+            point = InsertionPoint(location, stmt.visible)
+
+            # FIXME do not insert after a return
+
+            points.append(point)
+        db = InsertionPointDB(points)
+        logger.debug("computed insertion points")
+        return db
 
     def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
         return [stmt.to_dict(snapshot) for stmt in self.__statements]
