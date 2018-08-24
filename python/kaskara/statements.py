@@ -51,3 +51,6 @@ class StatementDB(object):
 
     def __init__(self, statements: List[Statement]) -> None:
         self.__statements = statements
+
+    def __iter__(self) -> Iterator[Statement]:
+        yield from self.__statements
