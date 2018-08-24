@@ -25,9 +25,8 @@ class Analysis(object):
     def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Analysis':
         loop_bodies = [FileLocationRange.from_string(s) for s in d['loops']]
         db_function = FunctionDB.from_dict(d['functions'], snapshot)
-        db_insertion = InsertionPointDB.from_dict(d['insertions'], snapshot)
         db_statement = StatementDB.from_dict(d['statements'], snapshot)
-        return Analysis(loop_bodies, db_function, db_insertion, db_statement)
+        return Analysis(loop_bodies, db_function, db_statement)
 
     @staticmethod
     def build(client_bugzoo: BugZooClient,
@@ -42,14 +41,10 @@ class Analysis(object):
                 find_loops(client_bugzoo, snapshot, files, container)
             db_function = \
                 FunctionDB.build(client_bugzoo, snapshot, files, container)
-            # db_insertion = \
-            #     InsertionPointDB.build(client_bugzoo, snapshot, files, container)
             db_statements = \
                 StatementDB.build(client_bugzoo, snapshot, files, container)
-            db_insertion = db_statements.insertions()
             return Analysis(loop_bodies,
                             db_function,
-                            db_insertion,
                             db_statements)
         finally:
             if container:
@@ -58,17 +53,15 @@ class Analysis(object):
     def __init__(self,
                  loop_bodies: List[FileLocationRange],
                  db_function: FunctionDB,
-                 db_insertion: InsertionPointDB,
                  db_statement: StatementDB
                  ) -> None:
         self.__location_bodies = FileLocationRangeSet(loop_bodies)
         self.__db_function = db_function
-        self.__db_insertion = db_insertion
+        self.__db_insertion = db_statement.insertions()
         self.__db_statement = db_statement
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         return {'functions': self.__db_function.to_dict(snapshot),
-                'insertions': self.__db_insertion.to_dict(snapshot),
                 'statements': self.__db_statement.to_dict(snapshot),
                 'loops': [str(loc) for loc in self.__location_bodies]}
 
