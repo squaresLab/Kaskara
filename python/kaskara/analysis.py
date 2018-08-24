@@ -11,6 +11,7 @@ from .core import FileLocation, FileLocationRange, FileLocationRangeSet
 from .loops import find_loops
 from .functions import FunctionDB
 from .insertions import InsertionPointDB
+from .statements import StatementDB
 
 
 class Analysis(object):
@@ -25,7 +26,8 @@ class Analysis(object):
         loop_bodies = [FileLocationRange.from_string(s) for s in d['loops']]
         db_function = FunctionDB.from_dict(d['functions'], snapshot)
         db_insertion = InsertionPointDB.from_dict(d['insertions'], snapshot)
-        return Analysis(loop_bodies, db_function, db_insertion)
+        db_statement = StatementDB.from_dict(d['statements'], snapshot)
+        return Analysis(loop_bodies, db_function, db_insertion, db_statement)
 
     @staticmethod
     def build(client_bugzoo: BugZooClient,
@@ -42,7 +44,12 @@ class Analysis(object):
                 FunctionDB.build(client_bugzoo, snapshot, files, container)
             db_insertion = \
                 InsertionPointDB.build(client_bugzoo, snapshot, files, container)
-            return Analysis(loop_bodies, db_function, db_insertion)
+            db_statements = \
+                StatementDB.build(client_bugzoo, snapshot, files, container)
+            return Analysis(loop_bodies,
+                            db_function,
+                            db_insertion,
+                            db_statements)
         finally:
             if container:
                 del client_bugzoo.containers[container.uid]
@@ -50,15 +57,18 @@ class Analysis(object):
     def __init__(self,
                  loop_bodies: List[FileLocationRange],
                  db_function: FunctionDB,
-                 db_insertion: InsertionPointDB
+                 db_insertion: InsertionPointDB,
+                 db_statement: StatementDB
                  ) -> None:
         self.__location_bodies = FileLocationRangeSet(loop_bodies)
         self.__db_function = db_function
         self.__db_insertion = db_insertion
+        self.__db_statement = db_statement
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         return {'functions': self.__db_function.to_dict(snapshot),
                 'insertions': self.__db_insertion.to_dict(snapshot),
+                'statements': self.__db_statement.to_dict(snapshot),
                 'loops': [str(loc) for loc in self.__location_bodies]}
 
     def to_file(self, fn: str, snapshot: Snapshot) -> None:
@@ -69,6 +79,10 @@ class Analysis(object):
     @property
     def functions(self) -> FunctionDB:
         return self.__db_function
+
+    @property
+    def statements(self) -> StatementDB:
+        return self.__db_statement
 
     @property
     def insertions(self) -> InsertionPointDB:
