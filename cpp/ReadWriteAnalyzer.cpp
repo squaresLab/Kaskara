@@ -2,22 +2,30 @@
 
 #include <iostream>
 
+#include <clang/AST/ASTTypeTraits.h>
+
+#include "util.h"
+
+using namespace clang::ast_type_traits;
+
 namespace kaskara {
 
 ReadWriteAnalyzer::ReadWriteAnalyzer(
     clang::ASTContext const *ctx,
     std::unordered_set<std::string> &reads,
-    std::unordered_set<std::string> &writes)
-  : ctx(ctx), reads(reads), writes(writes)
+    std::unordered_set<std::string> &writes,
+    std::unordered_set<std::string> &decls)
+  : ctx(ctx), reads(reads), writes(writes), decls(decls)
 { }
 
 void ReadWriteAnalyzer::analyze(
   clang::ASTContext const *ctx,
   clang::Stmt const *stmt,
   std::unordered_set<std::string> &reads,
-  std::unordered_set<std::string> &writes)
+  std::unordered_set<std::string> &writes,
+  std::unordered_set<std::string> &decls)
 {
-  ReadWriteAnalyzer analyzer(ctx, reads, writes);
+  ReadWriteAnalyzer analyzer(ctx, reads, writes, decls);
   analyzer.Visit(stmt);
 }
 
@@ -27,6 +35,23 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
     if (!c)
       continue;
     Visit(c);
+  }
+}
+
+void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
+{
+  for (auto const d : stmt->decls()) {
+    if (!d)
+      continue;
+
+    clang::NamedDecl const *nd = DynTypedNode::create(*d).get<clang::NamedDecl>();
+
+    if (!nd)
+      continue;
+
+    std::string name = nd->getName();
+    decls.emplace(name);
+    llvm::outs() << "NAMED DECL: " << name << "\n";
   }
 }
 

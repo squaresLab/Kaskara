@@ -15,21 +15,25 @@ public:
   static void analyze(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
                       std::unordered_set<std::string> &reads,
-                      std::unordered_set<std::string> &writes);
+                      std::unordered_set<std::string> &writes,
+                      std::unordered_set<std::string> &decls);
 
   void VisitStmt(clang::Stmt const *stmt);
   void VisitDeclRefExpr(clang::DeclRefExpr const *expr);
+  void VisitDeclStmt(clang::DeclStmt const *stmt);
   void VisitCXXDependentScopeMemberExpr(
       clang::CXXDependentScopeMemberExpr const *expr);
 
 private:
   explicit ReadWriteAnalyzer(clang::ASTContext const *ctx,
                              std::unordered_set<std::string> &reads,
-                             std::unordered_set<std::string> &writes);
+                             std::unordered_set<std::string> &writes,
+                             std::unordered_set<std::string> &decls);
 
   clang::ASTContext const *ctx;
   std::unordered_set<std::string> &reads;
   std::unordered_set<std::string> &writes;
+  std::unordered_set<std::string> &decls;
 };
 
 } // kaskara

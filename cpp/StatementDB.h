@@ -22,13 +22,15 @@ public:
     Entry(std::string const &location,
           std::string const &content,
           std::unordered_set<std::string> const &reads,
-          std::unordered_set<std::string> const &writes);
+          std::unordered_set<std::string> const &writes,
+          std::unordered_set<std::string> const &decls);
 
     std::string location;
     std::string content;
     std::unordered_set<std::string> writes;
     std::unordered_set<std::string> reads;
     std::unordered_set<std::string> visible;
+    std::unordered_set<std::string> decls;
 
     nlohmann::json const to_json() const;
   }; // Entry
