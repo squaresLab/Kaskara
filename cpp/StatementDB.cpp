@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "util.h"
+#include "ReadWriteAnalyzer.h"
 
 using json = nlohmann::json;
 using namespace kaskara;
@@ -56,7 +57,10 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::string loc_str = build_loc_str(source_range, ctx);
   std::string txt = read_source(*ctx, source_range);
 
-  // FIXME compute read and write information
+  // compute read and write information
+  std::unordered_set<std::string> reads;
+  std::unordered_set<std::string> writes;
+  ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes);
 
   contents.emplace_back(loc_str, txt);
 }
