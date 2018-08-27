@@ -77,11 +77,11 @@ class StatementDB(object):
         return db
 
     @staticmethod
-    def from_file(fn: str) -> 'StatementDB':
+    def from_file(fn: str, snapshot: Snapshot) -> 'StatementDB':
         logger.debug("reading statement database from file: %s", fn)
         with open(fn, 'r') as f:
             d = json.load(f)
-        db = StatementDB.from_dict(d)
+        db = StatementDB.from_dict(d, snapshot)
         logger.debug("read statement database from file: %s", fn)
         return db
 
