@@ -118,8 +118,9 @@ class StatementDB(object):
         """
         Returns an iterator over all of the statements located at a given line.
         """
+        num = line.num
         for stmt in self.in_file(line.filename):
-            if line == stmt.location.start.line:
+            if stmt.location.start.line == num:
                 yield stmt
 
     def insertions(self) -> InsertionPointDB:
