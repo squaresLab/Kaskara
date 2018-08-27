@@ -107,5 +107,5 @@ class InsertionPointDB(Iterable[InsertionPoint]):
                              str(line), ins)
                 yield ins
 
-    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
+    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
         return [i.to_dict(snapshot) for i in self]

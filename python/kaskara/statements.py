@@ -8,7 +8,7 @@ from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 
-from .core import FileLocationRange, FileLocation
+from .core import FileLocationRange, FileLocation, FileLine
 from .exceptions import BondException
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 from .insertions import InsertionPointDB, InsertionPoint
@@ -77,11 +77,11 @@ class StatementDB(object):
         return db
 
     @staticmethod
-    def from_file(fn: str) -> 'StatementDB':
+    def from_file(fn: str, snapshot: Snapshot) -> 'StatementDB':
         logger.debug("reading statement database from file: %s", fn)
         with open(fn, 'r') as f:
             d = json.load(f)
-        db = StatementDB.from_dict(d)
+        db = StatementDB.from_dict(d, snapshot)
         logger.debug("read statement database from file: %s", fn)
         return db
 
@@ -94,9 +94,34 @@ class StatementDB(object):
 
     def __init__(self, statements: List[Statement]) -> None:
         self.__statements = statements
+        logger.debug("indexing statements by file")
+        self.__file_to_statements = {}  # type: Dict[str, List[Statement]]
+        for statement in statements:
+            filename = statement.location.filename
+            if filename not in self.__file_to_statements:
+                self.__file_to_statements[filename] = []
+            self.__file_to_statements[filename].append(statement)
+        summary = ["  {}: {} statements".format(fn, len(stmts))
+                   for (fn, stmts) in self.__file_to_statements.items()]
+        logger.debug("indexed statements by file:\n%s", '\n'.join(summary))
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
+
+    def in_file(self, fn: str) -> Iterator[Statement]:
+        """
+        Returns an iterator over all of the statements belonging to a file.
+        """
+        yield from self.__file_to_statements.get(fn, [])
+
+    def at_line(self, line: FileLine) -> Iterator[Statement]:
+        """
+        Returns an iterator over all of the statements located at a given line.
+        """
+        num = line.num
+        for stmt in self.in_file(line.filename):
+            if stmt.location.start.line == num:
+                yield stmt
 
     def insertions(self) -> InsertionPointDB:
         logger.debug("computing insertion points")
