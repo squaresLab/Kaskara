@@ -4,6 +4,7 @@ add_executable(kaskara-loop-finder
   loop-finder.cpp)
 
 add_executable(kaskara-statement-finder
+  ReadWriteAnalyzer.cpp
   StatementDB.cpp
   util.cpp
   statement-finder.cpp)
@@ -14,6 +15,7 @@ add_executable(kaskara-function-scanner
   function-scanner.cpp)
 
 add_executable(kaskara-snippet-extractor
+  ReadWriteAnalyzer.cpp
   SnippetDB.cpp
   util.cpp
   snippet-extractor.cpp)
