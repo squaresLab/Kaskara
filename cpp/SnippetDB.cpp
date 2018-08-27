@@ -6,53 +6,12 @@
 #include <clang/AST/StmtVisitor.h>
 
 #include "util.h"
+#include "ReadWriteAnalyzer.h"
 
 using json = nlohmann::json;
 using namespace kaskara;
 
 namespace kaskara {
-
-/**
- * Computes read and write sets for given statements.
- */
-class ReadWriteAnalyzer
-  : public clang::ConstStmtVisitor<ReadWriteAnalyzer>
-{
-public:
-  explicit ReadWriteAnalyzer(clang::ASTContext const *ctx,
-                             std::unordered_set<std::string> &reads)
-    : ctx(ctx), reads(reads)
-  { }
-
-  void VisitStmt(clang::Stmt const *stmt)
-  {
-    for (clang::Stmt const *c : stmt->children()) {
-      if (!c) {
-        continue;
-      }
-      Visit(c);
-    }
-  }
-
-  void VisitCXXDependentScopeMemberExpr(clang::CXXDependentScopeMemberExpr const *expr)
-  {
-    if (!expr)
-      return;
-
-    // std::string name = expr->getMember().getAsString();
-    // // only look at this->BLAH
-    // llvm::outs() << "MEMBER: " << name << "\n";
-  }
-
-  void VisitDeclRefExpr(clang::DeclRefExpr const *expr)
-  {
-    reads.emplace(expr->getNameInfo().getAsString());
-  }
-
-private:
-  clang::ASTContext const *ctx;
-  std::unordered_set<std::string> &reads;
-};
 
 SnippetDB::SnippetDB() : contents()
 { }
@@ -124,8 +83,8 @@ void SnippetDB::add(std::string const &kind,
   if (contents.find(txt) == contents.end()) {
     // llvm::outs() << "creating entry for snippet\n";
     std::unordered_set<std::string> reads;
-    ReadWriteAnalyzer analyzer = ReadWriteAnalyzer(ctx, reads);
-    analyzer.Visit(stmt);
+    std::unordered_set<std::string> writes;
+    ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes);
     // llvm::outs() << "computed read-write information\n";
     contents.emplace(std::make_pair(txt, Entry(kind, txt, reads)));
     // llvm::outs() << "record entry\n";

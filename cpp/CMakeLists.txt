@@ -15,6 +15,7 @@ add_executable(kaskara-function-scanner
   function-scanner.cpp)
 
 add_executable(kaskara-snippet-extractor
+  ReadWriteAnalyzer.cpp
   SnippetDB.cpp
   util.cpp
   snippet-extractor.cpp)
