@@ -20,7 +20,9 @@ public:
   class Entry {
   public:
     Entry(std::string const &location,
-          std::string const &content);
+          std::string const &content,
+          std::unordered_set<std::string> const &reads,
+          std::unordered_set<std::string> const &writes);
 
     std::string location;
     std::string content;
