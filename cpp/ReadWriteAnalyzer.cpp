@@ -34,7 +34,31 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
   for (clang::Stmt const *c : stmt->children()) {
     if (!c)
       continue;
+
+    // llvm::outs() << "\n\nSTMT [" << stmt->getStmtClassName() << "]:\n";
+    // c->dumpPretty(*ctx);
     Visit(c);
+  }
+}
+
+void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
+{
+  if (!op || !op->isAssignmentOp())
+    return;
+
+  clang::Expr const *expr = op->getLHS();
+
+  if (clang::DeclRefExpr const *dre = DynTypedNode::create(*expr).get<clang::DeclRefExpr>()) {
+    writes.emplace(dre->getNameInfo().getAsString());
+    return;
+  }
+
+  // FIXME ensure consistent handling of MemberExpr
+  if (clang::MemberExpr const *mex = DynTypedNode::create(*expr).get<clang::MemberExpr>()) {
+    // llvm::outs() << "BASE: " << mex->getBase()->getStmtClassName() << "\n";
+
+    if (clang::CXXThisExpr const *base = DynTypedNode::create(*mex->getBase()).get<clang::CXXThisExpr>())
+      writes.emplace(mex->getMemberNameInfo().getAsString());
   }
 }
 
@@ -45,13 +69,12 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
       continue;
 
     clang::NamedDecl const *nd = DynTypedNode::create(*d).get<clang::NamedDecl>();
-
     if (!nd)
       continue;
 
     std::string name = nd->getName();
     decls.emplace(name);
-    llvm::outs() << "NAMED DECL: " << name << "\n";
+    writes.emplace(name);
   }
 }
 
