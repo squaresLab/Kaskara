@@ -9,13 +9,18 @@
 namespace kaskara {
 
 class ReadWriteAnalyzer
-  : private clang::ConstStmtVisitor<ReadWriteAnalyzer>
+  : public clang::ConstStmtVisitor<ReadWriteAnalyzer>
 {
 public:
   static void analyze(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
                       std::unordered_set<std::string> &reads,
                       std::unordered_set<std::string> &writes);
+
+  void VisitStmt(clang::Stmt const *stmt);
+  void VisitDeclRefExpr(clang::DeclRefExpr const *expr);
+  void VisitCXXDependentScopeMemberExpr(
+      clang::CXXDependentScopeMemberExpr const *expr);
 
 private:
   explicit ReadWriteAnalyzer(clang::ASTContext const *ctx,
