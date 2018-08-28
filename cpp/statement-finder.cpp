@@ -96,7 +96,7 @@ public:
         return true;
     }
 
-    // must belong to a real file
+    // FIXME must belong to a real file
 
     db->add(ctx, stmt, visible, liveness.get());
     return true;
@@ -131,8 +131,7 @@ public:
       std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
     liveness =
       std::unique_ptr<clang::LiveVariables const>(clang::LiveVariables::create(*adc));
-
-    VisitDecl(decl);
+    return VisitDecl(decl);
   }
 
   bool VisitDecl(clang::Decl *decl)

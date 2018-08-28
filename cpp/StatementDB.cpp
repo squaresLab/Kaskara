@@ -22,13 +22,17 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::unordered_set<std::string> const &reads,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
-                          std::unordered_set<std::string> const &visible)
+                          std::unordered_set<std::string> const &visible,
+                          std::unordered_set<std::string> const &live_after,
+                          std::unordered_set<std::string> const &live_before)
   : location(location),
     content(content),
     writes(writes),
     reads(reads),
     decls(decls),
-    visible(visible)
+    visible(visible),
+    live_after(live_after),
+    live_before(live_before)
 { }
 
 json const StatementDB::Entry::to_json() const
@@ -49,13 +53,23 @@ json const StatementDB::Entry::to_json() const
   for (auto v : decls)
     j_decls.push_back(v);
 
+  json j_live_after = json::array();
+  for (auto v : live_after)
+    j_live_after.push_back(v);
+
+  json j_live_before = json::array();
+  for (auto v : live_before)
+    j_live_before.push_back(v);
+
   json j = {
     {"location", location},
     {"content", content},
     {"reads", j_reads},
     {"writes", j_writes},
     {"visible", j_visible},
-    {"decls", j_decls}
+    {"decls", j_decls},
+    {"live_after", j_live_after},
+    {"live_before", j_live_before}
   };
   return j;
 }
@@ -75,7 +89,11 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> decls;
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
-  contents.emplace_back(loc_str, txt, reads, writes, decls, visible);
+  // compute liveness information
+  std::unordered_set<std::string> live_after;
+  std::unordered_set<std::string> live_before;
+
+  contents.emplace_back(loc_str, txt, reads, writes, decls, visible, live_after, live_before);
 }
 
 json StatementDB::to_json() const
