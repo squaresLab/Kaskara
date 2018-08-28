@@ -2,6 +2,7 @@
 // https://github.com/eschulte/clang-mutate/blob/master/ASTMutate.cpp
 #include <vector>
 #include <unordered_set>
+#include <sstream>
 
 #include <fmt/format.h>
 
@@ -31,6 +32,7 @@ static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpM
 
 
 // FIXME hide this class; expose StatementDB::build(*ctx)
+// https://clang.llvm.org/doxygen/classclang_1_1LexicallyOrderedRecursiveASTVisitor.html
 class StatementVisitor
   : public clang::RecursiveASTVisitor<StatementVisitor>
 {
@@ -42,7 +44,8 @@ public:
       current_decl_ctx(nullptr),
       db(db),
       visible(),
-      liveness(nullptr)
+      liveness(nullptr),
+      in_scope()
   { }
 
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
@@ -97,7 +100,9 @@ public:
     }
 
     // FIXME must belong to a real file
-
+    // llvm::outs() << "STMT: ";
+    // stmt->dumpPretty(*ctx);
+    // llvm::outs() << "\n";
     db->add(ctx, stmt, visible, liveness.get());
     return true;
   }
@@ -111,17 +116,28 @@ public:
       if (!d)
         continue;
 
-      clang::NamedDecl const *nd = DynTypedNode::create(*d).get<clang::NamedDecl>();
-      if (!nd || !nd->getIdentifier())
-        continue;
+      // record variables
+      if (clang::VarDecl const *vd = DynTypedNode::create(*d).get<clang::VarDecl>()) {
+        if (!vd->getIdentifier())
+          continue;
 
-      // FIXME getQualifiedNameAsString // getName
-      // std::string name = nd->getQualifiedNameAsString();
-      std::string name = nd->getName();
-      visible.emplace(name);
+        // FIXME getQualifiedNameAsString // getName
+        // std::string name = vd->getQualifiedNameAsString();
+        std::string name = vd->getName();
+        visible.emplace(name);
+        in_scope.emplace(vd);
+      }
+
+      // record fields
+      if (clang::FieldDecl const *fd = DynTypedNode::create(*d).get<clang::FieldDecl>()) {
+        if (!fd->getIdentifier())
+          continue;
+        visible.emplace(fd->getName());
+        in_scope.emplace(fd);
+      }
     }
 
-    CollectVisibleDecls(dctx->getLexicalParent());
+    CollectVisibleDecls(dctx->getParent());
   }
 
   // Upon visiting a function, we compute its liveness information.
@@ -143,7 +159,13 @@ public:
     }
     current_decl_ctx = decl_ctx;
     visible.clear();
+    in_scope.clear();
     CollectVisibleDecls(decl_ctx);
+
+    //std::stringstream ss;
+    //for (auto n : visible)
+    //  ss << n << " ";
+    //llvm::outs() << "VISIBLE: " << ss.str() << "\n";
     return true;
   }
 
@@ -154,6 +176,7 @@ private:
   std::unique_ptr<clang::LiveVariables const> liveness;
   StatementDB *db;
   std::unordered_set<std::string> visible;
+  std::unordered_set<clang::Decl const *> in_scope;
 };
 
 class StatementConsumer : public clang::ASTConsumer
