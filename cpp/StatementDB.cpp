@@ -21,13 +21,14 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::string const &content,
                           std::unordered_set<std::string> const &reads,
                           std::unordered_set<std::string> const &writes,
-                          std::unordered_set<std::string> const &decls)
+                          std::unordered_set<std::string> const &decls,
+                          std::unordered_set<std::string> const &visible)
   : location(location),
     content(content),
     writes(writes),
     reads(reads),
     decls(decls),
-    visible()
+    visible(visible)
 { }
 
 json const StatementDB::Entry::to_json() const
@@ -60,7 +61,8 @@ json const StatementDB::Entry::to_json() const
 }
 
 void StatementDB::add(clang::ASTContext const *ctx,
-                      clang::Stmt const *stmt)
+                      clang::Stmt const *stmt,
+                      std::unordered_set<std::string> const &visible)
 {
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
@@ -72,7 +74,7 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> decls;
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
-  contents.emplace_back(loc_str, txt, reads, writes, decls);
+  contents.emplace_back(loc_str, txt, reads, writes, decls, visible);
 }
 
 json StatementDB::to_json() const

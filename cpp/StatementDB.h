@@ -23,7 +23,8 @@ public:
           std::string const &content,
           std::unordered_set<std::string> const &reads,
           std::unordered_set<std::string> const &writes,
-          std::unordered_set<std::string> const &decls);
+          std::unordered_set<std::string> const &decls,
+          std::unordered_set<std::string> const &visible);
 
     std::string location;
     std::string content;
@@ -36,7 +37,8 @@ public:
   }; // Entry
 
   void add(clang::ASTContext const *ctx,
-           clang::Stmt const *stmt);
+           clang::Stmt const *stmt,
+           std::unordered_set<std::string> const &visible);
   void dump() const;
   nlohmann::json to_json() const;
   void to_file(const std::string &fn) const;

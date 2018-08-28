@@ -23,8 +23,6 @@ public:
   void VisitDeclRefExpr(clang::DeclRefExpr const *expr);
   void VisitDeclStmt(clang::DeclStmt const *stmt);
   void VisitMemberExpr(clang::MemberExpr const *expr);
-  void VisitCXXDependentScopeMemberExpr(
-      clang::CXXDependentScopeMemberExpr const *expr);
 
 private:
   explicit ReadWriteAnalyzer(clang::ASTContext const *ctx,

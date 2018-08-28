@@ -29,6 +29,8 @@ using namespace clang::ast_type_traits;
 static llvm::cl::OptionCategory MyToolCategory("kaskara-statement-finder options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
 
+
+// FIXME hide this class; expose StatementDB::build(*ctx)
 class StatementVisitor
   : public clang::RecursiveASTVisitor<StatementVisitor>
 {
@@ -95,7 +97,7 @@ public:
 
     // must belong to a real file
 
-    db->add(ctx, stmt);
+    db->add(ctx, stmt, visible);
     return true;
   }
 
