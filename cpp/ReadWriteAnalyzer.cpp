@@ -77,26 +77,27 @@ void ReadWriteAnalyzer::analyze(
 
 void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
 {
+  // llvm::outs() << "\n\nSTMT [" << stmt->getStmtClassName() << "]:\n";
+  // stmt->dumpPretty(*ctx);
+  // llvm::outs() << "\n";
+  // stmt->dump(llvm::outs());
+
   for (clang::Stmt const *c : stmt->children()) {
     if (!c)
       continue;
-
-    // llvm::outs() << "\n\nSTMT [" << stmt->getStmtClassName() << "]:\n";
-    // c->dumpPretty(*ctx);
     Visit(c);
   }
 }
 
 void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 {
+  VisitStmt(op);
   if (!op || !op->isAssignmentOp())
     return;
 
   clang::Expr const *expr = op->getLHS();
-
   if (clang::DeclRefExpr const *dre = DynTypedNode::create(*expr).get<clang::DeclRefExpr>()) {
     writes.emplace(dre->getNameInfo().getAsString());
-    return;
   }
   if (clang::MemberExpr const *mex = DynTypedNode::create(*expr).get<clang::MemberExpr>()) {
     if (auto resolved_name = resolve_member_expr(mex))
@@ -106,6 +107,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 
 void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 {
+  VisitStmt(stmt);
   for (auto const d : stmt->decls()) {
     if (!d)
       continue;
@@ -118,17 +120,6 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
     decls.emplace(name);
     writes.emplace(name);
   }
-}
-
-void ReadWriteAnalyzer::VisitCXXDependentScopeMemberExpr(
-    clang::CXXDependentScopeMemberExpr const *expr)
-{
-  if (!expr)
-    return;
-
-  llvm::outs() << "CXXDependentScopeMember: ";
-  expr->dumpPretty(*ctx);
-  llvm::outs() << "\n";
 }
 
 void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
