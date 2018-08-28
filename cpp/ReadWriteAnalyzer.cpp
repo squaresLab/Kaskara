@@ -1,14 +1,60 @@
 #include "ReadWriteAnalyzer.h"
 
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <experimental/optional>
+#include <stack>
 
 #include <clang/AST/ASTTypeTraits.h>
 
 #include "util.h"
 
 using namespace clang::ast_type_traits;
+using namespace std::experimental;
 
 namespace kaskara {
+
+optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
+{
+  std::stack<std::string> parts;
+  auto read = [&](clang::MemberExpr const *me) {
+    parts.push(me->getMemberNameInfo().getAsString());
+    parts.push(me->isArrow() ? "->" : ".");
+  };
+
+  clang::Expr const *b = e->getBase();
+  read(e);
+  while (b) {
+    if (auto const *member = DynTypedNode::create(*b).get<clang::MemberExpr>()) {
+      read(member);
+      b = member->getBase();
+    } else if (auto const *cast = DynTypedNode::create(*b).get<clang::ImplicitCastExpr>()) {
+      b = cast->getSubExprAsWritten();
+    } else if (auto const *root = DynTypedNode::create(*b).get<clang::CXXThisExpr>()) {
+      parts.pop();
+      break;
+    } else if (auto const *root = DynTypedNode::create(*b).get<clang::DeclRefExpr>()) {
+      parts.push(root->getNameInfo().getAsString());
+      break;
+    } else {
+      llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
+      e->dump(llvm::errs());
+      llvm::errs() << "[/ERROR]\n";
+      return {};
+    }
+  }
+
+  if (parts.empty())
+    return {};
+
+  std::stringstream ss;
+  while (!parts.empty()) {
+    ss << parts.top();
+    parts.pop();
+  }
+  return ss.str();
+}
 
 ReadWriteAnalyzer::ReadWriteAnalyzer(
     clang::ASTContext const *ctx,
@@ -57,8 +103,13 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
   if (clang::MemberExpr const *mex = DynTypedNode::create(*expr).get<clang::MemberExpr>()) {
     // llvm::outs() << "BASE: " << mex->getBase()->getStmtClassName() << "\n";
 
-    if (clang::CXXThisExpr const *base = DynTypedNode::create(*mex->getBase()).get<clang::CXXThisExpr>())
+    if (clang::CXXThisExpr const *base = DynTypedNode::create(*mex->getBase()).get<clang::CXXThisExpr>()) {
       writes.emplace(mex->getMemberNameInfo().getAsString());
+    } else {
+      llvm::outs() << "UNABLE TO HANDLE MemberExpr: ";
+      mex->dumpPretty(*ctx);
+      llvm::outs() << "\n";
+    }
   }
 }
 
@@ -84,9 +135,19 @@ void ReadWriteAnalyzer::VisitCXXDependentScopeMemberExpr(
   if (!expr)
     return;
 
+  llvm::outs() << "CXXDependentScopeMember: ";
+  expr->dumpPretty(*ctx);
+  llvm::outs() << "\n";
+
   // std::string name = expr->getMember().getAsString();
-  // // only look at this->BLAH
+  // only look at this->BLAH
   // llvm::outs() << "MEMBER: " << name << "\n";
+}
+
+void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
+{
+  if (auto resolved = resolve_member_expr(expr))
+    reads.emplace(*resolved);
 }
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
