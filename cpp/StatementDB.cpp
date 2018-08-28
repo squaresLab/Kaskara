@@ -20,11 +20,13 @@ StatementDB::~StatementDB()
 StatementDB::Entry::Entry(std::string const &location,
                           std::string const &content,
                           std::unordered_set<std::string> const &reads,
-                          std::unordered_set<std::string> const &writes)
+                          std::unordered_set<std::string> const &writes,
+                          std::unordered_set<std::string> const &decls)
   : location(location),
     content(content),
     writes(writes),
     reads(reads),
+    decls(decls),
     visible()
 { }
 
@@ -42,12 +44,17 @@ json const StatementDB::Entry::to_json() const
   for (auto v : visible)
     j_visible.push_back(v);
 
+  json j_decls = json::array();
+  for (auto v : decls)
+    j_decls.push_back(v);
+
   json j = {
     {"location", location},
     {"content", content},
     {"reads", j_reads},
     {"writes", j_writes},
-    {"visible", j_visible}
+    {"visible", j_visible},
+    {"decls", j_decls}
   };
   return j;
 }
@@ -62,9 +69,10 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // compute read and write information
   std::unordered_set<std::string> reads;
   std::unordered_set<std::string> writes;
-  ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes);
+  std::unordered_set<std::string> decls;
+  ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
-  contents.emplace_back(loc_str, txt, reads, writes);
+  contents.emplace_back(loc_str, txt, reads, writes, decls);
 }
 
 json StatementDB::to_json() const

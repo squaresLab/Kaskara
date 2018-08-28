@@ -84,7 +84,9 @@ void SnippetDB::add(std::string const &kind,
     // llvm::outs() << "creating entry for snippet\n";
     std::unordered_set<std::string> reads;
     std::unordered_set<std::string> writes;
-    ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes);
+    std::unordered_set<std::string> decls;
+    ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
+
     // llvm::outs() << "computed read-write information\n";
     contents.emplace(std::make_pair(txt, Entry(kind, txt, reads)));
     // llvm::outs() << "record entry\n";
