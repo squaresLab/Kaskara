@@ -19,8 +19,10 @@ public:
                       std::unordered_set<std::string> &decls);
 
   void VisitStmt(clang::Stmt const *stmt);
+  void VisitBinaryOperator(clang::BinaryOperator const *op);
   void VisitDeclRefExpr(clang::DeclRefExpr const *expr);
   void VisitDeclStmt(clang::DeclStmt const *stmt);
+  void VisitMemberExpr(clang::MemberExpr const *expr);
   void VisitCXXDependentScopeMemberExpr(
       clang::CXXDependentScopeMemberExpr const *expr);
 

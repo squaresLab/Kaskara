@@ -98,18 +98,9 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
     writes.emplace(dre->getNameInfo().getAsString());
     return;
   }
-
-  // FIXME ensure consistent handling of MemberExpr
   if (clang::MemberExpr const *mex = DynTypedNode::create(*expr).get<clang::MemberExpr>()) {
-    // llvm::outs() << "BASE: " << mex->getBase()->getStmtClassName() << "\n";
-
-    if (clang::CXXThisExpr const *base = DynTypedNode::create(*mex->getBase()).get<clang::CXXThisExpr>()) {
-      writes.emplace(mex->getMemberNameInfo().getAsString());
-    } else {
-      llvm::outs() << "UNABLE TO HANDLE MemberExpr: ";
-      mex->dumpPretty(*ctx);
-      llvm::outs() << "\n";
-    }
+    if (auto resolved_name = resolve_member_expr(mex))
+      writes.emplace(*resolved_name);
   }
 }
 
@@ -138,10 +129,6 @@ void ReadWriteAnalyzer::VisitCXXDependentScopeMemberExpr(
   llvm::outs() << "CXXDependentScopeMember: ";
   expr->dumpPretty(*ctx);
   llvm::outs() << "\n";
-
-  // std::string name = expr->getMember().getAsString();
-  // only look at this->BLAH
-  // llvm::outs() << "MEMBER: " << name << "\n";
 }
 
 void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
