@@ -62,7 +62,8 @@ json const StatementDB::Entry::to_json() const
 
 void StatementDB::add(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
-                      std::unordered_set<std::string> const &visible)
+                      std::unordered_set<std::string> const &visible,
+                      clang::LiveVariables const *liveness)
 {
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);

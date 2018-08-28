@@ -41,7 +41,8 @@ public:
       SM(ctx->getSourceManager()),
       current_decl_ctx(nullptr),
       db(db),
-      visible()
+      visible(),
+      liveness(nullptr)
   { }
 
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
@@ -97,7 +98,7 @@ public:
 
     // must belong to a real file
 
-    db->add(ctx, stmt, visible);
+    db->add(ctx, stmt, visible, liveness.get());
     return true;
   }
 
@@ -123,6 +124,17 @@ public:
     CollectVisibleDecls(dctx->getLexicalParent());
   }
 
+  // Upon visiting a function, we compute its liveness information.
+  bool VisitFunctionDecl(clang::FunctionDecl *decl)
+  {
+    std::unique_ptr<clang::AnalysisDeclContext> adc =
+      std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
+    liveness =
+      std::unique_ptr<clang::LiveVariables const>(clang::LiveVariables::create(*adc));
+
+    VisitDecl(decl);
+  }
+
   bool VisitDecl(clang::Decl *decl)
   {
     // avoid rebuilding the same context multiple times
@@ -140,6 +152,7 @@ private:
   clang::ASTContext *ctx;
   clang::SourceManager &SM;
   clang::DeclContext const *current_decl_ctx;
+  std::unique_ptr<clang::LiveVariables const> liveness;
   StatementDB *db;
   std::unordered_set<std::string> visible;
 };
