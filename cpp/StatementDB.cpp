@@ -79,8 +79,7 @@ json const StatementDB::Entry::to_json() const
 
 void StatementDB::add(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
-                      std::unordered_set<std::string> const &visible,
-                      std::unordered_set<clang::NamedDecl const *> const &in_scope,
+                      std::unordered_set<clang::NamedDecl const *> const &visible,
                       clang::LiveVariables *liveness)
 {
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
@@ -93,22 +92,25 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> decls;
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
-  // TODO generate names of in-scope variables and properties
-
   // compute liveness information
   // FIXME LiveVariables seems to ignore properties, therefore we assume that
   //  all properties are live (for now).
+  std::unordered_set<std::string> visible_names;
   std::unordered_set<std::string> live_after;
   std::unordered_set<std::string> live_before;
-  for (auto decl : in_scope) {
+  for (auto decl : visible) {
+    std::string name = decl->getNameAsString();
+    visible_names.emplace(name);
     if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
       if (!liveness->isLive(stmt, vd))
         continue;
     }
-    live_before.emplace(decl->getNameAsString());
+    live_before.emplace(name);
   }
 
-  contents.emplace_back(loc_str, txt, reads, writes, decls, visible, live_after, live_before);
+  contents.emplace_back(loc_str, txt,
+                        reads, writes, decls, visible_names,
+                        live_after, live_before);
 }
 
 json StatementDB::to_json() const
