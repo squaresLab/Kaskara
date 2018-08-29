@@ -24,6 +24,7 @@ class Statement(object):
     reads = attr.ib(type=FrozenSet[str])
     writes = attr.ib(type=FrozenSet[str])
     visible = attr.ib(type=FrozenSet[str])
+    declares = attr.ib(type=FrozenSet[str])
     live_before = attr.ib(type=FrozenSet[str])
 
     @staticmethod
@@ -36,6 +37,7 @@ class Statement(object):
                          frozenset(d['reads']),
                          frozenset(d['writes']),
                          frozenset(d['visible']),
+                         frozenset(d['decls']),
                          frozenset(d['live_before']))
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
@@ -45,6 +47,7 @@ class Statement(object):
                 'live_before': [v for v in self.live_before],
                 'reads': [v for v in self.reads],
                 'writes': [v for v in self.writes],
+                'decls': [v for v in self.declares],
                 'visible': [v for v in self.visible]}
 
 
