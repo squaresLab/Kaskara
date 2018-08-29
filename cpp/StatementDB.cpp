@@ -3,11 +3,14 @@
 #include <iostream>
 #include <fstream>
 
+#include <clang/AST/ASTTypeTraits.h>
+
 #include "util.h"
 #include "ReadWriteAnalyzer.h"
 
 using json = nlohmann::json;
 using namespace kaskara;
+using namespace clang::ast_type_traits;
 
 namespace kaskara {
 
@@ -77,7 +80,8 @@ json const StatementDB::Entry::to_json() const
 void StatementDB::add(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
                       std::unordered_set<std::string> const &visible,
-                      clang::LiveVariables const *liveness)
+                      std::unordered_set<clang::NamedDecl const *> const &in_scope,
+                      clang::LiveVariables *liveness)
 {
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
@@ -89,9 +93,20 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> decls;
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
+  // TODO generate names of in-scope variables and properties
+
   // compute liveness information
+  // FIXME LiveVariables seems to ignore properties, therefore we assume that
+  //  all properties are live (for now).
   std::unordered_set<std::string> live_after;
   std::unordered_set<std::string> live_before;
+  for (auto decl : in_scope) {
+    if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
+      if (!liveness->isLive(stmt, vd))
+        continue;
+    }
+    live_before.emplace(decl->getNameAsString());
+  }
 
   contents.emplace_back(loc_str, txt, reads, writes, decls, visible, live_after, live_before);
 }

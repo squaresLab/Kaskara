@@ -44,7 +44,8 @@ public:
   void add(clang::ASTContext const *ctx,
            clang::Stmt const *stmt,
            std::unordered_set<std::string> const &visible,
-           clang::LiveVariables const *liveness);
+           std::unordered_set<clang::NamedDecl const *> const &in_scope,
+           clang::LiveVariables *liveness);
   void dump() const;
   nlohmann::json to_json() const;
   void to_file(const std::string &fn) const;

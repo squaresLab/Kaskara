@@ -103,7 +103,7 @@ public:
     // llvm::outs() << "STMT: ";
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
-    db->add(ctx, stmt, visible, liveness.get());
+    db->add(ctx, stmt, visible, in_scope, liveness.get());
     return true;
   }
 
@@ -146,7 +146,7 @@ public:
     std::unique_ptr<clang::AnalysisDeclContext> adc =
       std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
     liveness =
-      std::unique_ptr<clang::LiveVariables const>(clang::LiveVariables::create(*adc));
+      std::unique_ptr<clang::LiveVariables>(clang::LiveVariables::create(*adc));
     return VisitDecl(decl);
   }
 
@@ -173,10 +173,10 @@ private:
   clang::ASTContext *ctx;
   clang::SourceManager &SM;
   clang::DeclContext const *current_decl_ctx;
-  std::unique_ptr<clang::LiveVariables const> liveness;
+  std::unique_ptr<clang::LiveVariables> liveness;
   StatementDB *db;
   std::unordered_set<std::string> visible;
-  std::unordered_set<clang::Decl const *> in_scope;
+  std::unordered_set<clang::NamedDecl const *> in_scope;
 };
 
 class StatementConsumer : public clang::ASTConsumer
