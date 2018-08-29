@@ -26,7 +26,6 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
                           std::unordered_set<std::string> const &visible,
-                          std::unordered_set<std::string> const &live_after,
                           std::unordered_set<std::string> const &live_before)
   : location(location),
     content(content),
@@ -34,7 +33,6 @@ StatementDB::Entry::Entry(std::string const &location,
     reads(reads),
     decls(decls),
     visible(visible),
-    live_after(live_after),
     live_before(live_before)
 { }
 
@@ -56,10 +54,6 @@ json const StatementDB::Entry::to_json() const
   for (auto v : decls)
     j_decls.push_back(v);
 
-  json j_live_after = json::array();
-  for (auto v : live_after)
-    j_live_after.push_back(v);
-
   json j_live_before = json::array();
   for (auto v : live_before)
     j_live_before.push_back(v);
@@ -71,7 +65,6 @@ json const StatementDB::Entry::to_json() const
     {"writes", j_writes},
     {"visible", j_visible},
     {"decls", j_decls},
-    {"live_after", j_live_after},
     {"live_before", j_live_before}
   };
   return j;
@@ -96,7 +89,6 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // FIXME LiveVariables seems to ignore properties, therefore we assume that
   //  all properties are live (for now).
   std::unordered_set<std::string> visible_names;
-  std::unordered_set<std::string> live_after;
   std::unordered_set<std::string> live_before;
   for (auto decl : visible) {
     std::string name = decl->getNameAsString();
@@ -109,8 +101,7 @@ void StatementDB::add(clang::ASTContext const *ctx,
   }
 
   contents.emplace_back(loc_str, txt,
-                        reads, writes, decls, visible_names,
-                        live_after, live_before);
+                        reads, writes, decls, visible_names, live_before);
 }
 
 json StatementDB::to_json() const
