@@ -26,14 +26,16 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
                           std::unordered_set<std::string> const &visible,
-                          std::unordered_set<std::string> const &live_before)
+                          std::unordered_set<std::string> const &live_before,
+                          StatementSyntaxScope const &syntax_scope)
   : location(location),
     content(content),
     writes(writes),
     reads(reads),
     decls(decls),
     visible(visible),
-    live_before(live_before)
+    live_before(live_before),
+    syntax_scope(syntax_scope)
 { }
 
 json const StatementDB::Entry::to_json() const
@@ -58,6 +60,12 @@ json const StatementDB::Entry::to_json() const
   for (auto v : live_before)
     j_live_before.push_back(v);
 
+  json j_syntax_required = json::array();
+  if (syntax_scope.requires_break)
+    j_syntax_required.push_back("break");
+  if (syntax_scope.requires_continue)
+    j_syntax_required.push_back("continue");
+
   json j = {
     {"location", location},
     {"content", content},
@@ -65,8 +73,10 @@ json const StatementDB::Entry::to_json() const
     {"writes", j_writes},
     {"visible", j_visible},
     {"decls", j_decls},
-    {"live_before", j_live_before}
+    {"live_before", j_live_before},
+    {"requires_syntax", j_syntax_required},
   };
+
   return j;
 }
 
@@ -100,8 +110,12 @@ void StatementDB::add(clang::ASTContext const *ctx,
     live_before.emplace(name);
   }
 
+  // compute syntax scope analysis
+  StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
+
   contents.emplace_back(loc_str, txt,
-                        reads, writes, decls, visible_names, live_before);
+                        reads, writes, decls, visible_names, live_before,
+                        syntax_scope);
 }
 
 json StatementDB::to_json() const
