@@ -60,12 +60,6 @@ json const StatementDB::Entry::to_json() const
   for (auto v : live_before)
     j_live_before.push_back(v);
 
-  json j_syntax_allowed = json::array();
-  if (syntax_scope.allows_break)
-    j_syntax_allowed.push_back("break");
-  if (syntax_scope.allows_continue)
-    j_syntax_allowed.push_back("continue");
-
   json j_syntax_required = json::array();
   if (syntax_scope.requires_break)
     j_syntax_required.push_back("break");
@@ -80,8 +74,7 @@ json const StatementDB::Entry::to_json() const
     {"visible", j_visible},
     {"decls", j_decls},
     {"live_before", j_live_before},
-    {"syntax_required", j_syntax_required},
-    {"syntax_allowed", j_syntax_allowed}
+    {"requires_syntax", j_syntax_required},
   };
 
   return j;

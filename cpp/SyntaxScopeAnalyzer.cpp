@@ -18,4 +18,30 @@ StatementSyntaxScope const SyntaxScopeAnalyzer::analyze(
   return results;
 }
 
+void SyntaxScopeAnalyzer::VisitStmt(clang::Stmt const *stmt)
+{
+  if (!stmt)
+    return;
+  for (clang::Stmt const *c : stmt->children()) {
+    if (!c)
+      continue;
+    Visit(c);
+  }
+}
+
+void SyntaxScopeAnalyzer::VisitBreakStmt(clang::BreakStmt const *stmt)
+{
+  results.requires_break = true;
+}
+
+void SyntaxScopeAnalyzer::VisitContinueStmt(clang::ContinueStmt const *stmt)
+{
+  results.requires_continue = true;
+}
+
+void SyntaxScopeAnalyzer::VisitForStmt(clang::ForStmt const *stmt) { }
+void SyntaxScopeAnalyzer::VisitCXXForRangeStmt(clang::CXXForRangeStmt const *stmt) { }
+void SyntaxScopeAnalyzer::VisitWhileStmt(clang::WhileStmt const *stmt) { }
+void SyntaxScopeAnalyzer::VisitSwitchStmt(clang::SwitchStmt const *stmt) { }
+
 } // kaskara
