@@ -26,6 +26,7 @@ class Statement(object):
     visible = attr.ib(type=FrozenSet[str])
     declares = attr.ib(type=FrozenSet[str])
     live_before = attr.ib(type=FrozenSet[str])
+    requires_syntax = attr.ib(type=FrozenSet[str])
 
     @staticmethod
     def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Statement':
@@ -34,11 +35,12 @@ class Statement(object):
         location = abs_to_rel_flocrange(snapshot.source_dir, location)
         return Statement(d['content'],
                          location,
-                         frozenset(d['reads']),
-                         frozenset(d['writes']),
-                         frozenset(d['visible']),
-                         frozenset(d['decls']),
-                         frozenset(d['live_before']))
+                         frozenset(d.get('reads', [])),
+                         frozenset(d.get('writes', [])),
+                         frozenset(d.get('visible', [])),
+                         frozenset(d.get('decls', [])),
+                         frozenset(d.get('live_before', [])),
+                         frozenset(d.get('requires_syntax', [])))
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
@@ -48,7 +50,8 @@ class Statement(object):
                 'reads': [v for v in self.reads],
                 'writes': [v for v in self.writes],
                 'decls': [v for v in self.declares],
-                'visible': [v for v in self.visible]}
+                'visible': [v for v in self.visible],
+                'requires_syntax': list(self.requires_syntax)}
 
 
 class StatementDB(object):
