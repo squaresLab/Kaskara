@@ -28,8 +28,8 @@ public:
           std::unordered_set<std::string> const &writes,
           std::unordered_set<std::string> const &decls,
           std::unordered_set<std::string> const &visible,
-          std::unordered_set<std::string> const &live_before);
-          // StatementSyntaxScope const &syntax_scope);
+          std::unordered_set<std::string> const &live_before,
+          StatementSyntaxScope const &syntax_scope);
 
     std::string location;
     std::string content;

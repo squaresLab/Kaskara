@@ -26,8 +26,8 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
                           std::unordered_set<std::string> const &visible,
-                          std::unordered_set<std::string> const &live_before)
-                          // StatementSyntaxScope const &syntax_scope)
+                          std::unordered_set<std::string> const &live_before,
+                          StatementSyntaxScope const &syntax_scope)
   : location(location),
     content(content),
     writes(writes),
@@ -35,7 +35,7 @@ StatementDB::Entry::Entry(std::string const &location,
     decls(decls),
     visible(visible),
     live_before(live_before),
-    syntax_scope()
+    syntax_scope(syntax_scope)
 { }
 
 json const StatementDB::Entry::to_json() const
@@ -79,12 +79,10 @@ json const StatementDB::Entry::to_json() const
     {"writes", j_writes},
     {"visible", j_visible},
     {"decls", j_decls},
-    {"live_before", j_live_before}
+    {"live_before", j_live_before},
+    {"syntax_required", j_syntax_required},
+    {"syntax_allowed", j_syntax_allowed}
   };
-  if (j_syntax_required)
-    j["syntax_required"] = j_syntax_required;
-  if (j_syntax_allowed)
-    j["syntax_allowed"] = j_syntax_allowed;
 
   return j;
 }
@@ -119,8 +117,12 @@ void StatementDB::add(clang::ASTContext const *ctx,
     live_before.emplace(name);
   }
 
+  // compute syntax scope analysis
+  StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
+
   contents.emplace_back(loc_str, txt,
-                        reads, writes, decls, visible_names, live_before);
+                        reads, writes, decls, visible_names, live_before,
+                        syntax_scope);
 }
 
 json StatementDB::to_json() const
