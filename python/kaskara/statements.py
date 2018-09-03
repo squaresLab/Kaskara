@@ -56,7 +56,9 @@ class StatementDB(object):
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
               files: List[str],
-              container: Container
+              container: Container,
+              *,
+              ignore_exit_code: bool = False
               ) -> 'StatementDB':
         out_fn = "statements.json"
         logger.debug("building statement database for snapshot [%s]",
@@ -70,7 +72,7 @@ class StatementDB(object):
         logger.debug("executed statement finder [%d]:\n%s",
                      outcome.code, indent(outcome.output, 2))
 
-        if outcome.code != 0:
+        if not ignore_exit_code and outcome.code != 0:
             msg = "kaskara-statement-finder exited with non-zero code: {}"
             msg = msg.format(outcome.code)
             raise BondException(msg)  # FIXME

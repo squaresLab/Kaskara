@@ -31,18 +31,23 @@ class Analysis(object):
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
-              files: List[str]
+              files: List[str],
+              *,
+              ignore_exit_code: bool = False
               ) -> 'Analysis':
         # FIXME assumes binaries are already present in container
         container = None  # type: Optional[Container]
         try:
             container = client_bugzoo.containers.provision(snapshot)
             loop_bodies = \
-                find_loops(client_bugzoo, snapshot, files, container)
+                find_loops(client_bugzoo, snapshot, files, container,
+                           ignore_exit_code=ignore_exit_code)
             db_function = \
-                FunctionDB.build(client_bugzoo, snapshot, files, container)
+                FunctionDB.build(client_bugzoo, snapshot, files, container,
+                                 ignore_exit_code=ignore_exit_code)
             db_statements = \
-                StatementDB.build(client_bugzoo, snapshot, files, container)
+                StatementDB.build(client_bugzoo, snapshot, files, container,
+                                  ignore_exit_code=ignore_exit_code)
             return Analysis(loop_bodies,
                             db_function,
                             db_statements)

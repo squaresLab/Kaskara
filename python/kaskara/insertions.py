@@ -58,7 +58,9 @@ class InsertionPointDB(Iterable[InsertionPoint]):
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
               files: List[str],
-              container: Container
+              container: Container,
+              *,
+              ignore_exit_code: bool = False
               ) -> 'InsertionPointDB':
         out_fn = "insertion-points.json"
         cmd = "kaskara-insertion-point-finder {}".format(' '.join(files))
@@ -67,7 +69,7 @@ class InsertionPointDB(Iterable[InsertionPoint]):
                                                 cmd,
                                                 context=workdir)
 
-        if outcome.code != 0:
+        if not ignore_exit_code and outcome.code != 0:
             msg = "kaskara-insertion-point-finder exited with non-zero code: {}"
             msg = msg.format(outcome.code)
             raise BondException(msg)
