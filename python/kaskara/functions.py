@@ -67,14 +67,16 @@ class FunctionDB(object):
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
               files: List[str],
-              container: Container
+              container: Container,
+              *,
+              ignore_exit_code: bool = False
               ) -> 'FunctionDB':
         out_fn = "functions.json"
         cmd = "kaskara-function-scanner {}".format(' '.join(files))
         workdir = snapshot.source_dir
         outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
 
-        if outcome.code != 0:
+        if not ignore_exit_code and outcome.code != 0:
             msg = "kaskara-function-scanner exited with non-zero code: {}"
             msg = msg.format(outcome.code)
             raise BondException(msg)

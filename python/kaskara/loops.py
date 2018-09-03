@@ -18,7 +18,9 @@ logger.setLevel(logging.DEBUG)
 def find_loops(client_bugzoo: BugZooClient,
                snapshot: Snapshot,
                files: List[str],
-               container: Container
+               container: Container,
+               *,
+               ignore_exit_code: bool = False
                ) -> List[FileLocationRange]:
     loop_bodies = []  # type: List[FileLocationRange]
 
@@ -30,7 +32,7 @@ def find_loops(client_bugzoo: BugZooClient,
     logger.debug("executed loop finder [%d]:\n%s",
                  outcome.code, indent(outcome.output, 2))
 
-    if outcome.code != 0:
+    if not ignore_exit_code and outcome.code != 0:
         msg = "loop finder exited with non-zero code: {}"
         msg = msg.format(outcome.code)
         raise BondException(msg)
