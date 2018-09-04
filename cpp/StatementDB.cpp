@@ -22,6 +22,7 @@ StatementDB::~StatementDB()
 
 StatementDB::Entry::Entry(std::string const &location,
                           std::string const &content,
+                          std::string const &canonical,
                           std::unordered_set<std::string> const &reads,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
@@ -30,6 +31,7 @@ StatementDB::Entry::Entry(std::string const &location,
                           StatementSyntaxScope const &syntax_scope)
   : location(location),
     content(content),
+    canonical(canonical),
     writes(writes),
     reads(reads),
     decls(decls),
@@ -69,6 +71,7 @@ json const StatementDB::Entry::to_json() const
   json j = {
     {"location", location},
     {"content", content},
+    {"canonical", canonical},
     {"reads", j_reads},
     {"writes", j_writes},
     {"visible", j_visible},
@@ -113,7 +116,10 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // compute syntax scope analysis
   StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
 
-  contents.emplace_back(loc_str, txt,
+  // compute canonical form
+  std::string canonical = txt;
+
+  contents.emplace_back(loc_str, txt, canonical,
                         reads, writes, decls, visible_names, live_before,
                         syntax_scope);
 }
