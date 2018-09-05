@@ -82,6 +82,7 @@ public:
         kind == "CaseStmt" ||
         kind == "ImplicitCastExpr" ||
         kind == "CXXCatchStmt" ||
+        kind == "InitListExpr" ||
         kind == "NullStmt") {
       return true;
     }
@@ -99,7 +100,7 @@ public:
     }
 
     // FIXME must belong to a real file
-    // llvm::outs() << "STMT: ";
+    // llvm::outs() << "STMT [" << kind << "]: ";
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
     db->add(ctx, stmt, visible, liveness.get());

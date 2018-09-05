@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <clang/AST/ASTTypeTraits.h>
+#include <clang/AST/PrettyPrinter.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include "util.h"
 #include "ReadWriteAnalyzer.h"
@@ -22,6 +25,7 @@ StatementDB::~StatementDB()
 
 StatementDB::Entry::Entry(std::string const &location,
                           std::string const &content,
+                          std::string const &canonical,
                           std::unordered_set<std::string> const &reads,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
@@ -30,6 +34,7 @@ StatementDB::Entry::Entry(std::string const &location,
                           StatementSyntaxScope const &syntax_scope)
   : location(location),
     content(content),
+    canonical(canonical),
     writes(writes),
     reads(reads),
     decls(decls),
@@ -69,6 +74,7 @@ json const StatementDB::Entry::to_json() const
   json j = {
     {"location", location},
     {"content", content},
+    {"canonical", canonical},
     {"reads", j_reads},
     {"writes", j_writes},
     {"visible", j_visible},
@@ -113,7 +119,25 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // compute syntax scope analysis
   StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
 
-  contents.emplace_back(loc_str, txt,
+  // compute canonical form
+  std::string canonical;
+  llvm::raw_string_ostream ss(canonical);
+
+  // FIXME store this printing policy
+  clang::PrintingPolicy pp = clang::PrintingPolicy(clang::LangOptions());
+  pp.Indentation = 0;
+  pp.IncludeNewlines = 0;
+  // pp.SuppressImplicitBase = 1;  // FIXME requires Clang 8
+  // pp.FullyQualifiedName = 0;  // FIXME requires Clang 8
+  stmt->printPretty(ss, NULL, pp);
+  ss.flush();
+
+  // add missing semi-colon to end of canonical form
+  char last = canonical.back();
+  if (last != '\n' && last != '}' && last != ';')
+    canonical.push_back(';');
+
+  contents.emplace_back(loc_str, txt, canonical,
                         reads, writes, decls, visible_names, live_before,
                         syntax_scope);
 }
