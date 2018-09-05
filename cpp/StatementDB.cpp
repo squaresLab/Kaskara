@@ -132,6 +132,11 @@ void StatementDB::add(clang::ASTContext const *ctx,
   stmt->printPretty(ss, NULL, pp);
   ss.flush();
 
+  // add missing semi-colon to end of canonical form
+  char last = canonical.back();
+  if (last != '\n' && last != '}' && last != ';')
+    canonical.push_back(';');
+
   contents.emplace_back(loc_str, txt, canonical,
                         reads, writes, decls, visible_names, live_before,
                         syntax_scope);
