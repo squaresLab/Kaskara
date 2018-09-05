@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <clang/AST/ASTTypeTraits.h>
+#include <clang/AST/PrettyPrinter.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include "util.h"
 #include "ReadWriteAnalyzer.h"
@@ -117,7 +120,17 @@ void StatementDB::add(clang::ASTContext const *ctx,
   StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
 
   // compute canonical form
-  std::string canonical = txt;
+  std::string canonical;
+  llvm::raw_string_ostream ss(canonical);
+
+  // FIXME store this printing policy
+  clang::PrintingPolicy pp = clang::PrintingPolicy(clang::LangOptions());
+  pp.Indentation = 0;
+  pp.IncludeNewlines = 0;
+  // pp.SuppressImplicitBase = 1;  // FIXME requires Clang 8
+  // pp.FullyQualifiedName = 0;  // FIXME requires Clang 8
+  stmt->printPretty(ss, NULL, pp);
+  ss.flush();
 
   contents.emplace_back(loc_str, txt, canonical,
                         reads, writes, decls, visible_names, live_before,
