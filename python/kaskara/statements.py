@@ -21,6 +21,7 @@ logger.setLevel(logging.DEBUG)
 class Statement(object):
     content = attr.ib(type=str)
     canonical = attr.ib(type=str)
+    kind = attr.ib(type=str)  # FIXME this is super memory inefficient
     location = attr.ib(type=FileLocationRange)
     reads = attr.ib(type=FrozenSet[str])
     writes = attr.ib(type=FrozenSet[str])
@@ -36,6 +37,7 @@ class Statement(object):
         location = abs_to_rel_flocrange(snapshot.source_dir, location)
         return Statement(d['content'],
                          d['canonical'],
+                         d['kind'],
                          location,
                          frozenset(d.get('reads', [])),
                          frozenset(d.get('writes', [])),
@@ -48,6 +50,7 @@ class Statement(object):
         loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
         return {'content': self.content,
                 'canonical': self.canonical,
+                'kind': self.kind,
                 'location': str(loc),
                 'live_before': [v for v in self.live_before],
                 'reads': [v for v in self.reads],
