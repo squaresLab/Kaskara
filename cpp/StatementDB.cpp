@@ -26,6 +26,7 @@ StatementDB::~StatementDB()
 StatementDB::Entry::Entry(std::string const &location,
                           std::string const &content,
                           std::string const &canonical,
+                          std::string const &kind,
                           std::unordered_set<std::string> const &reads,
                           std::unordered_set<std::string> const &writes,
                           std::unordered_set<std::string> const &decls,
@@ -35,6 +36,7 @@ StatementDB::Entry::Entry(std::string const &location,
   : location(location),
     content(content),
     canonical(canonical),
+    kind(kind),
     writes(writes),
     reads(reads),
     decls(decls),
@@ -75,6 +77,7 @@ json const StatementDB::Entry::to_json() const
     {"location", location},
     {"content", content},
     {"canonical", canonical},
+    {"kind", kind},
     {"reads", j_reads},
     {"writes", j_writes},
     {"visible", j_visible},
@@ -137,7 +140,10 @@ void StatementDB::add(clang::ASTContext const *ctx,
   if (last != '\n' && last != '}' && last != ';')
     canonical.push_back(';');
 
-  contents.emplace_back(loc_str, txt, canonical,
+  // determine statement kind
+  std::string kind = stmt->getStmtClassName();
+
+  contents.emplace_back(loc_str, txt, canonical, kind,
                         reads, writes, decls, visible_names, live_before,
                         syntax_scope);
 }

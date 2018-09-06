@@ -25,6 +25,7 @@ public:
     Entry(std::string const &location,
           std::string const &content,
           std::string const &canonical,
+          std::string const &kind,
           std::unordered_set<std::string> const &reads,
           std::unordered_set<std::string> const &writes,
           std::unordered_set<std::string> const &decls,
@@ -35,6 +36,7 @@ public:
     std::string location;
     std::string content;
     std::string canonical;
+    std::string kind;
     std::unordered_set<std::string> writes;
     std::unordered_set<std::string> reads;
     std::unordered_set<std::string> visible;
