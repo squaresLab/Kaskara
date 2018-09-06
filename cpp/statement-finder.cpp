@@ -166,35 +166,57 @@ class StatementConsumer : public clang::ASTConsumer
 {
 public:
   explicit StatementConsumer(clang::ASTContext *ctx,
-                             StatementDB *db)
-    : visitor(ctx, db)
-  {}
+                             StatementDB *db,
+                             std::string &filename,
+                             std::unordered_set<std::string> &visited_files)
+    : visitor(ctx, db), filename(filename), visited_files(visited_files)
+  { }
 
   virtual void HandleTranslationUnit(clang::ASTContext &ctx)
   {
-    visitor.TraverseDecl(ctx.getTranslationUnitDecl());
+    clang::SourceManager const &SM = ctx.getSourceManager();
+    clang::Decl *decl = ctx.getTranslationUnitDecl();
+
+    if (visited_files.find(filename) != visited_files.end()) {
+      llvm::outs() << "ignoring file: " << filename << "\n";
+    } else {
+      llvm::outs() << "visiting file: " << filename << "\n";
+      visited_files.emplace(filename);
+      visitor.TraverseDecl(decl);
+    }
   }
 
 private:
   StatementVisitor visitor;
+  std::string filename;
+  std::unordered_set<std::string> &visited_files;
 };
 
 class StatementAction : public clang::ASTFrontendAction
 {
 public:
-  StatementAction(StatementDB *db)
-    : db(db), clang::ASTFrontendAction()
+  StatementAction(StatementDB *db,
+                  std::unordered_set<std::string> &visited_files)
+    : db(db), visited_files(visited_files), clang::ASTFrontendAction()
   { }
 
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
     clang::CompilerInstance &compiler, llvm::StringRef in_file)
   {
+    const FileEntry *fe = compiler.getFileManager().getFile(in_file);
+    if (!fe) {
+      llvm::errs() << "failed to obtain file\n";
+      exit(1);
+    }
+    std::string filename = fe->tryGetRealPathName();
+
     return std::unique_ptr<clang::ASTConsumer>(
-        new StatementConsumer(&compiler.getASTContext(), db));
+        new StatementConsumer(&compiler.getASTContext(), db, filename, visited_files));
   }
 
 private:
   StatementDB *db;
+  std::unordered_set<std::string> &visited_files;
 };
 
 std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
@@ -205,16 +227,17 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
   {
   public:
     StatementActionFactory(StatementDB *db)
-      : db(db), clang::tooling::FrontendActionFactory()
+      : db(db), visited_files(), clang::tooling::FrontendActionFactory()
     { }
 
     clang::FrontendAction *create() override
     {
-      return new StatementAction(db);
+      return new StatementAction(db, visited_files);
     }
 
   private:
     StatementDB *db;
+    std::unordered_set<std::string> visited_files;
   };
 
   return std::unique_ptr<clang::tooling::FrontendActionFactory>(
