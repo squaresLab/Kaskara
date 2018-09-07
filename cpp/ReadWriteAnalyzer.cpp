@@ -28,8 +28,9 @@ optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
     } else if (auto const *cast = DynTypedNode::create(*child).get<clang::ImplicitCastExpr>()) {
       child = cast->getSubExprAsWritten();
     } else if (auto const *root = DynTypedNode::create(*child).get<clang::CXXThisExpr>()) {
-      // FIXME
-      return parent->getMemberNameInfo().getAsString();
+      if (auto const *field = DynTypedNode::create(*(parent->getMemberDecl())).get<clang::FieldDecl>())
+        return field->getNameAsString();
+      break;
     } else if (auto const *root = DynTypedNode::create(*child).get<clang::DeclRefExpr>()) {
       return root->getNameInfo().getAsString();
     } else {
