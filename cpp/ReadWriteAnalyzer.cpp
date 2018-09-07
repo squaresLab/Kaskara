@@ -17,43 +17,32 @@ namespace kaskara {
 
 optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
 {
-  std::stack<std::string> parts;
-  auto read = [&](clang::MemberExpr const *me) {
-    parts.push(me->getMemberNameInfo().getAsString());
-    parts.push(me->isArrow() ? "->" : ".");
-  };
-
-  clang::Expr const *b = e->getBase();
-  read(e);
-  while (b) {
-    if (auto const *member = DynTypedNode::create(*b).get<clang::MemberExpr>()) {
-      read(member);
-      b = member->getBase();
-    } else if (auto const *cast = DynTypedNode::create(*b).get<clang::ImplicitCastExpr>()) {
-      b = cast->getSubExprAsWritten();
-    } else if (auto const *root = DynTypedNode::create(*b).get<clang::CXXThisExpr>()) {
-      parts.pop();
+  clang::MemberExpr const *parent = e;
+  clang::Expr const *child = e->getBase();
+  while (child) {
+    if (auto const *member = DynTypedNode::create(*child).get<clang::MemberExpr>()) {
+      parent = member;
+      child = member->getBase();
+    } else if (auto const *call = DynTypedNode::create(*child).get<clang::CallExpr>()) {
+      child = call->getCallee();
+    } else if (auto const *cast = DynTypedNode::create(*child).get<clang::ImplicitCastExpr>()) {
+      child = cast->getSubExprAsWritten();
+    } else if (auto const *root = DynTypedNode::create(*child).get<clang::CXXThisExpr>()) {
+      if (auto const *field = DynTypedNode::create(*(parent->getMemberDecl())).get<clang::FieldDecl>())
+        return field->getNameAsString();
       break;
-    } else if (auto const *root = DynTypedNode::create(*b).get<clang::DeclRefExpr>()) {
-      parts.push(root->getNameInfo().getAsString());
+    } else if (auto const *root = DynTypedNode::create(*child).get<clang::DeclRefExpr>()) {
+      if (auto const *var = DynTypedNode::create(*(root->getDecl())).get<clang::VarDecl>())
+        return var->getNameAsString();
       break;
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
       e->dump(llvm::errs());
       llvm::errs() << "[/ERROR]\n";
-      return {};
+      break;
     }
   }
-
-  if (parts.empty())
-    return {};
-
-  std::stringstream ss;
-  while (!parts.empty()) {
-    ss << parts.top();
-    parts.pop();
-  }
-  return ss.str();
+  return {};
 }
 
 ReadWriteAnalyzer::ReadWriteAnalyzer(
@@ -96,6 +85,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
     return;
 
   clang::Expr const *expr = op->getLHS();
+  // FIXME
   if (clang::DeclRefExpr const *dre = DynTypedNode::create(*expr).get<clang::DeclRefExpr>()) {
     writes.emplace(dre->getNameInfo().getAsString());
   }
@@ -130,7 +120,10 @@ void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
 {
-  reads.emplace(expr->getNameInfo().getAsString());
+  // expr->dump();
+  // NOTE we do not record enum values
+  if (auto const *var = DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())
+    reads.emplace(var->getNameAsString());
 }
 
 } // kaskara
