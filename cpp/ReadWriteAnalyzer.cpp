@@ -32,7 +32,9 @@ optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
         return field->getNameAsString();
       break;
     } else if (auto const *root = DynTypedNode::create(*child).get<clang::DeclRefExpr>()) {
-      return root->getNameInfo().getAsString();
+      if (auto const *var = DynTypedNode::create(*(root->getDecl())).get<clang::VarDecl>())
+        return var->getNameAsString();
+      break;
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
       e->dump(llvm::errs());
