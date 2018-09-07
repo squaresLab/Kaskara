@@ -17,43 +17,29 @@ namespace kaskara {
 
 optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
 {
-  std::stack<std::string> parts;
-  auto read = [&](clang::MemberExpr const *me) {
-    parts.push(me->getMemberNameInfo().getAsString());
-    parts.push(me->isArrow() ? "->" : ".");
-  };
-
-  clang::Expr const *b = e->getBase();
-  read(e);
-  while (b) {
-    if (auto const *member = DynTypedNode::create(*b).get<clang::MemberExpr>()) {
-      read(member);
-      b = member->getBase();
-    } else if (auto const *cast = DynTypedNode::create(*b).get<clang::ImplicitCastExpr>()) {
-      b = cast->getSubExprAsWritten();
-    } else if (auto const *root = DynTypedNode::create(*b).get<clang::CXXThisExpr>()) {
-      parts.pop();
-      break;
-    } else if (auto const *root = DynTypedNode::create(*b).get<clang::DeclRefExpr>()) {
-      parts.push(root->getNameInfo().getAsString());
-      break;
+  clang::MemberExpr const *parent = e;
+  clang::Expr const *child = e->getBase();
+  while (child) {
+    if (auto const *member = DynTypedNode::create(*child).get<clang::MemberExpr>()) {
+      parent = member;
+      child = member->getBase();
+    } else if (auto const *call = DynTypedNode::create(*child).get<clang::CallExpr>()) {
+      child = call->getCallee();
+    } else if (auto const *cast = DynTypedNode::create(*child).get<clang::ImplicitCastExpr>()) {
+      child = cast->getSubExprAsWritten();
+    } else if (auto const *root = DynTypedNode::create(*child).get<clang::CXXThisExpr>()) {
+      // FIXME
+      return parent->getMemberNameInfo().getAsString();
+    } else if (auto const *root = DynTypedNode::create(*child).get<clang::DeclRefExpr>()) {
+      return root->getNameInfo().getAsString();
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
       e->dump(llvm::errs());
       llvm::errs() << "[/ERROR]\n";
-      return {};
+      break;
     }
   }
-
-  if (parts.empty())
-    return {};
-
-  std::stringstream ss;
-  while (!parts.empty()) {
-    ss << parts.top();
-    parts.pop();
-  }
-  return ss.str();
+  return {};
 }
 
 ReadWriteAnalyzer::ReadWriteAnalyzer(
