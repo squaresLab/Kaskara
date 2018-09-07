@@ -85,6 +85,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
     return;
 
   clang::Expr const *expr = op->getLHS();
+  // FIXME
   if (clang::DeclRefExpr const *dre = DynTypedNode::create(*expr).get<clang::DeclRefExpr>()) {
     writes.emplace(dre->getNameInfo().getAsString());
   }
@@ -119,7 +120,10 @@ void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
 {
-  reads.emplace(expr->getNameInfo().getAsString());
+  // expr->dump();
+  // NOTE we do not record enum values
+  if (auto const *var = DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())
+    reads.emplace(var->getNameAsString());
 }
 
 } // kaskara
