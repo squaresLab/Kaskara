@@ -16,7 +16,7 @@ from .statements import StatementDB
 
 PLUGIN = Plugin(name='kaskara',
                 image='squareslab/kaskara',
-                enviroment={'PATH': '/opt/kaskara/scripts:${PATH}'})
+                environment={'PATH': '/opt/kaskara/scripts:${PATH}'})
 
 
 class Analysis(object):
