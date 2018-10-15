@@ -3,6 +3,7 @@ __all__ = ['Analysis']
 from typing import List, Optional, Dict, Any
 import json
 
+from bugzoo.core.tool import Tool as Plugin
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 from bugzoo.client import Client as BugZooClient
@@ -12,6 +13,10 @@ from .loops import find_loops
 from .functions import FunctionDB
 from .insertions import InsertionPointDB
 from .statements import StatementDB
+
+PLUGIN = Plugin(name='kaskara',
+                image='squareslab/kaskara',
+                enviroment={'PATH': '/opt/kaskara/scripts:${PATH}'})
 
 
 class Analysis(object):
@@ -38,7 +43,8 @@ class Analysis(object):
         # FIXME assumes binaries are already present in container
         container = None  # type: Optional[Container]
         try:
-            container = client_bugzoo.containers.provision(snapshot)
+            container = client_bugzoo.containers.provision(snapshot,
+                                                           plugins=[PLUGIN])
             loop_bodies = \
                 find_loops(client_bugzoo, snapshot, files, container,
                            ignore_exit_code=ignore_exit_code)
