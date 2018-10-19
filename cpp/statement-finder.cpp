@@ -88,7 +88,8 @@ public:
     }
 
     // only visit "top-level" statements
-    for (auto const &p : ctx->getParents(*stmt)) {
+    auto const parents = ctx->getParents(*stmt);
+    for (auto const &p : parents) {
       if (p.get<clang::ReturnStmt>() ||
           p.get<clang::Expr>() ||
           p.get<clang::IfStmt>() ||
@@ -97,6 +98,22 @@ public:
           p.get<clang::SwitchStmt>() ||
           p.get<clang::DeclStmt>())
         return true;
+    }
+
+    // llvm::outs() << "NODE:\n";
+    // stmt->dump(llvm::outs(), SM);
+    // llvm::outs() << "PARENTS:\n";
+    // for (auto const &p : parents) {
+    //   p.dump(llvm::outs(), SM);
+    // }
+
+    // do not consider the contents of loop headers to be canonical
+    // statements
+    if (!parents.empty()) {
+      if (auto const p = parents[0].get<clang::WhileStmt>()) {
+        if (p->getCond() == stmt)
+          return true;
+      }
     }
 
     // FIXME must belong to a real file
