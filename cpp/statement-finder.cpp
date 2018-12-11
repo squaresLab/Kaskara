@@ -78,13 +78,16 @@ public:
   {
     const DynTypedNode n = DynTypedNode::create(*stmt);
     auto const parents = ctx->getParents(n);
-
     if (parents.empty())
       return false;
 
-    if (auto const p = parents[0].get<clang::WhileStmt>())
+    if (auto const p = parents[0].get<clang::WhileStmt>()) {
       if (p->getCond() == stmt)
         return true;
+    } else if (auto const p = parents[0].get<clang::ForStmt>()) {
+      if (p->getBody() != stmt)
+        return true;
+    }
 
     return false;
   }
@@ -140,10 +143,10 @@ public:
     if (is_inside_loop_header(stmt))
       return true;
 
-    // FIXME must belong to a real file
     // llvm::outs() << "STMT [" << kind << "]: ";
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
+
     db->add(ctx, stmt, visible, liveness.get());
     return true;
   }
