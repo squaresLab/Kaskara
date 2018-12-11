@@ -1,4 +1,4 @@
 FROM christimperley/start:Use-After-Free_fixed as test
-COPY --from=christimperley/kaskara:latest /opt/kaskara /opt/kaskara
+COPY --from=squareslab/kaskara /opt/kaskara /opt/kaskara
 ENV PATH "/opt/kaskara/scripts:${PATH}"
 ADD test.sh .

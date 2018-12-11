@@ -74,6 +74,24 @@ public:
     return false;
   }
 
+  bool is_inside_loop_header(clang::Stmt *stmt)
+  {
+    const DynTypedNode n = DynTypedNode::create(*stmt);
+    auto const parents = ctx->getParents(n);
+    if (parents.empty())
+      return false;
+
+    if (auto const p = parents[0].get<clang::WhileStmt>()) {
+      if (p->getCond() == stmt)
+        return true;
+    } else if (auto const p = parents[0].get<clang::ForStmt>()) {
+      if (p->getBody() != stmt)
+        return true;
+    }
+
+    return false;
+  }
+
   bool VisitStmt(clang::Stmt *stmt)
   {
     if (!stmt || stmt->getSourceRange().isInvalid())
@@ -101,7 +119,8 @@ public:
     }
 
     // only visit "top-level" statements
-    for (auto const &p : ctx->getParents(*stmt)) {
+    auto const parents = ctx->getParents(*stmt);
+    for (auto const &p : parents) {
       if (p.get<clang::ReturnStmt>() ||
           p.get<clang::Expr>() ||
           p.get<clang::IfStmt>() ||
@@ -112,13 +131,22 @@ public:
         return true;
     }
 
+    // llvm::outs() << "NODE:\n";
+    // stmt->dump(llvm::outs(), SM);
+    // llvm::outs() << "PARENTS:\n";
+    // for (auto const &p : parents) {
+    //   p.dump(llvm::outs(), SM);
+    // }
+
     if (is_inside_array_subscript(DynTypedNode::create(*stmt)))
       return true;
+    if (is_inside_loop_header(stmt))
+      return true;
 
-    // FIXME must belong to a real file
     // llvm::outs() << "STMT [" << kind << "]: ";
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
+
     db->add(ctx, stmt, visible, liveness.get());
     return true;
   }
