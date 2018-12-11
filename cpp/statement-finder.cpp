@@ -61,6 +61,19 @@ public:
     }
   }
 
+  bool is_inside_array_subscript(const DynTypedNode &n)
+  {
+    std::string kind = n.getNodeKind().asStringRef();
+    if (kind == "ArraySubscriptExpr")
+      return true;
+    if (kind == "CompoundStmt")
+      return false;
+    for (auto const &p : ctx->getParents(n))
+      if (is_inside_array_subscript(p))
+        return true;
+    return false;
+  }
+
   bool VisitStmt(clang::Stmt *stmt)
   {
     if (!stmt || stmt->getSourceRange().isInvalid())
@@ -98,6 +111,9 @@ public:
           p.get<clang::DeclStmt>())
         return true;
     }
+
+    if (is_inside_array_subscript(DynTypedNode::create(*stmt)))
+      return true;
 
     // FIXME must belong to a real file
     // llvm::outs() << "STMT [" << kind << "]: ";
