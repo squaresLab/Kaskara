@@ -74,6 +74,21 @@ public:
     return false;
   }
 
+  bool is_inside_loop_header(clang::Stmt *stmt)
+  {
+    const DynTypedNode n = DynTypedNode::create(*stmt);
+    auto const parents = ctx->getParents(n);
+
+    if (parents.empty())
+      return false;
+
+    if (auto const p = parents[0].get<clang::WhileStmt>())
+      if (p->getCond() == stmt)
+        return true;
+
+    return false;
+  }
+
   bool VisitStmt(clang::Stmt *stmt)
   {
     if (!stmt || stmt->getSourceRange().isInvalid())
@@ -120,16 +135,9 @@ public:
     //   p.dump(llvm::outs(), SM);
     // }
 
-    // do not consider the contents of loop headers to be canonical
-    // statements
-    if (!parents.empty()) {
-      if (auto const p = parents[0].get<clang::WhileStmt>()) {
-        if (p->getCond() == stmt)
-          return true;
-      }
-    }
-
     if (is_inside_array_subscript(DynTypedNode::create(*stmt)))
+      return true;
+    if (is_inside_loop_header(stmt))
       return true;
 
     // FIXME must belong to a real file
