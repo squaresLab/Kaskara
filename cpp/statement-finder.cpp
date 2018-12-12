@@ -114,6 +114,9 @@ public:
         kind == "ImplicitCastExpr" ||
         kind == "CXXCatchStmt" ||
         kind == "InitListExpr" ||
+        kind == "IntegerLiteral" ||
+        kind == "FloatingLiteral" ||
+        kind == "StringLiteral" ||
         kind == "NullStmt") {
       return true;
     }
