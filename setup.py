@@ -17,7 +17,7 @@ setuptools.setup(
     license='Apache-2.0',
     python_requires='>=3.5',
     install_requires=[
-        'bugzoo>=2.1.19',
+        'bugzoo>=2.1.20',
         'rooibos>=0.3.0',
         'boggart>=0.1.8',
         'attrs>=17.2.0',
