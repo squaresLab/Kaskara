@@ -160,11 +160,12 @@ public:
       if (!d)
         continue;
 
-      if (clang::VarDecl const *vd = DynTypedNode::create(*d).get<clang::VarDecl>()) {
-        if (!vd->getIdentifier())
+      DynTypedNode node = DynTypedNode::create(*d);
+      if (clang::VarDecl const *vd = node.get<clang::VarDecl>()) {
+        if (vd->getIdentifier())
           visible.emplace(vd);
       }
-      if (clang::FieldDecl const *fd = DynTypedNode::create(*d).get<clang::FieldDecl>()) {
+      if (clang::FieldDecl const *fd = node.get<clang::FieldDecl>()) {
         if (fd->getIdentifier())
           visible.emplace(fd);
       }
@@ -176,6 +177,8 @@ public:
   // Upon visiting a function, we compute its liveness information.
   bool VisitFunctionDecl(clang::FunctionDecl *decl)
   {
+    // std::string name = decl->getNameInfo().getAsString();
+    // llvm::outs() << "computing liveness for function: " << name << "\n";
     std::unique_ptr<clang::AnalysisDeclContext> adc =
       std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
     liveness =
