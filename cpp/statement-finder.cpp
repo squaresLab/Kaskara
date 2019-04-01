@@ -61,6 +61,37 @@ public:
     }
   }
 
+  bool is_inside_array_subscript(const DynTypedNode &n)
+  {
+    std::string kind = n.getNodeKind().asStringRef();
+    if (kind == "ArraySubscriptExpr")
+      return true;
+    if (kind == "CompoundStmt")
+      return false;
+    for (auto const &p : ctx->getParents(n))
+      if (is_inside_array_subscript(p))
+        return true;
+    return false;
+  }
+
+  bool is_inside_loop_header(clang::Stmt *stmt)
+  {
+    const DynTypedNode n = DynTypedNode::create(*stmt);
+    auto const parents = ctx->getParents(n);
+    if (parents.empty())
+      return false;
+
+    if (auto const p = parents[0].get<clang::WhileStmt>()) {
+      if (p->getCond() == stmt)
+        return true;
+    } else if (auto const p = parents[0].get<clang::ForStmt>()) {
+      if (p->getBody() != stmt)
+        return true;
+    }
+
+    return false;
+  }
+
   bool VisitStmt(clang::Stmt *stmt)
   {
     if (!stmt || stmt->getSourceRange().isInvalid())
@@ -83,12 +114,16 @@ public:
         kind == "ImplicitCastExpr" ||
         kind == "CXXCatchStmt" ||
         kind == "InitListExpr" ||
+        kind == "IntegerLiteral" ||
+        kind == "FloatingLiteral" ||
+        kind == "StringLiteral" ||
         kind == "NullStmt") {
       return true;
     }
 
     // only visit "top-level" statements
-    for (auto const &p : ctx->getParents(*stmt)) {
+    auto const parents = ctx->getParents(*stmt);
+    for (auto const &p : parents) {
       if (p.get<clang::ReturnStmt>() ||
           p.get<clang::Expr>() ||
           p.get<clang::IfStmt>() ||
@@ -99,10 +134,22 @@ public:
         return true;
     }
 
-    // FIXME must belong to a real file
+    // llvm::outs() << "NODE:\n";
+    // stmt->dump(llvm::outs(), SM);
+    // llvm::outs() << "PARENTS:\n";
+    // for (auto const &p : parents) {
+    //   p.dump(llvm::outs(), SM);
+    // }
+
+    if (is_inside_array_subscript(DynTypedNode::create(*stmt)))
+      return true;
+    if (is_inside_loop_header(stmt))
+      return true;
+
     // llvm::outs() << "STMT [" << kind << "]: ";
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
+
     db->add(ctx, stmt, visible, liveness.get());
     return true;
   }
@@ -116,11 +163,12 @@ public:
       if (!d)
         continue;
 
-      if (clang::VarDecl const *vd = DynTypedNode::create(*d).get<clang::VarDecl>()) {
-        if (!vd->getIdentifier())
+      DynTypedNode node = DynTypedNode::create(*d);
+      if (clang::VarDecl const *vd = node.get<clang::VarDecl>()) {
+        if (vd->getIdentifier())
           visible.emplace(vd);
       }
-      if (clang::FieldDecl const *fd = DynTypedNode::create(*d).get<clang::FieldDecl>()) {
+      if (clang::FieldDecl const *fd = node.get<clang::FieldDecl>()) {
         if (fd->getIdentifier())
           visible.emplace(fd);
       }
@@ -132,6 +180,8 @@ public:
   // Upon visiting a function, we compute its liveness information.
   bool VisitFunctionDecl(clang::FunctionDecl *decl)
   {
+    // std::string name = decl->getNameInfo().getAsString();
+    // llvm::outs() << "computing liveness for function: " << name << "\n";
     std::unique_ptr<clang::AnalysisDeclContext> adc =
       std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
     liveness =
