@@ -41,7 +41,10 @@ public:
       return true;
     }
 
+    llvm::outs() << "recording while-stmt\n";
+    stmt->dump();
     db_loop.add(ctx, stmt);
+    llvm::outs() << "recorded while-stmt\n";
     return true;
   }
 
@@ -54,7 +57,9 @@ public:
       return true;
     }
 
+    llvm::outs() << "recording for-stmt\n";
     db_loop.add(ctx, stmt);
+    llvm::outs() << "recorded for-stmt\n";
     return true;
   }
 
