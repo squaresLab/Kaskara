@@ -19,10 +19,10 @@ std::string const build_loc_str(clang::SourceRange const &range,
 
   std::string s = fmt::format(fmt("{0}@{1}:{2}::{3}:{4}"),
                               filename,
-                              loc_begin.getSpellingLineNumber(),
-                              loc_begin.getSpellingColumnNumber() - 1,
-                              loc_end.getSpellingLineNumber(),
-                              loc_end.getSpellingColumnNumber());
+                              loc_begin.getExpansionLineNumber(),
+                              loc_begin.getExpansionColumnNumber() - 1,
+                              loc_end.getExpansionLineNumber(),
+                              loc_end.getExpansionColumnNumber());
   return s;
 }
 
