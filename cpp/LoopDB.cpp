@@ -34,12 +34,9 @@ json const LoopDB::Entry::to_json() const
 
 void LoopDB::add(clang::ASTContext *ctx, clang::WhileStmt const *stmt)
 {
-  llvm::outs() << "building loc string\n";
   std::string location = build_loc_str(stmt->getSourceRange(), ctx);
-  llvm::outs() << "fetching body\n";
   auto sr = stmt->getBody()->getSourceRange();
   std::string body = build_loc_str(stmt->getBody()->getSourceRange(), ctx);
-  llvm::outs() << "fetched body: " << body << "\n";
   contents.emplace_back("while", location, body);
 }
 
