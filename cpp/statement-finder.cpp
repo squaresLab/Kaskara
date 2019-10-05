@@ -109,7 +109,6 @@ public:
         kind == "BreakStmt" ||
         kind == "DefaultStmt" ||
         kind == "ContinueStmt" ||
-        kind == "ReturnStmt" ||
         kind == "CaseStmt" ||
         kind == "ImplicitCastExpr" ||
         kind == "CXXCatchStmt" ||
