@@ -19,3 +19,6 @@ use of Docker.
 
 * Kaskara currently provides C and C++ analysis support via its Clang driver.
 * Python analysis support is planned for the end of December 2019.
+
+
+.. image:: https://upload.wikimedia.org/wikipedia/commons/f/fc/Kaskara-Sword.jpg
