@@ -70,7 +70,8 @@ class InsertionPointDB(Iterable[InsertionPoint]):
                                                 context=workdir)
 
         if not ignore_exit_code and outcome.code != 0:
-            msg = "kaskara-insertion-point-finder exited with non-zero code: {}"
+            msg = ('kaskara-insertion-point-finder '
+                   'exited with non-zero code: {}')
             msg = msg.format(outcome.code)
             raise BondException(msg)
 

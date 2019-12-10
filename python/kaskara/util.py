@@ -25,6 +25,7 @@ def abs_to_rel_flocrange(prefix: str,
     return FileLocationRange(abs_to_rel_filename(prefix, l.filename),
                              l.location_range)
 
+
 def rel_to_abs_flocrange(prefix: str,
                          l: FileLocationRange
                          ) -> FileLocationRange:

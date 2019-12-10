@@ -77,7 +77,7 @@ class StatementDB(object):
         cmd = "kaskara-statement-finder {}".format(' '.join(files))
         workdir = snapshot.source_dir
         logger.debug("executing statement finder [%s]: %s", workdir, cmd)
-        outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
+        outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)  # noqa
         logger.debug("executed statement finder [%d]:\n%s",
                      outcome.code, indent(outcome.output, 2))
 
@@ -86,7 +86,8 @@ class StatementDB(object):
             msg = msg.format(outcome.code)
             raise BondException(msg)  # FIXME
 
-        logger.debug("reading statement analysis results from file: %s", out_fn)
+        logger.debug('reading statement analysis results from file: %s',
+                     out_fn)
         output = client_bugzoo.files.read(container, out_fn)
         jsn = json.loads(output)  # type: List[Dict[str, Any]]
         db = StatementDB.from_dict(jsn, snapshot)

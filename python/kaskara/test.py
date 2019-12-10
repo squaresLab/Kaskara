@@ -57,7 +57,7 @@ def test() -> None:
 
     analysis.dump()
 
-    floc = FileLocation.from_string("/ros_ws/src/geometry/tf/src/transform_broadcaster.cpp@51:1")
+    floc = FileLocation.from_string("/ros_ws/src/geometry/tf/src/transform_broadcaster.cpp@51:1")  # noqa
     print("INSIDE FUNCTION? {}".format(analysis.is_inside_function(floc)))
-    print("INSIDE VOID FUNCTION? {}".format(analysis.is_inside_void_function(floc)))
+    print("INSIDE VOID FUNCTION? {}".format(analysis.is_inside_void_function(floc)))  # noqa
     print("INSIDE LOOP? {}".format(analysis.is_inside_loop(floc)))

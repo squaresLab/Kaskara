@@ -74,7 +74,8 @@ class FunctionDB(object):
         out_fn = "functions.json"
         cmd = "kaskara-function-scanner {}".format(' '.join(files))
         workdir = snapshot.source_dir
-        outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)
+        outcome = \
+            client_bugzoo.containers.exec(container, cmd, context=workdir)
 
         if not ignore_exit_code and outcome.code != 0:
             msg = "kaskara-function-scanner exited with non-zero code: {}"
