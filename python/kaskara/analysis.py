@@ -94,7 +94,7 @@ class Analysis(object):
         return self.__db_insertion
 
     def is_inside_loop(self, location: FileLocation) -> bool:
-        return location in self.__location_bodies
+        return self.__location_bodies.contains(location)
 
     def is_inside_function(self, location: FileLocation) -> bool:
         return self.__db_function.encloses(location) is not None

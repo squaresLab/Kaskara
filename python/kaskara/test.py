@@ -1,6 +1,6 @@
 import bugzoo.server
-from boggart.core.location import FileLocation
 
+from .core import FileLocation
 from .analysis import Analysis
 
 

@@ -1,6 +1,5 @@
-__all__ = ['FileLocation', 'FileLocationRange', 'FileLocationRangeSet']
-
-from typing import Dict, List, Iterable
-
-from boggart.core.location import FileLocation, FileLocationRange, \
-                                  FileLocationRangeSet, FileLine
+# -*- coding: utf-8 -*-
+from sourcelocation import (FileLocation,
+                            FileLocationRange,
+                            FileLocationRangeSet,
+                            FileLine)
