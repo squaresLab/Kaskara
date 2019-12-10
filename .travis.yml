@@ -3,7 +3,6 @@ sudo: required
 services:
 - docker
 python:
-- '3.5'
 - '3.6'
 install:
 - pip install mypy
@@ -19,4 +18,4 @@ deploy:
       secure: "IdIYOjJgn5hONw9JegUUHRA8g2SKUBSNZ2vogWsC/TgCkpC8iMDxIxPN7a26oGqrYZ4tLuAdZt1zVx0py+0MMTBKDF+Ob1sa0OLliF5qTrsEIsOKA53yrPtkITeQ9HF50yMPWTTs6YswW0Qj3uevosNmdm0vz7dW9CwJhe5ou3u9HcBy1nkR7TsgiCYz39Pr4Fryxy9VKvb9a2O+DFa96lXlYXgwW5qiBAHJMGmmhJ8ICMsEf2PwQMiwQRyatfBfMtd+/tYef40VsaB8FSYeDnhbBq3aw3ibD/pAZqTINAugwhlW8kb2xDeGUUmxXjhYkUMaxRAZ8q2qfJqE7OcH/SYVw2n8+yx4gZjV3VVdA/7txkNh+6LKuxYUsyRS+Sj8myFqC4qAYiv5tUwJ67MPV8JYelSoxJV45aiSCtfF0OZRV0FjfkSOl/rEX+EQFFj+uCxVTzRGTvMyygTYVkoOgF/gxefKVzoCmncIRcf+0biuq9DaEcLZS43WO7kk+kPJ3gnM+xPTSc6u0kidUAjhqk4WWN9baFU8dn2m6hNYngy1gRi4CPpz9aY17Wznrr3PyBjmKZTQmjw9kbCqWCeeCS9LBF4/PVZK74yxYXWRRDUuX9Z6jVMydbxpCgvOmfpS/igE9fYF+95C5fecLx3fXVDvoRZWJjx6tnetaIhA9T4="
     on:
       tags: true
-      python: 3.5
+      python: 3.6
