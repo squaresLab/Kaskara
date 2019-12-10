@@ -1,30 +1,16 @@
+# -*- coding: utf-8 -*-
 import os
-import glob
-import setuptools
+import re
+from glob import glob
+from setuptools import setup, find_packages
 
-path = os.path.join(os.path.dirname(__file__), 'python/kaskara/version.py')
-with open(path, 'r') as f:
-    exec(f.read())
+MODULE_FILE = \
+    os.path.join(os.path.dirname(__file__), 'python/kaskara/version.py')
+VERSION_REGEX = \
+    r"__version__\s+=\s+['|\"](.*)['|\"]\s*"
 
-setuptools.setup(
-    name='kaskara',
-    version=__version__,
-    description='A simple static analyer for C++',
-    long_description='TBA',
-    author='Chris Timperley',
-    author_email='christimperley@gmail.com',
-    url='https://github.com/ChrisTimperley/Kaskara',
-    license='Apache-2.0',
-    python_requires='>=3.6',
-    install_requires=[
-        'bugzoo>=2.1.20',
-        'attrs>=17.2.0',
-        'requests>=2.0.0',
-        'sourcelocation~=1.0.2'
-    ],
-    packages=['kaskara'],
-    package_dir={'': 'python'},
-    entry_points = {
-        'console_scripts': [ 'kaskara-test = kaskara.test:test' ]
-    }
-)
+with open(MODULE_FILE, 'r') as f:
+    contents = f.read()
+    VERSION = re.search(VERSION_REGEX, contents).group(1)
+
+setup(version=VERSION)
