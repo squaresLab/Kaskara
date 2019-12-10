@@ -5,7 +5,7 @@ services:
 python:
 - '3.6'
 install:
-- pip install mypy
+- pip install -r requirements.dev.txt
 - pip install .
 script:
 - mypy python
