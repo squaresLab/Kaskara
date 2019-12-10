@@ -1,4 +1,5 @@
-__all__ = ['FunctionDesc', 'FunctionDB']
+# -*- coding: utf-8 -*-
+__all__ = ('FunctionDesc', 'FunctionDB')
 
 from typing import List, Dict, Tuple, Optional, Iterator, Iterable, Any
 import json
@@ -13,14 +14,15 @@ from .exceptions import BondException
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 
 
-@attr.s(frozen=True)
-class FunctionDesc(object):
-    name = attr.ib(type=str)
-    location = attr.ib(type=FileLocationRange)
-    body = attr.ib(type=FileLocationRange)
-    return_type = attr.ib(type=str)
-    is_global = attr.ib(type=bool)
-    is_pure = attr.ib(type=bool)
+@attr.s(frozen=True, slots=True, auto_attribs=True)
+class FunctionDesc:
+    """Provides a concise description of a function definition."""
+    name: str
+    location: FileLocationRange
+    body: FileLocationRange
+    return_type: str
+    is_global: bool
+    is_pure: bool
 
     @staticmethod
     def from_dict(d: Dict[str, Any],
@@ -56,7 +58,7 @@ class FunctionDesc(object):
                 'pure': self.is_pure}
 
 
-class FunctionDB(object):
+class FunctionDB:
     @staticmethod
     def from_dict(d: List[Dict[str, Any]],
                   snapshot: Snapshot

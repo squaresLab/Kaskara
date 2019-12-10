@@ -1,4 +1,5 @@
-__all__ = ['InsertionPointDB', 'InsertionPoint']
+# -*- coding: utf-8 -*-
+__all__ = ('InsertionPointDB', 'InsertionPoint')
 
 from typing import FrozenSet, Iterable, Iterator, Dict, List, Any
 import logging
@@ -14,14 +15,14 @@ from .core import FileLocation, FileLine
 from .exceptions import BondException
 from .util import abs_to_rel_floc, rel_to_abs_floc
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-@attr.s(frozen=True, repr=False)
-class InsertionPoint(object):
-    location = attr.ib(type=FileLocation)
-    visible = attr.ib(type=FrozenSet[str])
+@attr.s(frozen=True, repr=False, slots=True, auto_attribs=True)
+class InsertionPoint:
+    location: FileLocation
+    visible: FrozenSet[str]
 
     @staticmethod
     def from_dict(d: Dict[str, str],
@@ -31,10 +32,6 @@ class InsertionPoint(object):
         location = abs_to_rel_floc(snapshot.source_dir, location)
         visible = frozenset(d['visible'])
         return InsertionPoint(location, visible)
-
-    def __repr__(self) -> str:
-        fmt = "InsertionPoint('{}', [{}])"
-        return fmt.format(self.location, ', '.join(self.visible))
 
     def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
         loc = rel_to_abs_floc(snapshot.source_dir, self.location)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from typing import FrozenSet, Dict, Any, List, Iterator
 import json
 import attr
@@ -13,22 +14,22 @@ from .exceptions import BondException
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 from .insertions import InsertionPointDB, InsertionPoint
 
-logger = logging.getLogger(__name__)  # type: logging.Logger
+logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-@attr.s(frozen=True)
-class Statement(object):
-    content = attr.ib(type=str)
-    canonical = attr.ib(type=str)
-    kind = attr.ib(type=str)  # FIXME this is super memory inefficient
-    location = attr.ib(type=FileLocationRange)
-    reads = attr.ib(type=FrozenSet[str])
-    writes = attr.ib(type=FrozenSet[str])
-    visible = attr.ib(type=FrozenSet[str])
-    declares = attr.ib(type=FrozenSet[str])
-    live_before = attr.ib(type=FrozenSet[str])
-    requires_syntax = attr.ib(type=FrozenSet[str])
+@attr.s(frozen=True, slots=True, auto_attribs=True)
+class Statement:
+    content: str
+    canonical: str
+    kind: str  # FIXME this is super memory inefficient
+    location: FileLocationRange
+    reads: FrozenSet[str]
+    writes: FrozenSet[str]
+    visible: FrozenSet[str]
+    declares: FrozenSet[str]
+    live_before: FrozenSet[str]
+    requires_syntax: FrozenSet[str]
 
     @staticmethod
     def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Statement':
@@ -60,7 +61,7 @@ class Statement(object):
                 'requires_syntax': list(self.requires_syntax)}
 
 
-class StatementDB(object):
+class StatementDB:
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
