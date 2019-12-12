@@ -4,6 +4,7 @@ __all__ = ('Analysis',)
 from typing import List, Optional, Dict, Any
 import json
 
+import attr
 from bugzoo.core.tool import Tool as Plugin
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
@@ -20,7 +21,13 @@ PLUGIN = Plugin(name='kaskara',
                 environment={'PATH': '/opt/kaskara/scripts:${PATH}'})
 
 
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class Analysis:
+    loops: ProgramLoops
+    functions: FunctionDB
+    statements: ProgramStatements
+    insertions: InsertionPointDB
+
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
@@ -45,45 +52,22 @@ class Analysis:
                                         files,
                                         container,
                                         ignore_exit_code=ignore_exit_code)
-            return Analysis(program_loops,
-                            db_function,
-                            db_statements)
+
+            db_insertion = db_statements.insertions()
+            return Analysis(loops=program_loops,
+                            functions=db_function,
+                            statements=db_statements,
+                            insertions=db_insertion)
         finally:
             if container:
                 del client_bugzoo.containers[container.uid]
 
-    def __init__(self,
-                 program_loops: ProgramLoops,
-                 db_function: FunctionDB,
-                 db_statement: ProgramStatements
-                 ) -> None:
-        self.__program_loops = program_loops
-        self.__db_function = db_function
-        self.__db_insertion = db_statement.insertions()
-        self.__db_statement = db_statement
-
-    @property
-    def functions(self) -> FunctionDB:
-        return self.__db_function
-
-    @property
-    def statements(self) -> ProgramStatements:
-        return self.__db_statement
-
-    @property
-    def insertions(self) -> InsertionPointDB:
-        return self.__db_insertion
-
-    @property
-    def loops(self) -> ProgramLoops:
-        return self.__program_loops
-
     def is_inside_loop(self, location: FileLocation) -> bool:
-        return self.__program_loops.is_within_loop(location)
+        return self.loops.is_within_loop(location)
 
     def is_inside_function(self, location: FileLocation) -> bool:
-        return self.__db_function.encloses(location) is not None
+        return self.functions.encloses(location) is not None
 
     def is_inside_void_function(self, location: FileLocation) -> bool:
-        f = self.__db_function.encloses(location)
+        f = self.functions.encloses(location)
         return f is not None and f.return_type == 'void'
