@@ -55,7 +55,7 @@ class Analysis:
     def __init__(self,
                  program_loops: ProgramLoops,
                  db_function: FunctionDB,
-                 db_statement: ProgramStatements 
+                 db_statement: ProgramStatements
                  ) -> None:
         self.__program_loops = program_loops
         self.__db_function = db_function
