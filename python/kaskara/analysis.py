@@ -1,4 +1,5 @@
-__all__ = ['Analysis']
+# -*- coding: utf-8 -*-
+__all__ = ('Analysis',)
 
 from typing import List, Optional, Dict, Any
 import json
@@ -9,7 +10,7 @@ from bugzoo.core.container import Container
 from bugzoo.client import Client as BugZooClient
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
-from .loops import find_loops
+from .loops import find_loops, ProgramLoops
 from .functions import FunctionDB
 from .insertions import InsertionPointDB
 from .statements import StatementDB
@@ -19,20 +20,7 @@ PLUGIN = Plugin(name='kaskara',
                 environment={'PATH': '/opt/kaskara/scripts:${PATH}'})
 
 
-class Analysis(object):
-    @staticmethod
-    def from_file(fn: str, snapshot: Snapshot) -> 'Analysis':
-        with open(fn, 'r') as f:
-            d = json.load(f)
-        return Analysis.from_dict(d, snapshot)
-
-    @staticmethod
-    def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Analysis':
-        loop_bodies = [FileLocationRange.from_string(s) for s in d['loops']]
-        db_function = FunctionDB.from_dict(d['functions'], snapshot)
-        db_statement = StatementDB.from_dict(d['statements'], snapshot)
-        return Analysis(loop_bodies, db_function, db_statement)
-
+class Analysis:
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
@@ -45,7 +33,7 @@ class Analysis(object):
         try:
             container = client_bugzoo.containers.provision(snapshot,
                                                            plugins=[PLUGIN])
-            loop_bodies = \
+            program_loops = \
                 find_loops(client_bugzoo, snapshot, files, container,
                            ignore_exit_code=ignore_exit_code)
             db_function = \
@@ -54,7 +42,7 @@ class Analysis(object):
             db_statements = \
                 StatementDB.build(client_bugzoo, snapshot, files, container,
                                   ignore_exit_code=ignore_exit_code)
-            return Analysis(loop_bodies,
+            return Analysis(program_loops,
                             db_function,
                             db_statements)
         finally:
@@ -62,24 +50,14 @@ class Analysis(object):
                 del client_bugzoo.containers[container.uid]
 
     def __init__(self,
-                 loop_bodies: List[FileLocationRange],
+                 program_loops: ProgramLoops,
                  db_function: FunctionDB,
                  db_statement: StatementDB
                  ) -> None:
-        self.__location_bodies = FileLocationRangeSet(loop_bodies)
+        self.__program_loops = program_loops
         self.__db_function = db_function
         self.__db_insertion = db_statement.insertions()
         self.__db_statement = db_statement
-
-    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
-        return {'functions': self.__db_function.to_dict(snapshot),
-                'statements': self.__db_statement.to_dict(snapshot),
-                'loops': [str(loc) for loc in self.__location_bodies]}
-
-    def to_file(self, fn: str, snapshot: Snapshot) -> None:
-        d = self.to_dict(snapshot)
-        with open(fn, 'w') as f:
-            json.dump(d, f)
 
     @property
     def functions(self) -> FunctionDB:
@@ -93,8 +71,12 @@ class Analysis(object):
     def insertions(self) -> InsertionPointDB:
         return self.__db_insertion
 
+    @property
+    def loops(self) -> ProgramLoops:
+        return self.__program_loops
+
     def is_inside_loop(self, location: FileLocation) -> bool:
-        return self.__location_bodies.contains(location)
+        return self.__program_loops.is_within_loop(location)
 
     def is_inside_function(self, location: FileLocation) -> bool:
         return self.__db_function.encloses(location) is not None

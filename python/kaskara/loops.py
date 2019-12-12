@@ -1,19 +1,37 @@
 # -*- coding: utf-8 -*-
-from typing import List, Dict
+__all__ = ('ProgramLoops',)
+
+from typing import List, Dict, Iterable
 import json
 import logging
 
+import attr
 from bugzoo.util import indent
 from bugzoo.client import Client as BugZooClient
 from bugzoo.core.bug import Bug as Snapshot
 from bugzoo.core.container import Container
 
-from .core import FileLocationRange
+from .core import FileLocation, FileLocationRange, FileLocationRangeSet
 from .exceptions import BondException
 from .util import abs_to_rel_flocrange
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
+
+
+@attr.s(frozen=True, slots=True, auto_attribs=True)
+class ProgramLoops:
+    """Maintains information about all loops within a program."""
+    _covered_by_loop_bodies: FileLocationRangeSet
+
+    @staticmethod
+    def from_body_location_ranges(bodies: Iterable[FileLocationRange]
+                                  ) -> 'ProgramLoops':
+        return ProgramLoops(FileLocationRangeSet(bodies))
+
+    def is_within_loop(self, location: FileLocation) -> bool:
+        """Checks whether a given location is enclosed within a loop."""
+        return self._covered_by_loop_bodies.contains(location)
 
 
 def find_loops(client_bugzoo: BugZooClient,
@@ -22,8 +40,8 @@ def find_loops(client_bugzoo: BugZooClient,
                container: Container,
                *,
                ignore_exit_code: bool = False
-               ) -> List[FileLocationRange]:
-    loop_bodies = []  # type: List[FileLocationRange]
+               ) -> ProgramLoops:
+    loop_bodies: List[FileLocationRange] = []
 
     out_fn = "loops.json"
     cmd = "kaskara-loop-finder {}".format(' '.join(files))
@@ -47,4 +65,4 @@ def find_loops(client_bugzoo: BugZooClient,
         loop_bodies.append(loc)
     logger.debug("finished reading loop analysis results")
 
-    return loop_bodies
+    return ProgramLoops.from_body_location_ranges(loop_bodies)
