@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+__all__ = ('Statement', 'ProgramStatements')
+
 from typing import FrozenSet, Dict, Any, List, Iterator
 import json
 import attr
@@ -61,7 +63,7 @@ class Statement:
                 'requires_syntax': list(self.requires_syntax)}
 
 
-class StatementDB:
+class ProgramStatements:
     @staticmethod
     def build(client_bugzoo: BugZooClient,
               snapshot: Snapshot,
@@ -69,7 +71,7 @@ class StatementDB:
               container: Container,
               *,
               ignore_exit_code: bool = False
-              ) -> 'StatementDB':
+              ) -> 'ProgramStatements':
         out_fn = "statements.json"
         logger.debug("building statement database for snapshot [%s]",
                      snapshot.name)
@@ -91,25 +93,25 @@ class StatementDB:
                      out_fn)
         output = client_bugzoo.files.read(container, out_fn)
         jsn = json.loads(output)  # type: List[Dict[str, Any]]
-        db = StatementDB.from_dict(jsn, snapshot)
+        db = ProgramStatements.from_dict(jsn, snapshot)
         logger.debug("finished reading statement analysis results")
         return db
 
     @staticmethod
-    def from_file(fn: str, snapshot: Snapshot) -> 'StatementDB':
+    def from_file(fn: str, snapshot: Snapshot) -> 'ProgramStatements':
         logger.debug("reading statement database from file: %s", fn)
         with open(fn, 'r') as f:
             d = json.load(f)
-        db = StatementDB.from_dict(d, snapshot)
+        db = ProgramStatements.from_dict(d, snapshot)
         logger.debug("read statement database from file: %s", fn)
         return db
 
     @staticmethod
     def from_dict(d: List[Dict[str, Any]],
                   snapshot: Snapshot
-                  ) -> 'StatementDB':
+                  ) -> 'ProgramStatements':
         statements = [Statement.from_dict(dd, snapshot) for dd in d]
-        return StatementDB(statements)
+        return ProgramStatements(statements)
 
     def __init__(self, statements: List[Statement]) -> None:
         self.__statements = statements
