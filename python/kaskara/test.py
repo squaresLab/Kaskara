@@ -55,8 +55,6 @@ def test() -> None:
         snapshot = orchestrator.snapshot.fetch_baseline_snapshot(client_bugzoo)
         analysis = Analysis.build(client_bugzoo, snapshot, files)
 
-    analysis.dump()
-
     floc = FileLocation.from_string("/ros_ws/src/geometry/tf/src/transform_broadcaster.cpp@51:1")  # noqa
     print("INSIDE FUNCTION? {}".format(analysis.is_inside_function(floc)))
     print("INSIDE VOID FUNCTION? {}".format(analysis.is_inside_void_function(floc)))  # noqa

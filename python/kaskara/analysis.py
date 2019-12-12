@@ -102,7 +102,3 @@ class Analysis(object):
     def is_inside_void_function(self, location: FileLocation) -> bool:
         f = self.__db_function.encloses(location)
         return f is not None and f.return_type == 'void'
-
-    def dump(self) -> None:
-        print("LOOPS: {}".format(self.__location_bodies))
-        print("INSERTIONS: {}".format([i for i in self.insertions]))
