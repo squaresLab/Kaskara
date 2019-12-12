@@ -13,7 +13,7 @@ from .core import FileLocation, FileLocationRange, FileLocationRangeSet
 from .loops import find_loops, ProgramLoops
 from .functions import FunctionDB
 from .insertions import InsertionPointDB
-from .statements import StatementDB
+from .statements import ProgramStatements
 
 PLUGIN = Plugin(name='kaskara',
                 image='squareslab/kaskara',
@@ -40,8 +40,11 @@ class Analysis:
                 FunctionDB.build(client_bugzoo, snapshot, files, container,
                                  ignore_exit_code=ignore_exit_code)
             db_statements = \
-                StatementDB.build(client_bugzoo, snapshot, files, container,
-                                  ignore_exit_code=ignore_exit_code)
+                ProgramStatements.build(client_bugzoo,
+                                        snapshot,
+                                        files,
+                                        container,
+                                        ignore_exit_code=ignore_exit_code)
             return Analysis(program_loops,
                             db_function,
                             db_statements)
@@ -52,7 +55,7 @@ class Analysis:
     def __init__(self,
                  program_loops: ProgramLoops,
                  db_function: FunctionDB,
-                 db_statement: StatementDB
+                 db_statement: ProgramStatements 
                  ) -> None:
         self.__program_loops = program_loops
         self.__db_function = db_function
@@ -64,7 +67,7 @@ class Analysis:
         return self.__db_function
 
     @property
-    def statements(self) -> StatementDB:
+    def statements(self) -> ProgramStatements:
         return self.__db_statement
 
     @property
