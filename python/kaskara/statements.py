@@ -3,18 +3,17 @@ __all__ = ('Statement', 'ProgramStatements')
 
 from typing import FrozenSet, Dict, Any, List, Iterator
 import json
-import attr
 import logging
+import os
 
-from bugzoo.util import indent
-from bugzoo.client import Client as BugZooClient
-from bugzoo.core.bug import Bug as Snapshot
-from bugzoo.core.container import Container
+import attr
+import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation, FileLine
 from .exceptions import BondException
-from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 from .insertions import InsertionPointDB, InsertionPoint
+from .project import Project
+from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
 
 logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -34,10 +33,10 @@ class Statement:
     requires_syntax: FrozenSet[str]
 
     @staticmethod
-    def from_dict(d: Dict[str, Any], snapshot: Snapshot) -> 'Statement':
+    def from_dict(project: Project, d: Dict[str, Any]) -> 'Statement':
         # FIXME
         location = FileLocationRange.from_string(d['location'])
-        location = abs_to_rel_flocrange(snapshot.source_dir, location)
+        location = abs_to_rel_flocrange(project.directory, location)
         return Statement(d['content'],
                          d['canonical'],
                          d['kind'],
@@ -49,8 +48,8 @@ class Statement:
                          frozenset(d.get('live_before', [])),
                          frozenset(d.get('requires_syntax', [])))
 
-    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
-        loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
+    def to_dict(self, project: Project) -> Dict[str, Any]:
+        loc = rel_to_abs_flocrange(project.directory, self.location)
         return {'content': self.content,
                 'canonical': self.canonical,
                 'kind': self.kind,
@@ -64,53 +63,55 @@ class Statement:
 
 
 class ProgramStatements:
-    @staticmethod
-    def build(client_bugzoo: BugZooClient,
-              snapshot: Snapshot,
-              files: List[str],
-              container: Container,
-              *,
-              ignore_exit_code: bool = False
-              ) -> 'ProgramStatements':
-        out_fn = "statements.json"
-        logger.debug("building statement database for snapshot [%s]",
-                     snapshot.name)
-        logger.debug("fetching statements from files: %s", ', '.join(files))
+    @classmethod
+    def build_for_container(cls,
+                            project: Project,
+                            container: _dockerblade.Container
+                            ) -> 'ProgramStatements':
+        logger.debug('finding statements for project: %s', project)
 
-        cmd = "kaskara-statement-finder {}".format(' '.join(files))
-        workdir = snapshot.source_dir
-        logger.debug("executing statement finder [%s]: %s", workdir, cmd)
-        outcome = client_bugzoo.containers.exec(container, cmd, context=workdir)  # noqa
-        logger.debug("executed statement finder [%d]:\n%s",
-                     outcome.code, indent(outcome.output, 2))
+        shell = container.shell()
+        workdir = project.directory
+        command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
+        command_args += project.files
+        command = ' '.join(command_args)
+        output_filename = os.path.join(workdir, 'statements.json')
+        logger.debug('executing statement finder [%s]: %s', workdir, command)
+        try:
+            shell.check_call(command, cwd=workdir)
+        except _dockerblade.CalledProcessError as err:
+            msg = f'statement finder failed with code {err.returncode}'
+            logger.exception(msg)
+            if not project.ignore_errors:
+                raise BondException(msg)
 
-        if not ignore_exit_code and outcome.code != 0:
-            msg = "kaskara-statement-finder exited with non-zero code: {}"
-            msg = msg.format(outcome.code)
-            raise BondException(msg)  # FIXME
-
-        logger.debug('reading statement analysis results from file: %s',
-                     out_fn)
-        output = client_bugzoo.files.read(container, out_fn)
-        jsn = json.loads(output)  # type: List[Dict[str, Any]]
-        db = ProgramStatements.from_dict(jsn, snapshot)
-        logger.debug("finished reading statement analysis results")
+        logger.debug('reading results from file: %s', output_filename)
+        files = container.filesystem()
+        file_contents = files.read(output_filename)
+        jsn: List[Dict[str, Any]] = json.loads(file_contents)
+        db = ProgramStatements.from_dict(project, jsn)
+        logger.debug('finished reading results')
         return db
 
-    @staticmethod
-    def from_file(fn: str, snapshot: Snapshot) -> 'ProgramStatements':
-        logger.debug("reading statement database from file: %s", fn)
-        with open(fn, 'r') as f:
-            d = json.load(f)
-        db = ProgramStatements.from_dict(d, snapshot)
-        logger.debug("read statement database from file: %s", fn)
-        return db
+    @classmethod
+    def build(cls, project: Project) -> 'ProgramStatements':
+        with project.provision() as container:
+            return cls.build_for_container(project, container)
+
+    @classmethod
+    def from_file(cls, project: Project, filename: str) -> 'ProgramStatements':
+        logger.debug('reading statement database from file: %s', filename)
+        with open(filename, 'r') as fh:
+            dict_ = json.load(fh)
+        statements = ProgramStatements.from_dict(project, dict_)
+        logger.debug("read statement database from file: %s", filename)
+        return statements
 
     @staticmethod
-    def from_dict(d: List[Dict[str, Any]],
-                  snapshot: Snapshot
+    def from_dict(project: Project,
+                  d: List[Dict[str, Any]]
                   ) -> 'ProgramStatements':
-        statements = [Statement.from_dict(dd, snapshot) for dd in d]
+        statements = [Statement.from_dict(project, dd) for dd in d]
         return ProgramStatements(statements)
 
     def __init__(self, statements: List[Statement]) -> None:
@@ -146,7 +147,7 @@ class ProgramStatements:
 
     def insertions(self) -> InsertionPointDB:
         logger.debug("computing insertion points")
-        points = []  # type: List[InsertionPoint]
+        points: List[InsertionPoint] = []
         for stmt in self:
             location = FileLocation(stmt.location.filename,
                                     stmt.location.stop)
@@ -159,12 +160,12 @@ class ProgramStatements:
         logger.debug("computed insertion points")
         return db
 
-    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
-        return [stmt.to_dict(snapshot) for stmt in self.__statements]
+    def to_dict(self, project: Project) -> List[Dict[str, Any]]:
+        return [stmt.to_dict(project) for stmt in self.__statements]
 
-    def to_file(self, fn: str, snapshot: Snapshot) -> None:
-        logger.debug("writing statement database to file: %s", fn)
-        d = self.to_dict(snapshot)
-        with open(fn, 'w') as f:
-            json.dump(d, f)
-        logger.debug("wrote statement database to file: %s", fn)
+    def to_file(self, project: Project, filename: str) -> None:
+        logger.debug('writing statement database to file: %s', filename)
+        d = self.to_dict(project)
+        with open(filename, 'w') as fh:
+            json.dump(d, fh)
+        logger.debug('wrote statement database to file: %s', filename)

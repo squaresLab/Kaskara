@@ -7,10 +7,6 @@ import json
 import attr
 import os
 
-from bugzoo.client import Client as BugZooClient
-from bugzoo.core.bug import Bug as Snapshot
-from bugzoo.core.container import Container
-
 from .core import FileLocation, FileLine
 from .exceptions import BondException
 from .util import abs_to_rel_floc, rel_to_abs_floc
@@ -24,20 +20,6 @@ class InsertionPoint:
     location: FileLocation
     visible: FrozenSet[str]
 
-    @staticmethod
-    def from_dict(d: Dict[str, str],
-                  snapshot: Snapshot
-                  ) -> 'InsertionPoint':
-        location = FileLocation.from_string(d['location'])
-        location = abs_to_rel_floc(snapshot.source_dir, location)
-        visible = frozenset(d['visible'])
-        return InsertionPoint(location, visible)
-
-    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
-        loc = rel_to_abs_floc(snapshot.source_dir, self.location)
-        return {'location': str(loc),
-                'visible': [sym for sym in self.visible]}
-
 
 class InsertionPointDB(Iterable[InsertionPoint]):
     def __init__(self, contents: List[InsertionPoint]) -> None:
@@ -50,38 +32,6 @@ class InsertionPointDB(Iterable[InsertionPoint]):
             if filename not in self.__file_insertions:
                 self.__file_insertions[filename] = []
             self.__file_insertions[filename].append(ins)
-
-    @staticmethod
-    def build(client_bugzoo: BugZooClient,
-              snapshot: Snapshot,
-              files: List[str],
-              container: Container,
-              *,
-              ignore_exit_code: bool = False
-              ) -> 'InsertionPointDB':
-        out_fn = "insertion-points.json"
-        cmd = "kaskara-insertion-point-finder {}".format(' '.join(files))
-        workdir = snapshot.source_dir
-        outcome = client_bugzoo.containers.exec(container,
-                                                cmd,
-                                                context=workdir)
-
-        if not ignore_exit_code and outcome.code != 0:
-            msg = ('kaskara-insertion-point-finder '
-                   'exited with non-zero code: {}')
-            msg = msg.format(outcome.code)
-            raise BondException(msg)
-
-        output = client_bugzoo.files.read(container, out_fn)
-        jsn = json.loads(output)  # type: List[Dict[str, str]]
-        return InsertionPointDB.from_dict(jsn, snapshot)
-
-    @staticmethod
-    def from_dict(d: List[Dict[str, Any]],
-                  snapshot: Snapshot
-                  ) -> 'InsertionPointDB':
-        contents = [InsertionPoint.from_dict(dd, snapshot) for dd in d]
-        return InsertionPointDB(contents)
 
     def __iter__(self) -> Iterator[InsertionPoint]:
         yield from self.__contents
@@ -106,6 +56,3 @@ class InsertionPointDB(Iterable[InsertionPoint]):
                 logger.debug("found insertion point at line [%s]: %s",
                              str(line), ins)
                 yield ins
-
-    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
-        return [i.to_dict(snapshot) for i in self]

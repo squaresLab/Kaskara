@@ -3,15 +3,19 @@ __all__ = ('FunctionDesc', 'FunctionDB')
 
 from typing import List, Dict, Tuple, Optional, Iterator, Iterable, Any
 import json
-import attr
+import logging
+import os
 
-from bugzoo.client import Client as BugZooClient
-from bugzoo.core.bug import Bug as Snapshot
-from bugzoo.core.container import Container
+import attr
+import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation
 from .exceptions import BondException
+from .project import Project
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
+
+logger: logging.Logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
@@ -25,14 +29,12 @@ class FunctionDesc:
     is_pure: bool
 
     @staticmethod
-    def from_dict(d: Dict[str, Any],
-                  snapshot: Snapshot
-                  ) -> 'FunctionDesc':
+    def from_dict(project: Project, d: Dict[str, Any]) -> 'FunctionDesc':
         name = d['name']
         location = FileLocationRange.from_string(d['location'])
-        location = abs_to_rel_flocrange(snapshot.source_dir, location)
+        location = abs_to_rel_flocrange(project.directory, location)
         body = FileLocationRange.from_string(d['body'])
-        body = abs_to_rel_flocrange(snapshot.source_dir, body)
+        body = abs_to_rel_flocrange(project.directory, body)
         return_type = d['return-type']
         is_global = d['global']
         is_pure = d['pure']
@@ -47,9 +49,9 @@ class FunctionDesc:
     def filename(self) -> str:
         return self.location.filename
 
-    def to_dict(self, snapshot: Snapshot) -> Dict[str, Any]:
-        loc = rel_to_abs_flocrange(snapshot.source_dir, self.location)
-        body = rel_to_abs_flocrange(snapshot.source_dir, self.body)
+    def to_dict(self, project: Project) -> Dict[str, Any]:
+        loc = rel_to_abs_flocrange(project.directory, self.location)
+        body = rel_to_abs_flocrange(project.directory, self.body)
         return {'name': self.name,
                 'location': str(loc),
                 'body': str(body),
@@ -60,34 +62,41 @@ class FunctionDesc:
 
 class FunctionDB:
     @staticmethod
-    def from_dict(d: List[Dict[str, Any]],
-                  snapshot: Snapshot
-                  ) -> 'FunctionDB':
-        return FunctionDB(FunctionDesc.from_dict(desc, snapshot) for desc in d)
+    def from_dict(project: Project, d: List[Dict[str, Any]]) -> 'FunctionDB':
+        return FunctionDB(FunctionDesc.from_dict(project, desc) for desc in d)
 
-    @staticmethod
-    def build(client_bugzoo: BugZooClient,
-              snapshot: Snapshot,
-              files: List[str],
-              container: Container,
-              *,
-              ignore_exit_code: bool = False
-              ) -> 'FunctionDB':
-        out_fn = "functions.json"
-        cmd = "kaskara-function-scanner {}".format(' '.join(files))
-        workdir = snapshot.source_dir
-        outcome = \
-            client_bugzoo.containers.exec(container, cmd, context=workdir)
+    @classmethod
+    def build_for_container(cls,
+                            project: Project,
+                            container: _dockerblade.Container
+                            ) -> 'FunctionDB':
+        shell = container.shell()
+        workdir = project.directory
+        output_filename = os.path.join(workdir, 'functions.json')
+        command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
+        command_args += project.files
+        command = ' '.join(command_args)
 
-        if not ignore_exit_code and outcome.code != 0:
-            msg = "kaskara-function-scanner exited with non-zero code: {}"
-            msg = msg.format(outcome.code)
-            raise BondException(msg)
+        logger.debug('executing function scanner [%s]: %s', workdir, command)
+        try:
+            shell.check_call(command, cwd=workdir)
+        except _dockerblade.CalledProcessError as err:
+            msg = f'function scanner failed with code {err.returncode}'
+            logger.exception(msg)
+            if not project.ignore_errors:
+                raise BondException(msg)
 
-        output = client_bugzoo.files.read(container, out_fn)
-        jsn = json.loads(output)  # type: List[Dict[str, Any]]
-        funcs = [FunctionDesc.from_dict(d, snapshot) for d in jsn]
+        logger.debug('reading results from file: %s', output_filename)
+        files = container.filesystem()
+        file_contents = files.read(output_filename)
+        jsn = json.loads(file_contents)
+        funcs = [FunctionDesc.from_dict(project, d) for d in jsn]
         return FunctionDB(funcs)
+
+    @classmethod
+    def build(cls, project: Project) -> 'FunctionDB':
+        with project.provision() as container:
+            return cls.build_for_container(project, container)
 
     def __init__(self, functions: Iterable[FunctionDesc]) -> None:
         self.__filename_to_functions = \
@@ -115,9 +124,9 @@ class FunctionDB:
         """
         yield from self.__filename_to_functions.get(filename, [])
 
-    def to_dict(self, snapshot: Snapshot) -> List[Dict[str, Any]]:
-        d = []  # type: List[Dict[str, Any]]
+    def to_dict(self, project: Project) -> List[Dict[str, Any]]:
+        d: List[Dict[str, Any]] = []
         for descs in self.__filename_to_functions.values():
             for desc in descs:
-                d.append(desc.to_dict(snapshot))
+                d.append(desc.to_dict(project))
         return d
