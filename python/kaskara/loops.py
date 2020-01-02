@@ -10,7 +10,7 @@ import attr
 import dockerblade as _dockerblade
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
-from .exceptions import BondException
+from .exceptions import KaskaraException
 from .project import Project
 from .util import abs_to_rel_flocrange
 
@@ -65,7 +65,7 @@ class ProgramLoops:
             msg = f'loop finder failed with code {err.returncode}'
             logger.exception(msg)
             if not project.ignore_errors:
-                raise BondException(msg)
+                raise KaskaraException(msg)
 
         logger.debug('reading results from file: %s', output_filename)
         files = container.filesystem()

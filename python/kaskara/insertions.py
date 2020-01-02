@@ -8,7 +8,7 @@ import attr
 import os
 
 from .core import FileLocation, FileLine
-from .exceptions import BondException
+from .exceptions import KaskaraException
 from .util import abs_to_rel_floc, rel_to_abs_floc
 
 logger: logging.Logger = logging.getLogger(__name__)

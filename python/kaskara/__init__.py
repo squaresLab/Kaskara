@@ -2,7 +2,7 @@
 import logging
 
 from .version import __version__
-from .exceptions import BondException
+from .exceptions import KaskaraException
 from .project import Project
 from .analysis import Analysis
 from .insertions import InsertionPoint

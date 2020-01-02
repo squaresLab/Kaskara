@@ -10,7 +10,7 @@ import attr
 import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation, FileLine
-from .exceptions import BondException
+from .exceptions import KaskaraException
 from .insertions import InsertionPointDB, InsertionPoint
 from .project import Project
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
@@ -83,7 +83,7 @@ class ProgramStatements:
             msg = f'statement finder failed with code {err.returncode}'
             logger.exception(msg)
             if not project.ignore_errors:
-                raise BondException(msg)
+                raise KaskaraException(msg)
 
         logger.debug('reading results from file: %s', output_filename)
         files = container.filesystem()
