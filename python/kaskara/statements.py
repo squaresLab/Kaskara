@@ -48,19 +48,6 @@ class Statement:
                          frozenset(d.get('live_before', [])),
                          frozenset(d.get('requires_syntax', [])))
 
-    def to_dict(self, project: Project) -> Dict[str, Any]:
-        loc = rel_to_abs_flocrange(project.directory, self.location)
-        return {'content': self.content,
-                'canonical': self.canonical,
-                'kind': self.kind,
-                'location': str(loc),
-                'live_before': [v for v in self.live_before],
-                'reads': [v for v in self.reads],
-                'writes': [v for v in self.writes],
-                'decls': [v for v in self.declares],
-                'visible': [v for v in self.visible],
-                'requires_syntax': list(self.requires_syntax)}
-
 
 class ProgramStatements:
     @classmethod
@@ -159,13 +146,3 @@ class ProgramStatements:
         db = InsertionPointDB(points)
         logger.debug("computed insertion points")
         return db
-
-    def to_dict(self, project: Project) -> List[Dict[str, Any]]:
-        return [stmt.to_dict(project) for stmt in self.__statements]
-
-    def to_file(self, project: Project, filename: str) -> None:
-        logger.debug('writing statement database to file: %s', filename)
-        d = self.to_dict(project)
-        with open(filename, 'w') as fh:
-            json.dump(d, fh)
-        logger.debug('wrote statement database to file: %s', filename)

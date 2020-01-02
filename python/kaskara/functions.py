@@ -53,16 +53,6 @@ class FunctionDesc:
     def filename(self) -> str:
         return self.location.filename
 
-    def to_dict(self, project: Project) -> Dict[str, Any]:
-        loc = rel_to_abs_flocrange(project.directory, self.location)
-        body = rel_to_abs_flocrange(project.directory, self.body)
-        return {'name': self.name,
-                'location': str(loc),
-                'body': str(body),
-                'return-type': self.return_type,
-                'global': self.is_global,
-                'pure': self.is_pure}
-
 
 class ProgramFunctions:
     """Represents the set of functions within an associated program."""
@@ -131,10 +121,3 @@ class ProgramFunctions:
         contained within a given file.
         """
         yield from self.__filename_to_functions.get(filename, [])
-
-    def to_dict(self, project: Project) -> List[Dict[str, Any]]:
-        d: List[Dict[str, Any]] = []
-        for descs in self.__filename_to_functions.values():
-            for desc in descs:
-                d.append(desc.to_dict(project))
-        return d
