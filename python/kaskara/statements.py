@@ -10,6 +10,7 @@ import attr
 import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation, FileLine
+from .container import ProjectContainer
 from .exceptions import KaskaraException
 from .insertions import InsertionPointDB, InsertionPoint
 from .project import Project
@@ -52,12 +53,11 @@ class Statement:
 class ProgramStatements:
     @classmethod
     def build_for_container(cls,
-                            project: Project,
-                            container: _dockerblade.Container
+                            container: ProjectContainer
                             ) -> 'ProgramStatements':
+        project = container.project
         logger.debug('finding statements for project: %s', project)
 
-        shell = container.shell()
         workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
         command_args += project.files
@@ -65,7 +65,7 @@ class ProgramStatements:
         output_filename = os.path.join(workdir, 'statements.json')
         logger.debug('executing statement finder [%s]: %s', workdir, command)
         try:
-            shell.check_call(command, cwd=workdir)
+            container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
             msg = f'statement finder failed with code {err.returncode}'
             logger.exception(msg)
@@ -73,8 +73,7 @@ class ProgramStatements:
                 raise KaskaraException(msg)
 
         logger.debug('reading results from file: %s', output_filename)
-        files = container.filesystem()
-        file_contents = files.read(output_filename)
+        file_contents = container.files.read(output_filename)
         jsn: List[Dict[str, Any]] = json.loads(file_contents)
         db = ProgramStatements.from_dict(project, jsn)
         logger.debug('finished reading results')
@@ -83,7 +82,7 @@ class ProgramStatements:
     @classmethod
     def build(cls, project: Project) -> 'ProgramStatements':
         with project.provision() as container:
-            return cls.build_for_container(project, container)
+            return cls.build_for_container(container)
 
     @classmethod
     def from_file(cls, project: Project, filename: str) -> 'ProgramStatements':

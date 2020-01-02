@@ -10,6 +10,7 @@ import attr
 import dockerblade as _dockerblade
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
+from .container import ProjectContainer
 from .exceptions import KaskaraException
 from .project import Project
 from .util import abs_to_rel_flocrange
@@ -49,10 +50,9 @@ class ProgramLoops:
 
     @classmethod
     def build_for_container(cls,
-                            project: Project,
-                            container: _dockerblade.Container
+                            container: ProjectContainer
                             ) -> 'ProgramLoops':
-        shell = container.shell()
+        project = container.project
         workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-loop-finder']
         command_args += project.files
@@ -60,7 +60,7 @@ class ProgramLoops:
         output_filename = os.path.join(workdir, 'loops.json')
         logger.debug('executing loop finder [%s]: %s', workdir, command)
         try:
-            shell.check_call(command, cwd=workdir)
+            container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
             msg = f'loop finder failed with code {err.returncode}'
             logger.exception(msg)
@@ -68,11 +68,10 @@ class ProgramLoops:
                 raise KaskaraException(msg)
 
         logger.debug('reading results from file: %s', output_filename)
-        files = container.filesystem()
-        file_contents = files.read(output_filename)
+        file_contents = container.files.read(output_filename)
         return cls._from_file_contents(project, file_contents)
 
     @classmethod
     def build(cls, project: Project) -> 'ProgramLoops':
         with project.provision() as container:
-            return cls.build_for_container(project, container)
+            return cls.build_for_container(container)

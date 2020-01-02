@@ -14,6 +14,7 @@ import attr
 import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation
+from .container import ProjectContainer
 from .exceptions import KaskaraException
 from .project import Project
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
@@ -65,10 +66,9 @@ class ProgramFunctions:
 
     @classmethod
     def build_for_container(cls,
-                            project: Project,
-                            container: _dockerblade.Container
+                            container: ProjectContainer
                             ) -> 'ProgramFunctions':
-        shell = container.shell()
+        project = container.project
         workdir = project.directory
         output_filename = os.path.join(workdir, 'functions.json')
         command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
@@ -77,7 +77,7 @@ class ProgramFunctions:
 
         logger.debug('executing function scanner [%s]: %s', workdir, command)
         try:
-            shell.check_call(command, cwd=workdir)
+            container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
             msg = f'function scanner failed with code {err.returncode}'
             logger.exception(msg)
@@ -85,8 +85,7 @@ class ProgramFunctions:
                 raise KaskaraException(msg)
 
         logger.debug('reading results from file: %s', output_filename)
-        files = container.filesystem()
-        file_contents = files.read(output_filename)
+        file_contents = container.files(output_filename)
         jsn = json.loads(file_contents)
         funcs = [FunctionDesc.from_dict(project, d) for d in jsn]
         return ProgramFunctions(funcs)
@@ -94,11 +93,10 @@ class ProgramFunctions:
     @classmethod
     def build(cls, project: Project) -> 'ProgramFunctions':
         with project.provision() as container:
-            return cls.build_for_container(project, container)
+            return cls.build_for_container(container)
 
     def __init__(self, functions: Iterable[FunctionDesc]) -> None:
-        self.__filename_to_functions = \
-            {}  # type: Dict[str, List[FunctionDesc]]
+        self.__filename_to_functions: Dict[str, List[FunctionDesc]] = {}
         for f in functions:
             if f.filename not in self.__filename_to_functions:
                 self.__filename_to_functions[f.filename] = []
