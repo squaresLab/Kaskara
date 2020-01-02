@@ -57,44 +57,6 @@ class FunctionDesc:
 
 class ProgramFunctions:
     """Represents the set of functions within an associated program."""
-    @staticmethod
-    def from_dict(project: Project,
-                  d: List[Dict[str, Any]]
-                  ) -> 'ProgramFunctions':
-        return ProgramFunctions(FunctionDesc.from_dict(project, desc)
-                                for desc in d)
-
-    @classmethod
-    def build_for_container(cls,
-                            container: ProjectContainer
-                            ) -> 'ProgramFunctions':
-        project = container.project
-        workdir = project.directory
-        output_filename = os.path.join(workdir, 'functions.json')
-        command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
-        command_args += project.files
-        command = ' '.join(command_args)
-
-        logger.debug('executing function scanner [%s]: %s', workdir, command)
-        try:
-            container.shell.check_call(command, cwd=workdir)
-        except _dockerblade.CalledProcessError as err:
-            msg = f'function scanner failed with code {err.returncode}'
-            logger.exception(msg)
-            if not project.ignore_errors:
-                raise KaskaraException(msg)
-
-        logger.debug('reading results from file: %s', output_filename)
-        file_contents = container.files(output_filename)
-        jsn = json.loads(file_contents)
-        funcs = [FunctionDesc.from_dict(project, d) for d in jsn]
-        return ProgramFunctions(funcs)
-
-    @classmethod
-    def build(cls, project: Project) -> 'ProgramFunctions':
-        with project.provision() as container:
-            return cls.build_for_container(container)
-
     def __init__(self, functions: Iterable[FunctionDesc]) -> None:
         self.__filename_to_functions: Dict[str, List[FunctionDesc]] = {}
         for f in functions:

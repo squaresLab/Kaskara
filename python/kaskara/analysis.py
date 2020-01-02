@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Analysis',)
 
-from typing import List, Optional, Dict, Any
-from contextlib import ExitStack
-import json
-
 import attr
-import docker as _docker
-import dockerblade as _dockerblade
 
-from .core import FileLocation, FileLocationRange, FileLocationRangeSet
+from .core import FileLocation
 from .functions import ProgramFunctions
 from .insertions import InsertionPointDB
 from .loops import ProgramLoops
@@ -37,19 +31,6 @@ class Analysis:
     functions: ProgramFunctions
     statements: ProgramStatements
     insertions: InsertionPointDB
-
-    @staticmethod
-    def build(project: Project) -> 'Analysis':
-        """Performs an analysis of a given project."""
-        loops = ProgramLoops.build(project)
-        functions = ProgramFunctions.build(project)
-        statements = ProgramStatements.build(project)
-        insertions = statements.insertions()
-        return Analysis(project=project,
-                        loops=loops,
-                        functions=functions,
-                        statements=statements,
-                        insertions=insertions)
 
     def is_inside_loop(self, location: FileLocation) -> bool:
         return self.loops.is_within_loop(location)

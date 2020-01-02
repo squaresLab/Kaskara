@@ -31,5 +31,5 @@ class ProjectContainer:
     files: _dockerblade.FileSystem = attr.ib(init=False)
 
     def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, '_shell', self.dockerblade.shell('/bin/sh'))
-        object.__setattr__(self, '_shell', self.dockerblade.filesystem())
+        object.__setattr__(self, 'shell', self.dockerblade.shell('/bin/sh'))
+        object.__setattr__(self, 'files', self.dockerblade.filesystem())

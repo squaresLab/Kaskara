@@ -10,5 +10,7 @@ from .insertions import InsertionPoint
 from .statements import Statement
 from .loops import ProgramLoops
 
+from . import clang
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

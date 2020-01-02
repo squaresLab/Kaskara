@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Statement', 'ProgramStatements')
 
-from typing import FrozenSet, Dict, Any, List, Iterator
+from typing import FrozenSet, Dict, Any, List, Iterator, Mapping, Sequence
 import json
 import logging
-import os
 
 import attr
-import dockerblade as _dockerblade
 
 from .core import FileLocationRange, FileLocation, FileLine
-from .container import ProjectContainer
-from .exceptions import KaskaraException
 from .insertions import InsertionPointDB, InsertionPoint
 from .project import Project
 from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
@@ -34,7 +30,7 @@ class Statement:
     requires_syntax: FrozenSet[str]
 
     @staticmethod
-    def from_dict(project: Project, d: Dict[str, Any]) -> 'Statement':
+    def from_dict(project: Project, d: Mapping[str, Any]) -> 'Statement':
         # FIXME
         location = FileLocationRange.from_string(d['location'])
         location = abs_to_rel_flocrange(project.directory, location)
@@ -52,39 +48,6 @@ class Statement:
 
 class ProgramStatements:
     @classmethod
-    def build_for_container(cls,
-                            container: ProjectContainer
-                            ) -> 'ProgramStatements':
-        project = container.project
-        logger.debug('finding statements for project: %s', project)
-
-        workdir = project.directory
-        command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
-        command_args += project.files
-        command = ' '.join(command_args)
-        output_filename = os.path.join(workdir, 'statements.json')
-        logger.debug('executing statement finder [%s]: %s', workdir, command)
-        try:
-            container.shell.check_call(command, cwd=workdir)
-        except _dockerblade.CalledProcessError as err:
-            msg = f'statement finder failed with code {err.returncode}'
-            logger.exception(msg)
-            if not project.ignore_errors:
-                raise KaskaraException(msg)
-
-        logger.debug('reading results from file: %s', output_filename)
-        file_contents = container.files.read(output_filename)
-        jsn: List[Dict[str, Any]] = json.loads(file_contents)
-        db = ProgramStatements.from_dict(project, jsn)
-        logger.debug('finished reading results')
-        return db
-
-    @classmethod
-    def build(cls, project: Project) -> 'ProgramStatements':
-        with project.provision() as container:
-            return cls.build_for_container(container)
-
-    @classmethod
     def from_file(cls, project: Project, filename: str) -> 'ProgramStatements':
         logger.debug('reading statement database from file: %s', filename)
         with open(filename, 'r') as fh:
@@ -95,7 +58,7 @@ class ProgramStatements:
 
     @staticmethod
     def from_dict(project: Project,
-                  d: List[Dict[str, Any]]
+                  d: Sequence[Mapping[str, Any]]
                   ) -> 'ProgramStatements':
         statements = [Statement.from_dict(project, dd) for dd in d]
         return ProgramStatements(statements)
