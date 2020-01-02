@@ -19,6 +19,19 @@ from .statements import ProgramStatements
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class Analysis:
+    """Stores the results of an analysis of a given project.
+
+    Attributes
+    ----------
+    project: Project
+        A description of the project that was analysed.
+    loops: ProgramLoops
+        The set of loop control-flow statements within the program.
+    functions: ProgramFunctions
+        The set of functions within the program.
+    statements: ProgramStatements
+        The set of statements within the program.
+    """
     project: Project
     loops: ProgramLoops
     functions: ProgramFunctions
@@ -27,15 +40,16 @@ class Analysis:
 
     @staticmethod
     def build(project: Project) -> 'Analysis':
-        program_loops = ProgramLoops.build(project)
-        db_function = ProgramFunctions.build(project)
-        db_statements = ProgramStatements.build(project)
-        db_insertion = db_statements.insertions()
+        """Performs an analysis of a given project."""
+        loops = ProgramLoops.build(project)
+        functions = ProgramFunctions.build(project)
+        statements = ProgramStatements.build(project)
+        insertions = statements.insertions()
         return Analysis(project=project,
-                        loops=program_loops,
-                        functions=db_function,
-                        statements=db_statements,
-                        insertions=db_insertion)
+                        loops=loops,
+                        functions=functions,
+                        statements=statements,
+                        insertions=insertions)
 
     def is_inside_loop(self, location: FileLocation) -> bool:
         return self.loops.is_within_loop(location)
