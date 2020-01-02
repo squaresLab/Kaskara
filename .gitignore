@@ -15,7 +15,6 @@ Pipfile
 *.swo
 
 build
-Makefile
 
 # Prerequisites
 *.d

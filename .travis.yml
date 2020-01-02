@@ -5,6 +5,8 @@ services:
 python:
 - '3.6'
 install:
+- docker build -t squareslab/kaskara .
+- make -C test/examples
 - pip install -r requirements.dev.txt
 - pip install .
 script:
