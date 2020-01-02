@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-__all__ = ('FunctionDesc', 'FunctionDB')
+"""
+This module provides functionality for discovering and describing the set of
+functions contained within a program.
+"""
+__all__ = ('FunctionDesc', 'ProgramFunctions')
 
 from typing import List, Dict, Tuple, Optional, Iterator, Iterable, Any
 import json
@@ -60,16 +64,20 @@ class FunctionDesc:
                 'pure': self.is_pure}
 
 
-class FunctionDB:
+class ProgramFunctions:
+    """Represents the set of functions within an associated program."""
     @staticmethod
-    def from_dict(project: Project, d: List[Dict[str, Any]]) -> 'FunctionDB':
-        return FunctionDB(FunctionDesc.from_dict(project, desc) for desc in d)
+    def from_dict(project: Project,
+                  d: List[Dict[str, Any]]
+                  ) -> 'ProgramFunctions':
+        return ProgramFunctions(FunctionDesc.from_dict(project, desc)
+                                for desc in d)
 
     @classmethod
     def build_for_container(cls,
                             project: Project,
                             container: _dockerblade.Container
-                            ) -> 'FunctionDB':
+                            ) -> 'ProgramFunctions':
         shell = container.shell()
         workdir = project.directory
         output_filename = os.path.join(workdir, 'functions.json')
@@ -91,10 +99,10 @@ class FunctionDB:
         file_contents = files.read(output_filename)
         jsn = json.loads(file_contents)
         funcs = [FunctionDesc.from_dict(project, d) for d in jsn]
-        return FunctionDB(funcs)
+        return ProgramFunctions(funcs)
 
     @classmethod
-    def build(cls, project: Project) -> 'FunctionDB':
+    def build(cls, project: Project) -> 'ProgramFunctions':
         with project.provision() as container:
             return cls.build_for_container(project, container)
 

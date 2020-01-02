@@ -10,7 +10,7 @@ import docker as _docker
 import dockerblade as _dockerblade
 
 from .core import FileLocation, FileLocationRange, FileLocationRangeSet
-from .functions import FunctionDB
+from .functions import ProgramFunctions
 from .insertions import InsertionPointDB
 from .loops import ProgramLoops
 from .project import Project
@@ -21,14 +21,14 @@ from .statements import ProgramStatements
 class Analysis:
     project: Project
     loops: ProgramLoops
-    functions: FunctionDB
+    functions: ProgramFunctions
     statements: ProgramStatements
     insertions: InsertionPointDB
 
     @staticmethod
     def build(project: Project) -> 'Analysis':
         program_loops = ProgramLoops.build(project)
-        db_function = FunctionDB.build(project)
+        db_function = ProgramFunctions.build(project)
         db_statements = ProgramStatements.build(project)
         db_insertion = db_statements.insertions()
         return Analysis(project=project,
