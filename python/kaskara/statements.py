@@ -3,13 +3,11 @@ __all__ = ('Statement', 'ProgramStatements')
 
 from typing import FrozenSet, Dict, List, Iterable, Iterator, Optional
 import abc
-import logging
+
+from loguru import logger
 
 from .core import FileLocationRange, FileLocation, FileLine
 from .insertions import ProgramInsertionPoints, InsertionPoint
-
-logger: logging.Logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Statement(abc.ABC):
@@ -64,9 +62,9 @@ class ProgramStatements:
             if filename not in self.__file_to_statements:
                 self.__file_to_statements[filename] = []
             self.__file_to_statements[filename].append(statement)
-        summary = ["  {}: {} statements".format(fn, len(stmts))
-                   for (fn, stmts) in self.__file_to_statements.items()]
-        logger.debug("indexed statements by file:\n%s", '\n'.join(summary))
+        summary = '\n'.join(f"  {fn}: {len(stmts)} statements" for (fn, stmts)
+                            in self.__file_to_statements.items())
+        logger.debug(f'indexed statements by file:\n{summary}')
 
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
@@ -83,7 +81,7 @@ class ProgramStatements:
                 yield stmt
 
     def insertions(self) -> ProgramInsertionPoints:
-        logger.debug("computing insertion points")
+        logger.debug('computing insertion points')
         points: List[InsertionPoint] = []
         for stmt in self:
             location = FileLocation(stmt.location.filename,
@@ -94,5 +92,5 @@ class ProgramStatements:
 
             points.append(point)
         db = ProgramInsertionPoints(points)
-        logger.debug("computed insertion points")
+        logger.debug('computed insertion points')
         return db

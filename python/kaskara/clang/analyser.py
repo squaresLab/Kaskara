@@ -3,10 +3,10 @@ __all__ = ('ClangAnalyser',)
 
 from typing import Any, List, Mapping, Sequence
 import json
-import logging
 import os
 
 import dockerblade as _dockerblade
+from loguru import logger
 
 from .analysis import ClangFunction, ClangStatement
 from ..analyser import Analyser
@@ -19,9 +19,6 @@ from ..loops import ProgramLoops
 from ..project import Project
 from ..statements import ProgramStatements
 from ..util import abs_to_rel_flocrange
-
-logger: logging.Logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class ClangAnalyser(Analyser):
@@ -44,14 +41,14 @@ class ClangAnalyser(Analyser):
                          container: ProjectContainer
                          ) -> ProgramStatements:
         project = container.project
-        logger.debug('finding statements for project: %s', project)
+        logger.debug(f'finding statements for project: {project}')
 
         workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
         command_args += project.files
         command = ' '.join(command_args)
         output_filename = os.path.join(workdir, 'statements.json')
-        logger.debug('executing statement finder [%s]: %s', workdir, command)
+        logger.debug(f'executing statement finder [{workdir}]: {command}')
         try:
             container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
@@ -60,7 +57,7 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: %s', output_filename)
+        logger.debug('reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
         statements = \
@@ -75,7 +72,7 @@ class ClangAnalyser(Analyser):
         command_args += project.files
         command = ' '.join(command_args)
         output_filename = os.path.join(workdir, 'loops.json')
-        logger.debug('executing loop finder [%s]: %s', workdir, command)
+        logger.debug('executing loop finder [{workdir}]: {command}')
         try:
             container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
@@ -84,7 +81,7 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: %s', output_filename)
+        logger.debug('reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         return self._read_loops_from_file_contents(project, file_contents)
 
@@ -109,7 +106,7 @@ class ClangAnalyser(Analyser):
         command_args += project.files
         command = ' '.join(command_args)
 
-        logger.debug('executing function scanner [%s]: %s', workdir, command)
+        logger.debug('executing function scanner [{workdir}]: {command}')
         try:
             container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
@@ -118,7 +115,7 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: %s', output_filename)
+        logger.debug('reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         jsn = json.loads(file_contents)
         return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)  # noqa

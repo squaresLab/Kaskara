@@ -2,15 +2,13 @@
 __all__ = ('InsertionPoint', 'ProgramInsertionPoints')
 
 from typing import FrozenSet, Iterable, Iterator, Dict, List, Any, Optional
-import logging
 import attr
+
+from loguru import logger
 
 from .core import FileLocation, FileLine
 from .exceptions import KaskaraException
 from .util import abs_to_rel_floc, rel_to_abs_floc
-
-logger: logging.Logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
@@ -44,11 +42,10 @@ class ProgramInsertionPoints(Iterable[InsertionPoint]):
         Returns an iterator over all of the insertion points located at a
         given line.
         """
-        logger.debug("finding insertion points at line: %s", str(line))
+        logger.debug(f"finding insertion points at line: {line}")
         filename: str = line.filename
         line_num: int = line.num
         for ins in self.in_file(filename):
             if line_num == ins.location.line:
-                logger.debug("found insertion point at line [%s]: %s",
-                             str(line), ins)
+                logger.debug(f"found insertion point at line [{line}]: {ins}")
                 yield ins
