@@ -23,6 +23,7 @@ from ..util import abs_to_rel_flocrange
 
 class ClangAnalyser(Analyser):
     def analyse(self, project: Project) -> Analysis:
+        logger.debug(f"analysing Clang project: {project}")
         with project.provision() as container:
             return self._analyse_container(container)
 
@@ -57,12 +58,12 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: {output_filename}')
+        logger.debug(f'reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
         statements = \
-            ProgramStatements(ClangStatement.from_dict(project, d) for d in jsn)  # noqa
-        logger.debug('finished reading results')
+            ProgramStatements([ClangStatement.from_dict(project, d) for d in jsn])  # noqa
+        logger.debug(f'finished reading results')
         return statements
 
     def _find_loops(self, container: ProjectContainer) -> ProgramLoops:
@@ -72,7 +73,7 @@ class ClangAnalyser(Analyser):
         command_args += project.files
         command = ' '.join(command_args)
         output_filename = os.path.join(workdir, 'loops.json')
-        logger.debug('executing loop finder [{workdir}]: {command}')
+        logger.debug(f'executing loop finder [{workdir}]: {command}')
         try:
             container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
@@ -81,7 +82,7 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: {output_filename}')
+        logger.debug(f'reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         return self._read_loops_from_file_contents(project, file_contents)
 
@@ -95,7 +96,7 @@ class ClangAnalyser(Analyser):
             loc = FileLocationRange.from_string(loop_info['body'])
             loc = abs_to_rel_flocrange(project.directory, loc)
             loop_bodies.append(loc)
-        logger.debug('finished reading loop analysis results')
+        logger.debug(f'finished reading loop analysis results')
         return ProgramLoops.from_body_location_ranges(loop_bodies)
 
     def _find_functions(self, container: ProjectContainer) -> ProgramFunctions:
@@ -106,7 +107,7 @@ class ClangAnalyser(Analyser):
         command_args += project.files
         command = ' '.join(command_args)
 
-        logger.debug('executing function scanner [{workdir}]: {command}')
+        logger.debug(f'executing function scanner [{workdir}]: {command}')
         try:
             container.shell.check_call(command, cwd=workdir)
         except _dockerblade.CalledProcessError as err:
@@ -115,7 +116,7 @@ class ClangAnalyser(Analyser):
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
-        logger.debug('reading results from file: {output_filename}')
+        logger.debug(f'reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         jsn = json.loads(file_contents)
         return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)  # noqa
