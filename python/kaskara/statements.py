@@ -1,72 +1,60 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Statement', 'ProgramStatements')
 
-from typing import FrozenSet, Dict, Any, List, Iterator, Mapping, Sequence
-import json
-import logging
-
-import attr
+from typing import FrozenSet, Dict, List, Iterable, Iterator, Optional
+import abc
 
 from .core import FileLocationRange, FileLocation, FileLine
-from .insertions import InsertionPointDB, InsertionPoint
-from .project import Project
-from .util import abs_to_rel_flocrange, rel_to_abs_flocrange
-
-logger: logging.Logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from .insertions import ProgramInsertionPoints, InsertionPoint
 
 
-@attr.s(frozen=True, slots=True, auto_attribs=True)
-class Statement:
+class Statement(abc.ABC):
+    """Provides a description of a program statement.
+
+    Attributes
+    ----------
+    kind: str
+        The name of the kind of statement.
     content: str
+        The original source code for this statement.
     canonical: str
-    kind: str  # FIXME this is super memory inefficient
+        The canonical form of the source code for this statement.
     location: FileLocationRange
-    reads: FrozenSet[str]
-    writes: FrozenSet[str]
-    visible: FrozenSet[str]
-    declares: FrozenSet[str]
-    live_before: FrozenSet[str]
-    requires_syntax: FrozenSet[str]
+        The range of locations spanned by this statement.
+    visible: FrozenSet[str], optional
+        The set of visible symbols at this statement, if known.
+    """
+    @property
+    @abc.abstractmethod
+    def kind(self) -> str:
+        ...
 
-    @staticmethod
-    def from_dict(project: Project, d: Mapping[str, Any]) -> 'Statement':
-        # FIXME
-        location = FileLocationRange.from_string(d['location'])
-        location = abs_to_rel_flocrange(project.directory, location)
-        return Statement(d['content'],
-                         d['canonical'],
-                         d['kind'],
-                         location,
-                         frozenset(d.get('reads', [])),
-                         frozenset(d.get('writes', [])),
-                         frozenset(d.get('visible', [])),
-                         frozenset(d.get('decls', [])),
-                         frozenset(d.get('live_before', [])),
-                         frozenset(d.get('requires_syntax', [])))
+    @property
+    @abc.abstractmethod
+    def content(self) -> str:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def canonical(self) -> str:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def visible(self) -> Optional[FrozenSet[str]]:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def location(self) -> FileLocationRange:
+        ...
 
 
 class ProgramStatements:
-    @classmethod
-    def from_file(cls, project: Project, filename: str) -> 'ProgramStatements':
-        logger.debug('reading statement database from file: %s', filename)
-        with open(filename, 'r') as fh:
-            dict_ = json.load(fh)
-        statements = ProgramStatements.from_dict(project, dict_)
-        logger.debug("read statement database from file: %s", filename)
-        return statements
-
-    @staticmethod
-    def from_dict(project: Project,
-                  d: Sequence[Mapping[str, Any]]
-                  ) -> 'ProgramStatements':
-        statements = [Statement.from_dict(project, dd) for dd in d]
-        return ProgramStatements(statements)
-
-    def __init__(self, statements: List[Statement]) -> None:
-        self.__statements = statements
+    def __init__(self, statements: Iterable[Statement]) -> None:
+        self.__statements = list(statements)
         logger.debug("indexing statements by file")
-        self.__file_to_statements = {}  # type: Dict[str, List[Statement]]
+        self.__file_to_statements: Dict[str, List[Statement]] = {}
         for statement in statements:
             filename = statement.location.filename
             if filename not in self.__file_to_statements:
@@ -80,21 +68,17 @@ class ProgramStatements:
         yield from self.__statements
 
     def in_file(self, fn: str) -> Iterator[Statement]:
-        """
-        Returns an iterator over all of the statements belonging to a file.
-        """
+        """Returns an iterator over the statements belonging to a file."""
         yield from self.__file_to_statements.get(fn, [])
 
     def at_line(self, line: FileLine) -> Iterator[Statement]:
-        """
-        Returns an iterator over all of the statements located at a given line.
-        """
+        """Returns an iterator over the statements located at a given line."""
         num = line.num
         for stmt in self.in_file(line.filename):
             if stmt.location.start.line == num:
                 yield stmt
 
-    def insertions(self) -> InsertionPointDB:
+    def insertions(self) -> ProgramInsertionPoints:
         logger.debug("computing insertion points")
         points: List[InsertionPoint] = []
         for stmt in self:
@@ -105,6 +89,6 @@ class ProgramStatements:
             # FIXME do not insert after a return
 
             points.append(point)
-        db = InsertionPointDB(points)
+        db = ProgramInsertionPoints(points)
         logger.debug("computed insertion points")
         return db

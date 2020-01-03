@@ -8,7 +8,7 @@ import os
 
 import dockerblade as _dockerblade
 
-from .analysis import ClangFunction
+from .analysis import ClangFunction, ClangStatement
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..core import FileLocationRange
@@ -63,7 +63,8 @@ class ClangAnalyser(Analyser):
         logger.debug('reading results from file: %s', output_filename)
         file_contents = container.files.read(output_filename)
         jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
-        statements = ProgramStatements.from_dict(project, jsn)
+        statements = \
+            ProgramStatements(ClangStatement.from_dict(project, d) for d in jsn)  # noqa
         logger.debug('finished reading results')
         return statements
 

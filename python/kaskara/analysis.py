@@ -5,7 +5,7 @@ import attr
 
 from .core import FileLocation
 from .functions import ProgramFunctions
-from .insertions import InsertionPointDB
+from .insertions import ProgramInsertionPoints
 from .loops import ProgramLoops
 from .project import Project
 from .statements import ProgramStatements
@@ -30,7 +30,7 @@ class Analysis:
     loops: ProgramLoops
     functions: ProgramFunctions
     statements: ProgramStatements
-    insertions: InsertionPointDB
+    insertions: ProgramInsertionPoints
 
     def is_inside_loop(self, location: FileLocation) -> bool:
         return self.loops.is_within_loop(location)
