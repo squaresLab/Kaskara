@@ -3,9 +3,13 @@ __all__ = ('Statement', 'ProgramStatements')
 
 from typing import FrozenSet, Dict, List, Iterable, Iterator, Optional
 import abc
+import logging
 
 from .core import FileLocationRange, FileLocation, FileLine
 from .insertions import ProgramInsertionPoints, InsertionPoint
+
+logger: logging.Logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class Statement(abc.ABC):
