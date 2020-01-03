@@ -8,12 +8,13 @@ import os
 
 import dockerblade as _dockerblade
 
+from .analysis import ClangFunction
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..core import FileLocationRange
 from ..container import ProjectContainer
 from ..exceptions import KaskaraException
-from ..functions import ProgramFunctions, FunctionDesc
+from ..functions import ProgramFunctions
 from ..loops import ProgramLoops
 from ..project import Project
 from ..statements import ProgramStatements
@@ -119,5 +120,4 @@ class ClangAnalyser(Analyser):
         logger.debug('reading results from file: %s', output_filename)
         file_contents = container.files.read(output_filename)
         jsn = json.loads(file_contents)
-        functions = [FunctionDesc.from_dict(project, d) for d in jsn]
-        return ProgramFunctions(functions)
+        return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)  # noqa
