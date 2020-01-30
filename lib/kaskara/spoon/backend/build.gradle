@@ -1,0 +1,26 @@
+apply plugin: 'application'
+apply plugin: 'checkstyle'
+apply plugin: 'java'
+
+application {
+  mainClassName = 'christimperley.kaskara.Main'
+}
+
+checkstyle {
+  toolVersion '8.29'
+  configFile file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation "fr.inria.gforge.spoon:spoon-core:8.0.0"
+  testImplementation "junit:junit:4.12"
+}
+
+jar {
+  archiveBaseName = 'kaskara-java'
+  archiveVersion = '0.0.1'
+}
