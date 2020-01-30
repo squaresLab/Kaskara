@@ -12,7 +12,8 @@ import dockerblade as _dockerblade
 
 from .container import ProjectContainer
 
-KASKARA_IMAGE = 'squareslab/kaskara'
+# FIXME the plugin container shouldn't be launched from here
+KASKARA_IMAGE = 'christimperley/kaskara:cpp'
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)

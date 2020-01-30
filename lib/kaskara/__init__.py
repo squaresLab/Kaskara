@@ -9,7 +9,9 @@ from .analyser import Analyser
 from .insertions import InsertionPoint
 from .statements import Statement
 from .loops import ProgramLoops
+from .post_install import post_install
 from . import clang
 from . import python
+
 
 _logger.disable('kaskara')

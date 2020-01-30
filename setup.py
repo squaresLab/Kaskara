@@ -5,7 +5,7 @@ from glob import glob
 from setuptools import setup, find_packages
 
 MODULE_FILE = \
-    os.path.join(os.path.dirname(__file__), 'python/kaskara/version.py')
+    os.path.join(os.path.dirname(__file__), 'lib/kaskara/version.py')
 VERSION_REGEX = \
     r"__version__\s+=\s+['|\"](.*)['|\"]\s*"
 

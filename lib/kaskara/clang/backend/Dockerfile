@@ -34,23 +34,20 @@ ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
     cd /tmp/kaskara/build && \
     cmake .. && \
-    make -j $(nproc)
+    make -j4
 RUN mkdir -p /opt/kaskara/bin \
- && cp /tmp/kaskara/build/cpp/kaskara-loop-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/cpp/kaskara-statement-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/cpp/kaskara-function-scanner /opt/kaskara/bin \
- && cp /tmp/kaskara/build/cpp/kaskara-insertion-point-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/cpp/kaskara-snippet-extractor /opt/kaskara/bin
+ && cp /tmp/kaskara/build/src/kaskara-loop-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/src/kaskara-statement-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/src/kaskara-function-scanner /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/src/kaskara-insertion-point-finder /opt/kaskara/bin \
+ && cp /tmp/kaskara/build/src/kaskara-snippet-extractor /opt/kaskara/bin
 RUN mkdir -p /opt/kaskara/clang \
  && cp -r /usr/local/lib/clang/5.0.0/include/* /opt/kaskara/clang
 
 # install scripts
-ADD scripts /opt/kaskara/scripts
-
-FROM alpine:3.7 as python
+FROM alpine:3.7 as minimal
 COPY --from=cpp /opt/kaskara /opt/kaskara
+COPY scripts /opt/kaskara/scripts
 WORKDIR /opt/kaskara
-COPY python /opt/kaskara/python
-COPY setup.py /opt/kaskara
 ENV PATH "/opt/kaskara/scripts:${PATH}"
 VOLUME /opt/kaskara
