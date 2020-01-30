@@ -8,6 +8,7 @@ install:
 - make -C test/examples
 - pip install -r requirements.dev.txt
 - pip install .
+- python -c 'import kaskara; kaskara.post_install()'
 script:
 - tox
 notifications:
