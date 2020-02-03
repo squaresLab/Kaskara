@@ -1,0 +1,7 @@
+*.tmp
+*.swp
+*.swo
+build
+.gradle
+.idea
+Dockerfile

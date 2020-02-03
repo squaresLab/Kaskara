@@ -12,6 +12,7 @@ from .loops import ProgramLoops
 from .post_install import post_install
 from . import clang
 from . import python
+from . import spoon
 
 
 _logger.disable('kaskara')
