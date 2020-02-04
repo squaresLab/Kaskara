@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -19,6 +23,11 @@ public class Main implements Callable<Integer> {
             description = "The root source code directory for the project.")
     private String directory;
 
+    @CommandLine.Option(names = "-o",
+        defaultValue = ".",
+        description = "The directory to which results should be written.")
+    private String outputDirectory;
+
     /**
      * Provides an entrypoint to the Kaskara Java analysis tool.
      *
@@ -28,8 +37,30 @@ public class Main implements Callable<Integer> {
         System.exit(new CommandLine(new Main()).execute(args));
     }
 
+    /**
+     * Prepares the output directory by ensuring that it exists.
+     */
+    private void prepareOutputDirectory() throws IOException {
+        this.outputDirectory = FileSystems.getDefault()
+                .getPath(this.outputDirectory)
+                .normalize()
+                .toAbsolutePath()
+                .toString();
+
+        Files.createDirectories(Paths.get(this.outputDirectory));
+        System.out.printf("Output will be written to: %s%n", this.outputDirectory);
+    }
+
     @Override
     public Integer call() throws IOException {
+        try {
+            this.prepareOutputDirectory();
+        } catch (java.nio.file.AccessDeniedException exc) {
+            System.err.printf("ERROR: insufficient permissions to write to output directory [%s]%n",
+                    this.outputDirectory);
+            return 1;
+        }
+
         var launcher = new Launcher();
         launcher.getEnvironment().setAutoImports(true);
         // add source code directories [specify as command line argument]
@@ -72,10 +103,10 @@ public class Main implements Callable<Integer> {
             System.out.printf("%s%n%n", statement);
         }
 
-        // TODO write to specified file
-        ObjectMapper mapper = new ObjectMapper();
+        var statementsFileName = Path.of(this.outputDirectory, "statements.json").toString();
+        var mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        try (var fileOutputStream = new FileOutputStream("statements.json")) {
+        try (var fileOutputStream = new FileOutputStream(statementsFileName)) {
             mapper.writeValue(fileOutputStream, statements);
         }
 
