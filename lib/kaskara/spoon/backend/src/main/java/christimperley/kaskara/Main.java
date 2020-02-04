@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
-import spoon.Launcher;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
@@ -61,14 +60,11 @@ public class Main implements Callable<Integer> {
             return 1;
         }
 
-        var launcher = new Launcher();
-        launcher.getEnvironment().setAutoImports(true);
-        // add source code directories [specify as command line argument]
-        launcher.addInputResource(this.directory);
-        var model = launcher.buildModel();
+        // construct a description of the project
+        var project = Project.build(this.directory);
 
         // find all statements in the program
-        var elements = model.getElements(new AbstractFilter<CtStatement>() {
+        var elements = project.getModel().getElements(new AbstractFilter<CtStatement>() {
             @Override
             public boolean matches(CtStatement element) {
                 // must be a top-level statement within a block
