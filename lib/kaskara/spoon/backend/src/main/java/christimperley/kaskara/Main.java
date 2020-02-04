@@ -27,6 +27,8 @@ public class Main implements Callable<Integer> {
         description = "The directory to which results should be written.")
     private String outputDirectory;
 
+    private ObjectMapper mapper;
+
     /**
      * Provides an entrypoint to the Kaskara Java analysis tool.
      *
@@ -50,6 +52,21 @@ public class Main implements Callable<Integer> {
         System.out.printf("Output will be written to: %s%n", this.outputDirectory);
     }
 
+    /**
+     * Finds all statements within the project and writes a summary of those statements
+     * to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findStatements(Project project) throws IOException {
+        System.out.println("Finding all statements in project");
+        var statementsFileName = Path.of(this.outputDirectory, "statements.json").toString();
+        var statements = StatementFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(statementsFileName)) {
+            this.mapper.writeValue(fileOutputStream, statements);
+        }
+        System.out.printf("Wrote summary of statements to disk [%s]%n",  statementsFileName);
+    }
+
     @Override
     public Integer call() throws IOException {
         try {
@@ -60,52 +77,12 @@ public class Main implements Callable<Integer> {
             return 1;
         }
 
-        // construct a description of the project
+        // prepare the JSON output formatter
+        this.mapper = new ObjectMapper();
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
         var project = Project.build(this.directory);
-
-        // find all statements in the program
-        var elements = project.getModel().getElements(new AbstractFilter<CtStatement>() {
-            @Override
-            public boolean matches(CtStatement element) {
-                // must be a top-level statement within a block
-                if (!(element.getParent() instanceof spoon.support.reflect.code.CtBlockImpl)) {
-                    return false;
-                }
-
-                // ignore blocks
-                if (element instanceof spoon.support.reflect.code.CtBlockImpl) {
-                    return false;
-                }
-
-                // ignore comments
-                if (element instanceof spoon.support.reflect.code.CtCommentImpl) {
-                    return false;
-                }
-
-                // ignore class implementations
-                if (element instanceof spoon.support.reflect.declaration.CtClassImpl) {
-                    return false;
-                }
-
-                // statement must appear in file
-                return element.getPosition().isValidPosition();
-            }
-        });
-
-        List<Statement> statements = new ArrayList<>();
-        for (var element : elements) {
-            var statement = Statement.forSpoonStatement(element);
-            statements.add(statement);
-            System.out.printf("%s%n%n", statement);
-        }
-
-        var statementsFileName = Path.of(this.outputDirectory, "statements.json").toString();
-        var mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        try (var fileOutputStream = new FileOutputStream(statementsFileName)) {
-            mapper.writeValue(fileOutputStream, statements);
-        }
-
+        this.findStatements(project);
         return 0;
     }
 }

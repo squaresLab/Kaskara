@@ -22,7 +22,7 @@ public class Project {
         return new Project(model);
     }
 
-    public Project(CtModel model) {
+    protected Project(CtModel model) {
         this.model = model;
     }
 
