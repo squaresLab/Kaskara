@@ -6,22 +6,34 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import picocli.CommandLine;
 import spoon.Launcher;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
 
-public class Main {
+@CommandLine.Command(name = "kaskara", mixinStandardHelpOptions = true)
+public class Main implements Callable<Integer> {
+    @CommandLine.Parameters(index = "0",
+            description = "The root source code directory for the project.")
+    private String directory;
+
     /**
      * Provides an entrypoint to the Kaskara Java analysis tool.
      *
      * @param args  A list of command-line arguments.
      */
     public static void main(String[] args) throws IOException {
+        System.exit(new CommandLine(new Main()).execute(args));
+    }
+
+    @Override
+    public Integer call() throws IOException {
         var launcher = new Launcher();
         launcher.getEnvironment().setAutoImports(true);
         // add source code directories [specify as command line argument]
-        launcher.addInputResource("src/main/java/");
+        launcher.addInputResource(this.directory);
         var model = launcher.buildModel();
 
         // find all statements in the program
@@ -66,5 +78,7 @@ public class Main {
         try (var fileOutputStream = new FileOutputStream("statements.json")) {
             mapper.writeValue(fileOutputStream, statements);
         }
+
+        return 0;
     }
 }
