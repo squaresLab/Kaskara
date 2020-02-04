@@ -42,6 +42,15 @@ public final class Statement {
         return this.kind.getName();
     }
 
+    /**
+     * Returns the canonical form of the source for the statement.
+     * @return  canonicalised source code
+     */
+    @JsonGetter("canonical")
+    public String getCanonicalSource() {
+        return this.source;
+    }
+
     @JsonGetter("source")
     public String getSource() {
         return this.source;
