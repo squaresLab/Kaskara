@@ -78,6 +78,20 @@ public class Main implements Callable<Integer> {
         System.out.printf("Wrote summary of functions to disk [%s]%n",  filename);
     }
 
+    /**
+     * Finds all loops within the project and writes a summary of those functions to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findLoops(Project project) throws IOException {
+        System.out.println("Finding all loops in project");
+        var filename = Path.of(this.outputDirectory, "loops.json").toString();
+        var loops = LoopFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(filename)) {
+            this.mapper.writeValue(fileOutputStream, loops);
+        }
+        System.out.printf("Wrote summary of loops to disk [%s]%n",  filename);
+    }
+
     @Override
     public Integer call() throws IOException {
         try {
@@ -95,6 +109,7 @@ public class Main implements Callable<Integer> {
         var project = Project.build(this.directory);
         this.findStatements(project);
         this.findFunctions(project);
+        this.findLoops(project);
         return 0;
     }
 }
