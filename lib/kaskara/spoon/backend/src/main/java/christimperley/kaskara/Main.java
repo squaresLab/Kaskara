@@ -55,12 +55,27 @@ public class Main implements Callable<Integer> {
      */
     private void findStatements(Project project) throws IOException {
         System.out.println("Finding all statements in project");
-        var statementsFileName = Path.of(this.outputDirectory, "statements.json").toString();
+        var filename = Path.of(this.outputDirectory, "statements.json").toString();
         var statements = StatementFinder.forProject(project).find();
-        try (var fileOutputStream = new FileOutputStream(statementsFileName)) {
+        try (var fileOutputStream = new FileOutputStream(filename)) {
             this.mapper.writeValue(fileOutputStream, statements);
         }
-        System.out.printf("Wrote summary of statements to disk [%s]%n",  statementsFileName);
+        System.out.printf("Wrote summary of statements to disk [%s]%n",  filename);
+    }
+
+    /**
+     * Finds all functions within the project and writes a summary of those functions
+     * to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findFunctions(Project project) throws IOException {
+        System.out.println("Finding all functions in project");
+        var filename = Path.of(this.outputDirectory, "functions.json").toString();
+        var functions = FunctionFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(filename)) {
+            this.mapper.writeValue(fileOutputStream, functions);
+        }
+        System.out.printf("Wrote summary of functions to disk [%s]%n",  filename);
     }
 
     @Override
@@ -79,6 +94,7 @@ public class Main implements Callable<Integer> {
 
         var project = Project.build(this.directory);
         this.findStatements(project);
+        this.findFunctions(project);
         return 0;
     }
 }
