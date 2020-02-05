@@ -17,7 +17,9 @@ from .post_install import IMAGE_NAME as SPOON_IMAGE_NAME
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..container import ProjectContainer
+from ..core import FileLocationRange
 from ..functions import ProgramFunctions
+from ..loops import ProgramLoops
 from ..project import Project
 from ..statements import ProgramStatements
 
@@ -78,7 +80,19 @@ class SpoonAnalyser(Analyser):
         functions_dict = json.loads(container.files.read(filename_functions))
         functions = self._load_functions_from_dict(functions_dict)
 
-        raise NotImplementedError
+        # load loops
+        filename_loops = os.path.join(dir_output, 'loops.json')
+        loops_dict = json.loads(container.files.read(filename_loops))
+        loops = self._load_loops_from_dict(loops_dict)
+
+        # find insertion points
+        insertions = statements.insertions()
+
+        return Analysis(project=container.project,
+                        loops=loops,
+                        functions=functions,
+                        statements=statements,
+                        insertions=insertions)
 
     def _load_statements_from_dict(self,
                                    dict_: Sequence[Mapping[str, Any]]
@@ -99,3 +113,16 @@ class SpoonAnalyser(Analyser):
             ProgramFunctions([SpoonFunction.from_dict(d) for d in dict_])
         logger.debug(f'parsed {len(functions)} functions')
         return functions
+
+    def _load_loops_from_dict(self,
+                              dict_: Sequence[Mapping[str, Any]]
+                              ) -> ProgramFunctions:
+        """Loads the loops database from a given dictionary."""
+        logger.debug('parsing loop database')
+        loop_bodies: List[FileLocationRange] = []
+        for loop_info in dict_:
+            loc = FileLocationRange.from_string(loop_info['body'])
+            loop_bodies.append(loc)
+        loops = ProgramLoops.from_body_location_ranges(loop_bodies)
+        logger.debug(f'parsed loops')
+        return loops
