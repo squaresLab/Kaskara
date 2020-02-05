@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('SpoonAnalyser',)
 
-from typing import Iterator
+from typing import Any, Iterator, Mapping, Sequence
 import contextlib
 import json
 import os
@@ -12,11 +12,13 @@ from dockerblade import DockerDaemon as DockerBladeDockerDaemon
 from loguru import logger
 import attr
 
+from .analysis import SpoonStatement
 from .post_install import IMAGE_NAME as SPOON_IMAGE_NAME
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..container import ProjectContainer
 from ..project import Project
+from ..statements import ProgramStatements
 
 
 @attr.s
@@ -66,10 +68,21 @@ class SpoonAnalyser(Analyser):
         command = f'kaskara {dir_source} -o {dir_output_container}'
         output = container.shell.check_output(command)
 
-        # TODO parse statements file
+        # load statements
         filename_statements_container = os.path.join(dir_output_container,
                                                      'statements.json')
         statements_dict = \
             json.loads(container.files.read(filename_statements_container))
-        print(statements_dict)
+        statements = self._load_statements_from_dict(statements_dict)
+
         raise NotImplementedError
+
+    def _load_statements_from_dict(self,
+                                   dict_: Sequence[Mapping[str, Any]]
+                                   ) -> ProgramStatements:
+        """Loads the statement database from a given dictionary."""
+        logger.debug('parsing statements database')
+        statements = \
+            ProgramStatements([SpoonStatement.from_dict(d) for d in dict_])
+        logger.debug(f'parsed {len(statements)} statements')
+        return statements

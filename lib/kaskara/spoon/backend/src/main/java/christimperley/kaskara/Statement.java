@@ -57,10 +57,10 @@ public final class Statement {
     }
 
     /**
-     * Returns the position of statement as a string.
-     * @return A string encoding of the position of the statement.
+     * Returns the location of statement as a string.
+     * @return A string encoding of the location of the statement.
      */
-    @JsonGetter("position")
+    @JsonGetter("location")
     public String getPositionAsString() {
         var filename = this.position.getFile();
         var startLine = this.position.getLine();
