@@ -3,6 +3,10 @@ __all__ = ('SpoonAnalyser',)
 
 from typing import Iterator
 import contextlib
+import json
+import os
+import shlex
+import subprocess
 
 from dockerblade import DockerDaemon as DockerBladeDockerDaemon
 from loguru import logger
@@ -22,15 +26,29 @@ class SpoonAnalyser(Analyser):
     @contextlib.contextmanager
     def _container(self, project: Project) -> Iterator[ProjectContainer]:
         """Provisions an ephemeral container for a given project."""
-        create = self._dockerblade.client.containers.create
         launch = self._dockerblade.client.containers.run
         with contextlib.ExitStack() as stack:
-            docker_project = create(project.image)
-            stack.callback(docker_project.remove, force=True)
+            # create a temporary volume from the project image
+            volume_name = 'kaskaraspoon'
+            cmd_create_volume = (f'docker run --rm -v {volume_name}:'
+                                 f'{shlex.quote(project.directory)} '
+                                 f'{project.image} /bin/true')
+            cmd_kill_volume = f'docker volume rm {volume_name}'
+            logger.debug(f'created temporary volume [{volume_name}] '
+                         f'from project image [{project.image}] '
+                         f'via command: {cmd_create_volume}')
+            subprocess.check_output(cmd_create_volume, shell=True)
+            stack.callback(subprocess.call, cmd_kill_volume,
+                           shell=True,
+                           stderr=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL,
+                           stdin=subprocess.DEVNULL)
 
             docker_analyser = launch(SPOON_IMAGE_NAME, '/bin/sh',
                                      stdin_open=True,
-                                     volumes_from=[docker_project.id],
+                                     volumes={volume_name: {
+                                         'bind': '/workspace',
+                                         'mode': 'ro'}},
                                      detach=True)
             stack.callback(docker_analyser.remove, force=True)
 
@@ -43,4 +61,15 @@ class SpoonAnalyser(Analyser):
             return self._analyse_container(container)
 
     def _analyse_container(self, container: ProjectContainer) -> Analysis:
+        dir_source = '/workspace'
+        dir_output_container = '/output'
+        command = f'kaskara {dir_source} -o {dir_output_container}'
+        output = container.shell.check_output(command)
+
+        # TODO parse statements file
+        filename_statements_container = os.path.join(dir_output_container,
+                                                     'statements.json')
+        statements_dict = \
+            json.loads(container.files.read(filename_statements_container))
+        print(statements_dict)
         raise NotImplementedError
