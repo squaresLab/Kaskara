@@ -27,6 +27,10 @@ public class FunctionFinder {
         var elements = this.project.getModel().getElements(new AbstractFilter<CtMethod>() {
             @Override
             public boolean matches(CtMethod element) {
+                // function must have body
+                if (element.getBody() == null) {
+                    return false;
+                }
                 // function must appear in file
                 return element.getPosition().isValidPosition();
             }

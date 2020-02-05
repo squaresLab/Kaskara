@@ -16,6 +16,7 @@ public final class Statement {
     private final String source;
 
     @JsonSerialize(converter = SourcePositionSerializer.class)
+    @JsonProperty("location")
     private final SourcePosition position;
 
     /**

@@ -12,11 +12,12 @@ from dockerblade import DockerDaemon as DockerBladeDockerDaemon
 from loguru import logger
 import attr
 
-from .analysis import SpoonStatement
+from .analysis import SpoonFunction, SpoonStatement
 from .post_install import IMAGE_NAME as SPOON_IMAGE_NAME
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..container import ProjectContainer
+from ..functions import ProgramFunctions
 from ..project import Project
 from ..statements import ProgramStatements
 
@@ -64,16 +65,18 @@ class SpoonAnalyser(Analyser):
 
     def _analyse_container(self, container: ProjectContainer) -> Analysis:
         dir_source = '/workspace'
-        dir_output_container = '/output'
-        command = f'kaskara {dir_source} -o {dir_output_container}'
-        output = container.shell.check_output(command)
+        dir_output = '/output'
+        container.shell.check_output(f'kaskara {dir_source} -o {dir_output}')
 
         # load statements
-        filename_statements_container = os.path.join(dir_output_container,
-                                                     'statements.json')
-        statements_dict = \
-            json.loads(container.files.read(filename_statements_container))
+        filename_statements = os.path.join(dir_output, 'statements.json')
+        statements_dict = json.loads(container.files.read(filename_statements))
         statements = self._load_statements_from_dict(statements_dict)
+
+        # load functions
+        filename_functions = os.path.join(dir_output, 'functions.json')
+        functions_dict = json.loads(container.files.read(filename_functions))
+        functions = self._load_functions_from_dict(functions_dict)
 
         raise NotImplementedError
 
@@ -86,3 +89,13 @@ class SpoonAnalyser(Analyser):
             ProgramStatements([SpoonStatement.from_dict(d) for d in dict_])
         logger.debug(f'parsed {len(statements)} statements')
         return statements
+
+    def _load_functions_from_dict(self,
+                                  dict_: Sequence[Mapping[str, Any]]
+                                  ) -> ProgramFunctions:
+        """Loads the function database from a given dictionary."""
+        logger.debug('parsing function database')
+        functions = \
+            ProgramFunctions([SpoonFunction.from_dict(d) for d in dict_])
+        logger.debug(f'parsed {len(functions)} functions')
+        return functions
