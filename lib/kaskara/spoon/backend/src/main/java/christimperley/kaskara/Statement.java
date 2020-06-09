@@ -1,6 +1,8 @@
 package christimperley.kaskara;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.cu.SourcePosition;
 
@@ -10,7 +12,11 @@ import spoon.reflect.cu.SourcePosition;
  */
 public final class Statement {
     private final Class kind;
+    @JsonProperty("source")
     private final String source;
+
+    @JsonSerialize(converter = SourcePositionSerializer.class)
+    @JsonProperty("location")
     private final SourcePosition position;
 
     /**
@@ -42,28 +48,13 @@ public final class Statement {
         return this.kind.getName();
     }
 
-    @JsonGetter("source")
-    public String getSource() {
-        return this.source;
-    }
-
     /**
-     * Returns the position of statement as a string.
-     * @return A string encoding of the position of the statement.
+     * Returns the canonical form of the source for the statement.
+     * @return  canonicalised source code
      */
-    @JsonGetter("position")
-    public String getPositionAsString() {
-        var filename = this.position.getFile();
-        var startLine = this.position.getLine();
-        var startCol = this.position.getColumn();
-        var endLine = this.position.getEndLine();
-        var endCol = this.position.getEndColumn();
-        return String.format("%s@%d:%d::%d:%d",
-                this.position.getFile().getAbsolutePath(),
-                this.position.getLine(),
-                this.position.getColumn(),
-                this.position.getEndLine(),
-                this.position.getEndColumn());
+    @JsonGetter("canonical")
+    public String getCanonicalSource() {
+        return this.source;
     }
 
     @Override

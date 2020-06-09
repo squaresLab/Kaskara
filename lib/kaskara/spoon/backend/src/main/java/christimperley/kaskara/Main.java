@@ -4,13 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
-import spoon.Launcher;
-import spoon.reflect.code.CtStatement;
-import spoon.reflect.visitor.filter.AbstractFilter;
 
 
 @CommandLine.Command(name = "kaskara", mixinStandardHelpOptions = true)
@@ -18,6 +17,13 @@ public class Main implements Callable<Integer> {
     @CommandLine.Parameters(index = "0",
             description = "The root source code directory for the project.")
     private String directory;
+
+    @CommandLine.Option(names = "-o",
+        defaultValue = ".",
+        description = "The directory to which results should be written.")
+    private String outputDirectory;
+
+    private ObjectMapper mapper;
 
     /**
      * Provides an entrypoint to the Kaskara Java analysis tool.
@@ -28,57 +34,82 @@ public class Main implements Callable<Integer> {
         System.exit(new CommandLine(new Main()).execute(args));
     }
 
+    /**
+     * Prepares the output directory by ensuring that it exists.
+     */
+    private void prepareOutputDirectory() throws IOException {
+        this.outputDirectory = FileSystems.getDefault()
+                .getPath(this.outputDirectory)
+                .normalize()
+                .toAbsolutePath()
+                .toString();
+
+        Files.createDirectories(Paths.get(this.outputDirectory));
+        System.out.printf("Output will be written to: %s%n", this.outputDirectory);
+    }
+
+    /**
+     * Finds all statements within the project and writes a summary of those statements
+     * to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findStatements(Project project) throws IOException {
+        System.out.println("Finding all statements in project");
+        var filename = Path.of(this.outputDirectory, "statements.json").toString();
+        var statements = StatementFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(filename)) {
+            this.mapper.writeValue(fileOutputStream, statements);
+        }
+        System.out.printf("Wrote summary of statements to disk [%s]%n",  filename);
+    }
+
+    /**
+     * Finds all functions within the project and writes a summary of those functions
+     * to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findFunctions(Project project) throws IOException {
+        System.out.println("Finding all functions in project");
+        var filename = Path.of(this.outputDirectory, "functions.json").toString();
+        var functions = FunctionFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(filename)) {
+            this.mapper.writeValue(fileOutputStream, functions);
+        }
+        System.out.printf("Wrote summary of functions to disk [%s]%n",  filename);
+    }
+
+    /**
+     * Finds all loops within the project and writes a summary of those functions to disk.
+     * @throws IOException  If an error occurs during the write to disk.
+     */
+    private void findLoops(Project project) throws IOException {
+        System.out.println("Finding all loops in project");
+        var filename = Path.of(this.outputDirectory, "loops.json").toString();
+        var loops = LoopFinder.forProject(project).find();
+        try (var fileOutputStream = new FileOutputStream(filename)) {
+            this.mapper.writeValue(fileOutputStream, loops);
+        }
+        System.out.printf("Wrote summary of loops to disk [%s]%n",  filename);
+    }
+
     @Override
     public Integer call() throws IOException {
-        var launcher = new Launcher();
-        launcher.getEnvironment().setAutoImports(true);
-        // add source code directories [specify as command line argument]
-        launcher.addInputResource(this.directory);
-        var model = launcher.buildModel();
-
-        // find all statements in the program
-        var elements = model.getElements(new AbstractFilter<CtStatement>() {
-            @Override
-            public boolean matches(CtStatement element) {
-                // must be a top-level statement within a block
-                if (!(element.getParent() instanceof spoon.support.reflect.code.CtBlockImpl)) {
-                    return false;
-                }
-
-                // ignore blocks
-                if (element instanceof spoon.support.reflect.code.CtBlockImpl) {
-                    return false;
-                }
-
-                // ignore comments
-                if (element instanceof spoon.support.reflect.code.CtCommentImpl) {
-                    return false;
-                }
-
-                // ignore class implementations
-                if (element instanceof spoon.support.reflect.declaration.CtClassImpl) {
-                    return false;
-                }
-
-                // statement must appear in file
-                return element.getPosition().isValidPosition();
-            }
-        });
-
-        List<Statement> statements = new ArrayList<>();
-        for (var element : elements) {
-            var statement = Statement.forSpoonStatement(element);
-            statements.add(statement);
-            System.out.printf("%s%n%n", statement);
+        try {
+            this.prepareOutputDirectory();
+        } catch (java.nio.file.AccessDeniedException exc) {
+            System.err.printf("ERROR: insufficient permissions to write to output directory [%s]%n",
+                    this.outputDirectory);
+            return 1;
         }
 
-        // TODO write to specified file
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        try (var fileOutputStream = new FileOutputStream("statements.json")) {
-            mapper.writeValue(fileOutputStream, statements);
-        }
+        // prepare the JSON output formatter
+        this.mapper = new ObjectMapper();
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
+        var project = Project.build(this.directory);
+        this.findStatements(project);
+        this.findFunctions(project);
+        this.findLoops(project);
         return 0;
     }
 }

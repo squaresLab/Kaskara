@@ -66,6 +66,10 @@ class ProgramStatements:
                             in self.__file_to_statements.items())
         logger.debug(f'indexed statements by file:\n{summary}')
 
+    def __len__(self) -> int:
+        """Returns the number of statements in this collection."""
+        return len(self.__statements)
+
     def __iter__(self) -> Iterator[Statement]:
         yield from self.__statements
 
