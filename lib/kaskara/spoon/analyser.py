@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('SpoonAnalyser',)
 
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any, Iterator, List, Mapping, Sequence
 import contextlib
 import json
 import os
@@ -116,7 +116,7 @@ class SpoonAnalyser(Analyser):
 
     def _load_loops_from_dict(self,
                               dict_: Sequence[Mapping[str, Any]]
-                              ) -> ProgramFunctions:
+                              ) -> ProgramLoops:
         """Loads the loops database from a given dictionary."""
         logger.debug('parsing loop database')
         loop_bodies: List[FileLocationRange] = []
