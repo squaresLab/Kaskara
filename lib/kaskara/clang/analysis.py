@@ -4,6 +4,7 @@ __all__ = ('ClangFunction', 'ClangStatement')
 from typing import Any, FrozenSet, Mapping
 
 import attr
+from loguru import logger
 
 from ..core import FileLocationRange
 from ..functions import Function
@@ -50,19 +51,23 @@ class ClangStatement(Statement):
     visible: FrozenSet[str]
     declares: FrozenSet[str]
     live_before: FrozenSet[str]
+    live_after: FrozenSet[str]
     requires_syntax: FrozenSet[str]
 
     @staticmethod
     def from_dict(project: Project, d: Mapping[str, Any]) -> 'ClangStatement':
         location = FileLocationRange.from_string(d['location'])
         location = abs_to_rel_flocrange(project.directory, location)
-        return ClangStatement(d['content'],
-                              d['canonical'],
-                              d['kind'],
-                              location,
-                              frozenset(d.get('reads', [])),
-                              frozenset(d.get('writes', [])),
-                              frozenset(d.get('visible', [])),
-                              frozenset(d.get('decls', [])),
-                              frozenset(d.get('live_before', [])),
-                              frozenset(d.get('requires_syntax', [])))
+        statement = ClangStatement(d['content'],
+                                   d['canonical'],
+                                   d['kind'],
+                                   location,
+                                   frozenset(d.get('reads', [])),
+                                   frozenset(d.get('writes', [])),
+                                   frozenset(d.get('visible', [])),
+                                   frozenset(d.get('decls', [])),
+                                   frozenset(d.get('live_before', [])),
+                                   frozenset(d.get('live_after', [])),
+                                   frozenset(d.get('requires_syntax', [])))
+        logger.debug(f"loaded statement: {statement}")
+        return statement

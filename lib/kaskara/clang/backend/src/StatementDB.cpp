@@ -6,6 +6,7 @@
 
 #include <clang/AST/ASTTypeTraits.h>
 #include <clang/AST/PrettyPrinter.h>
+#include <clang/Analysis/CFGStmtMap.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include "util.h"
@@ -32,6 +33,7 @@ StatementDB::Entry::Entry(std::string const &location,
                           std::unordered_set<std::string> const &decls,
                           std::unordered_set<std::string> const &visible,
                           std::unordered_set<std::string> const &live_before,
+                          std::unordered_set<std::string> const &live_after,
                           StatementSyntaxScope const &syntax_scope)
   : location(location),
     content(content),
@@ -42,6 +44,7 @@ StatementDB::Entry::Entry(std::string const &location,
     decls(decls),
     visible(visible),
     live_before(live_before),
+    live_after(live_after),
     syntax_scope(syntax_scope)
 { }
 
@@ -67,6 +70,10 @@ json const StatementDB::Entry::to_json() const
   for (auto v : live_before)
     j_live_before.push_back(v);
 
+  json j_live_after = json::array();
+  for (auto v : live_after)
+    j_live_after.push_back(v);
+
   json j_syntax_required = json::array();
   if (syntax_scope.requires_break)
     j_syntax_required.push_back("break");
@@ -83,6 +90,7 @@ json const StatementDB::Entry::to_json() const
     {"visible", j_visible},
     {"decls", j_decls},
     {"live_before", j_live_before},
+    {"live_after", j_live_after},
     {"requires_syntax", j_syntax_required},
   };
 
@@ -92,7 +100,8 @@ json const StatementDB::Entry::to_json() const
 void StatementDB::add(clang::ASTContext const *ctx,
                       clang::Stmt const *stmt,
                       std::unordered_set<clang::NamedDecl const *> const &visible,
-                      clang::LiveVariables *liveness)
+                      clang::LiveVariables *liveness,
+                      clang::AnalysisDeclContext *analysis_decl_ctx)
 {
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
@@ -104,19 +113,33 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> decls;
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
 
+  // compute the names of all visible variables
+  std::unordered_set<std::string> visible_names;
+  for (auto decl : visible) {
+    visible_names.emplace(decl->getNameAsString());
+  }
+
   // compute liveness information
   // FIXME LiveVariables seems to ignore properties, therefore we assume that
   //  all properties are live (for now).
-  std::unordered_set<std::string> visible_names;
   std::unordered_set<std::string> live_before;
   for (auto decl : visible) {
-    std::string name = decl->getNameAsString();
-    visible_names.emplace(name);
     if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
       if (!liveness->isLive(stmt, vd))
         continue;
     }
-    live_before.emplace(name);
+    live_before.emplace(decl->getNameAsString());
+  }
+
+  // find variables that are live after the statement
+  clang::CFGBlock const *block = analysis_decl_ctx->getCFGStmtMap()->getBlock(stmt);
+  std::unordered_set<std::string> live_after;
+  for (auto decl : visible) {
+    if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
+      if (!liveness->isLive(block, vd))
+        continue;
+    }
+    live_after.emplace(decl->getNameAsString());
   }
 
   // compute syntax scope analysis
@@ -144,7 +167,9 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::string kind = stmt->getStmtClassName();
 
   contents.emplace_back(loc_str, txt, canonical, kind,
-                        reads, writes, decls, visible_names, live_before,
+                        reads, writes, decls, visible_names,
+                        live_before,
+                        live_after,
                         syntax_scope);
 }
 

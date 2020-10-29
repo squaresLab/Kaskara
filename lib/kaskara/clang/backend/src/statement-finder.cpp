@@ -42,6 +42,7 @@ public:
     : ctx(ctx),
       SM(ctx->getSourceManager()),
       current_decl_ctx(nullptr),
+      current_analysis_decl_ctx(nullptr),
       db(db),
       visible(),
       liveness(nullptr)
@@ -149,7 +150,7 @@ public:
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
 
-    db->add(ctx, stmt, visible, liveness.get());
+    db->add(ctx, stmt, visible, liveness.get(), current_analysis_decl_ctx.get());
     return true;
   }
 
@@ -181,10 +182,10 @@ public:
   {
     // std::string name = decl->getNameInfo().getAsString();
     // llvm::outs() << "computing liveness for function: " << name << "\n";
-    std::unique_ptr<clang::AnalysisDeclContext> adc =
+    current_analysis_decl_ctx =
       std::unique_ptr<clang::AnalysisDeclContext>(new clang::AnalysisDeclContext(NULL, decl));
     liveness =
-      std::unique_ptr<clang::LiveVariables>(clang::LiveVariables::create(*adc));
+      std::unique_ptr<clang::LiveVariables>(clang::LiveVariables::create(*current_analysis_decl_ctx));
     return VisitDecl(decl);
   }
 
@@ -206,6 +207,7 @@ private:
   clang::ASTContext *ctx;
   clang::SourceManager &SM;
   clang::DeclContext const *current_decl_ctx;
+  std::unique_ptr<clang::AnalysisDeclContext> current_analysis_decl_ctx;
   std::unique_ptr<clang::LiveVariables> liveness;
   StatementDB *db;
   std::unordered_set<clang::NamedDecl const *> visible;
