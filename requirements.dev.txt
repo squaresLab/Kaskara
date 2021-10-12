@@ -1,7 +1,0 @@
-twine==3.1.1
-pycodestyle==2.5.0
-mypy==0.750
-pytest==5.3.1
-ptpython==2.0.6
-tox==3.14.2
-coveralls==1.9.2
