@@ -51,10 +51,11 @@ class ClangAnalyser(Analyser):
         output_filename = os.path.join(workdir, 'statements.json')
         logger.debug(f'executing statement finder [{workdir}]: {command}')
         try:
-            container.shell.check_call(command, cwd=workdir)
+            container.shell.check_output(command, cwd=workdir, text=True)
         except _dockerblade.CalledProcessError as err:
             msg = f'statement finder failed with code {err.returncode}'
             logger.exception(msg)
+            logger.error(f"statement finder output: {err.output}")
             if not project.ignore_errors:
                 raise KaskaraException(msg)
 
