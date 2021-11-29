@@ -46,7 +46,7 @@ class ClangAnalyser(Analyser):
 
         workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
-        command_args += project.files
+        command_args += sorted(project.files)
         command = ' '.join(command_args)
         output_filename = os.path.join(workdir, 'statements.json')
         logger.debug(f'executing statement finder [{workdir}]: {command}')
@@ -71,7 +71,7 @@ class ClangAnalyser(Analyser):
         project = container.project
         workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-loop-finder']
-        command_args += project.files
+        command_args += sorted(project.files)
         command = ' '.join(command_args)
         output_filename = os.path.join(workdir, 'loops.json')
         logger.debug(f'executing loop finder [{workdir}]: {command}')
@@ -105,7 +105,7 @@ class ClangAnalyser(Analyser):
         workdir = project.directory
         output_filename = os.path.join(workdir, 'functions.json')
         command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
-        command_args += project.files
+        command_args += sorted(project.files)
         command = ' '.join(command_args)
 
         logger.debug(f'executing function scanner [{workdir}]: {command}')
