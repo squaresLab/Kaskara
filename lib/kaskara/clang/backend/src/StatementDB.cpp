@@ -124,30 +124,42 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // compute liveness information
   // FIXME LiveVariables seems to ignore properties, therefore we assume that
   //  all properties are live (for now).
+  llvm::outs() << "DEBUG: computing liveness information...\n";
   std::unordered_set<std::string> live_before;
   for (auto decl : visible) {
-    if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
+    if (auto *vd = clang::dyn_cast<clang::VarDecl>(decl)) {
       if (!liveness->isLive(stmt, vd))
         continue;
     }
     live_before.emplace(decl->getNameAsString());
   }
+  llvm::outs() << "DEBUG: computed live before\n";
 
   // find variables that are live after the statement
-  clang::CFGBlock const *block = analysis_decl_ctx->getCFGStmtMap()->getBlock(stmt);
+  auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
+  if (stmtMap == nullptr) {
+    llvm::outs() << "WARNING: failed to obtain stmt map -- skipping statement\n";
+    return;
+  }
+
+  llvm::outs() << "DEBUG: fetched stmt map\n";
+  clang::CFGBlock const *block = stmtMap->getBlock(stmt);
+  llvm::outs() << "DEBUG: fetched CFG block...\n";
   std::unordered_set<std::string> live_after;
   for (auto decl : visible) {
-    if (clang::VarDecl const *vd = DynTypedNode::create(*decl).get<clang::VarDecl>()) {
+    if (auto *vd = clang::dyn_cast<clang::VarDecl>(decl)) {
       if (!liveness->isLive(block, vd))
         continue;
     }
     live_after.emplace(decl->getNameAsString());
   }
+  llvm::outs() << "DEBUG: computed liveness information\n";
 
   // compute syntax scope analysis
   StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
 
   // compute canonical form
+  llvm::outs() << "DEBUG: computing canonical form...\n";
   std::string canonical;
   llvm::raw_string_ostream ss(canonical);
 
@@ -164,15 +176,25 @@ void StatementDB::add(clang::ASTContext const *ctx,
   char last = canonical.back();
   if (last != '\n' && last != '}' && last != ';')
     canonical.push_back(';');
+  llvm::outs() << "DEBUG: computed canonical form\n";
 
   // determine statement kind
   std::string kind = stmt->getStmtClassName();
 
-  contents.emplace_back(loc_str, txt, canonical, kind,
-                        reads, writes, decls, visible_names,
-                        live_before,
-                        live_after,
-                        syntax_scope);
+  llvm::outs() << "DEBUG: adding statement info...\n";
+  contents.emplace_back(
+    loc_str,
+    txt,
+    canonical,
+    kind,
+    reads,
+    writes,
+    decls,
+    visible_names,
+    live_before,
+    live_after,
+    syntax_scope);
+  llvm::outs() << "DEBUG: added statement info\n";
 }
 
 json StatementDB::to_json() const
