@@ -15,25 +15,46 @@ using namespace std::experimental;
 
 namespace kaskara {
 
+// FIXME take non-const? use const cast?
 optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
 {
+  llvm::outs() << "[DEBUG] resolving member expression: ";
+  e->dump();
+  llvm::outs() << "\n";
+
   clang::MemberExpr const *parent = e;
   clang::Expr const *child = e->getBase();
   while (child) {
-    if (auto const *member = DynTypedNode::create(*child).get<clang::MemberExpr>()) {
+    // llvm::errs() << "[DEBUG] child expression: ";
+    // child->dump(llvm::errs());
+    // llvm::errs() << "\n";
+
+    child = child->IgnoreImplicit()->IgnoreCasts()->IgnoreParens();
+    // llvm::errs() << "[DEBUG] unwrapped expression: ";
+    // child->dump(llvm::errs());
+    // llvm::errs() << "\n";
+
+    if (auto *member = clang::dyn_cast<clang::MemberExpr>(child)) {
       parent = member;
       child = member->getBase();
-    } else if (auto const *call = DynTypedNode::create(*child).get<clang::CallExpr>()) {
+    } else if (auto *call = clang::dyn_cast<clang::CallExpr>(child)) {
       child = call->getCallee();
-    } else if (auto const *cast = DynTypedNode::create(*child).get<clang::ImplicitCastExpr>()) {
+    // FIXME is this needed?
+    } else if (auto *cast = clang::dyn_cast<clang::ImplicitCastExpr>(child)) {
       child = cast->getSubExprAsWritten();
-    } else if (auto const *root = DynTypedNode::create(*child).get<clang::CXXThisExpr>()) {
-      if (auto const *field = DynTypedNode::create(*(parent->getMemberDecl())).get<clang::FieldDecl>())
+    } else if (auto *root = clang::dyn_cast<clang::CXXThisExpr>(child)) {
+      if (auto *field = clang::dyn_cast<clang::FieldDecl>(parent->getMemberDecl())) {
         return field->getNameAsString();
+      }
       break;
-    } else if (auto const *root = DynTypedNode::create(*child).get<clang::DeclRefExpr>()) {
-      if (auto const *var = DynTypedNode::create(*(root->getDecl())).get<clang::VarDecl>())
-        return var->getNameAsString();
+    } else if (auto *root = clang::dyn_cast<clang::DeclRefExpr>(child)) {
+      if (auto *var = clang::dyn_cast<clang::VarDecl>(root->getDecl())) {
+        auto name = var->getNameAsString();
+        return name;
+      } else {
+        llvm::errs() << "[ERROR] Unrecognized declrefexpr\n";
+        break;
+      }
       break;
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
@@ -70,7 +91,7 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
   // stmt->dumpPretty(*ctx);
   // llvm::outs() << "\n";
   // stmt->dump(llvm::outs());
-
+  llvm::outs() << "[DEBUG] visiting generic stmt...\n";
   for (clang::Stmt const *c : stmt->children()) {
     if (!c)
       continue;
@@ -80,16 +101,17 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
 
 void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 {
+  llvm::outs() << "[DEBUG] visiting binary operator...\n";
   VisitStmt(op);
   if (!op || !op->isAssignmentOp())
     return;
 
   clang::Expr const *expr = op->getLHS();
   // FIXME
-  if (clang::DeclRefExpr const *dre = DynTypedNode::create(*expr).get<clang::DeclRefExpr>()) {
+  if (auto *dre = clang::dyn_cast<clang::DeclRefExpr>(expr)) {
     writes.emplace(dre->getNameInfo().getAsString());
   }
-  if (clang::MemberExpr const *mex = DynTypedNode::create(*expr).get<clang::MemberExpr>()) {
+  if (auto *mex = clang::dyn_cast<clang::MemberExpr>(expr)) {
     if (auto resolved_name = resolve_member_expr(mex))
       writes.emplace(*resolved_name);
   }
@@ -97,6 +119,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 
 void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 {
+  llvm::outs() << "[DEBUG] visiting decl stmt...\n";
   VisitStmt(stmt);
   for (auto const d : stmt->decls()) {
     if (!d)
@@ -114,12 +137,14 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 
 void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
 {
+  llvm::outs() << "[DEBUG] visiting member expr...\n";
   if (auto resolved = resolve_member_expr(expr))
     reads.emplace(*resolved);
 }
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
 {
+  llvm::outs() << "[DEBUG] visiting decl ref expr...\n";
   // expr->dump();
   // NOTE we do not record enum values
   if (auto const *var = DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())

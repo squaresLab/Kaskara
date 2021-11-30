@@ -233,6 +233,7 @@ public:
     } else {
       llvm::outs() << "visiting file: " << filename << "\n";
       visited_files.emplace(filename);
+      llvm::outs() << "DEBUG: traversing translation unit decl...\n";
       visitor.TraverseDecl(decl);
     }
   }
@@ -300,7 +301,7 @@ int main(int argc, const char **argv)
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
-
+  Tool.setDiagnosticConsumer(new clang::IgnoringDiagConsumer());
   std::unique_ptr<StatementDB> db(new StatementDB);
   int res = Tool.run(functionFinderFactory(db.get()).get());
   db->to_file("statements.json");
