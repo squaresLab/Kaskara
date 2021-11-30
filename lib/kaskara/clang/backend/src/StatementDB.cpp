@@ -111,7 +111,9 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::unordered_set<std::string> reads;
   std::unordered_set<std::string> writes;
   std::unordered_set<std::string> decls;
+  llvm::outs() << "DEBUG: computing read-write information...\n";
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
+  llvm::outs() << "DEBUG: computed read-write information\n";
 
   // compute the names of all visible variables
   std::unordered_set<std::string> visible_names;

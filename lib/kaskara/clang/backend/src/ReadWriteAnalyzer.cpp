@@ -18,6 +18,11 @@ namespace kaskara {
 // FIXME take non-const? use const cast?
 optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
 {
+  if (e == nullptr) {
+    llvm::errs() << "[FATAL ERROR] null pointer provided to resolve_member_expr\n";
+    abort();
+  }
+
   llvm::outs() << "[DEBUG] resolving member expression: ";
   e->dump();
   llvm::outs() << "\n";
