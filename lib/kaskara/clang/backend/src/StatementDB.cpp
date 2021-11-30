@@ -107,6 +107,13 @@ void StatementDB::add(clang::ASTContext const *ctx,
   std::string loc_str = build_loc_str(source_range, ctx);
   std::string txt = read_source(*ctx, source_range);
 
+  auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
+  if (stmtMap == nullptr) {
+    llvm::outs() << "WARNING: failed to obtain stmt map -- skipping statement\n";
+    return;
+  }
+  llvm::outs() << "DEBUG: fetched stmt map\n";
+
   // compute read and write information
   std::unordered_set<std::string> reads;
   std::unordered_set<std::string> writes;
@@ -127,22 +134,18 @@ void StatementDB::add(clang::ASTContext const *ctx,
   llvm::outs() << "DEBUG: computing liveness information...\n";
   std::unordered_set<std::string> live_before;
   for (auto decl : visible) {
+    llvm::outs() << "DEBUG: checking decl...\n";
     if (auto *vd = clang::dyn_cast<clang::VarDecl>(decl)) {
+      llvm::outs() << "DEBUG: checking decl liveness...\n";
       if (!liveness->isLive(stmt, vd))
         continue;
+      llvm::outs() << "DEBUG: checked decl liveness\n";
     }
     live_before.emplace(decl->getNameAsString());
   }
   llvm::outs() << "DEBUG: computed live before\n";
 
   // find variables that are live after the statement
-  auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
-  if (stmtMap == nullptr) {
-    llvm::outs() << "WARNING: failed to obtain stmt map -- skipping statement\n";
-    return;
-  }
-
-  llvm::outs() << "DEBUG: fetched stmt map\n";
   clang::CFGBlock const *block = stmtMap->getBlock(stmt);
   llvm::outs() << "DEBUG: fetched CFG block...\n";
   std::unordered_set<std::string> live_after;
