@@ -103,9 +103,12 @@ void StatementDB::add(clang::ASTContext const *ctx,
                       clang::LiveVariables *liveness,
                       clang::AnalysisDeclContext *analysis_decl_ctx)
 {
+  llvm::outs() << "DEBUG: StatementDatabase: adding statement...\n";
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
+  llvm::outs() << "DEBUG: obtained statement location: " << loc_str << "\n";
   std::string txt = read_source(*ctx, source_range);
+  llvm::outs() << "DEBUG: obtained source for statement: " << txt << "\n";
 
   auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
   if (stmtMap == nullptr) {
