@@ -51,6 +51,8 @@ public:
   // https://stackoverflow.com/questions/10454075/avoid-traversing-included-system-libraries
   bool TraverseDecl(clang::Decl *decl)
   {
+    llvm::outs() << "DEBUG: statement visitor: traversing decl...\n";
+
     if (!decl)
       return true;
 
@@ -64,6 +66,7 @@ public:
 
   bool is_inside_array_subscript(const DynTypedNode &n)
   {
+    llvm::outs() << "DEBUG: statement visitor: checking whether statement is inside array subscript...\n";
     std::string kind = n.getNodeKind().asStringRef();
     if (kind == "ArraySubscriptExpr")
       return true;
@@ -77,6 +80,7 @@ public:
 
   bool is_inside_loop_header(clang::Stmt *stmt)
   {
+    llvm::outs() << "DEBUG: statement visitor: checking whether statement is inside loop header...\n";
     const DynTypedNode n = DynTypedNode::create(*stmt);
     auto const parents = ctx->getParents(n);
     if (parents.empty())
@@ -95,6 +99,7 @@ public:
 
   bool VisitStmt(clang::Stmt *stmt)
   {
+    llvm::outs() << "DEBUG: statement visitor: visiting statement...\n";
     if (!stmt || stmt->getSourceRange().isInvalid())
       return true;
 
@@ -150,12 +155,15 @@ public:
     // stmt->dumpPretty(*ctx);
     // llvm::outs() << "\n";
 
+    llvm::outs() << "DEBUG: adding statement to database...\n";
     db->add(ctx, stmt, visible, liveness.get(), current_analysis_decl_ctx.get());
+    llvm::outs() << "DEBUG: finished adding statement to database\n";
     return true;
   }
 
   void CollectVisibleDecls(clang::DeclContext const *dctx)
   {
+    llvm::outs() << "DEBUG: statement visitor: collecting visible decls...\n";
     if (!dctx)
       return;
 
@@ -180,6 +188,8 @@ public:
   // Upon visiting a function, we compute its liveness information.
   bool VisitFunctionDecl(clang::FunctionDecl *decl)
   {
+    llvm::outs() << "DEBUG: statement visitor: visiting function decl...\n";
+
     // std::string name = decl->getNameInfo().getAsString();
     // llvm::outs() << "computing liveness for function: " << name << "\n";
     current_analysis_decl_ctx =
@@ -191,6 +201,8 @@ public:
 
   bool VisitDecl(clang::Decl *decl)
   {
+    llvm::outs() << "DEBUG: statement visitor: visiting decl...\n";
+
     // avoid rebuilding the same context multiple times
     clang::DeclContext const *decl_ctx = decl->getDeclContext();
     if (!decl_ctx || decl_ctx == current_decl_ctx) {
