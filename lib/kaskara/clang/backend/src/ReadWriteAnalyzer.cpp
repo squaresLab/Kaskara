@@ -63,7 +63,7 @@ optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
       break;
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
-      e->dump(llvm::errs());
+      e->dump();
       llvm::errs() << "[/ERROR]\n";
       break;
     }
@@ -134,7 +134,7 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
     if (!nd)
       continue;
 
-    std::string name = nd->getName();
+    std::string name = nd->getName().str();
     decls.emplace(name);
     writes.emplace(name);
   }

@@ -104,12 +104,24 @@ void StatementDB::add(clang::ASTContext const *ctx,
                       clang::AnalysisDeclContext *analysis_decl_ctx)
 {
   llvm::outs() << "DEBUG: StatementDatabase: adding statement...\n";
+
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
+  if (!source_range.isValid()) {
+    llvm::outs() << "WARNING: invalid source location -- skipping statement\n";
+    return;
+  }
+
   std::string loc_str = build_loc_str(source_range, ctx);
   llvm::outs() << "DEBUG: obtained statement location: " << loc_str << "\n";
   std::string txt = read_source(*ctx, source_range);
   llvm::outs() << "DEBUG: obtained source for statement: " << txt << "\n";
 
+  if (analysis_decl_ctx == nullptr) {
+    llvm::outs() << "WARNING: no analysis decl context provided -- skipping statement\n";
+    return;
+  }
+
+  llvm::outs() << "DEBUG: fetching statement map\n";
   auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
   if (stmtMap == nullptr) {
     llvm::outs() << "WARNING: failed to obtain stmt map -- skipping statement\n";

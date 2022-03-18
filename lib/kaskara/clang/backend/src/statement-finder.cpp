@@ -17,6 +17,7 @@
 #include <clang/AST/DeclLookups.h>
 #include <clang/AST/Decl.h>
 #include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/AST/ParentMapContext.h>
 
 #include "util.h"
 #include "StatementDB.h"
@@ -67,7 +68,7 @@ public:
   bool is_inside_array_subscript(const DynTypedNode &n)
   {
     llvm::outs() << "DEBUG: statement visitor: checking whether statement is inside array subscript...\n";
-    std::string kind = n.getNodeKind().asStringRef();
+    std::string kind = n.getNodeKind().asStringRef().str();
     if (kind == "ArraySubscriptExpr")
       return true;
     if (kind == "CompoundStmt")
@@ -103,14 +104,14 @@ public:
     if (!stmt || stmt->getSourceRange().isInvalid())
       return true;
 
-    if (!SM.isInMainFile(stmt->getLocStart()))
+    if (!SM.isInMainFile(stmt->getBeginLoc()))
         return true;
 
-    if (!SM.getFileEntryForID(SM.getFileID(stmt->getLocStart())))
+    if (!SM.getFileEntryForID(SM.getFileID(stmt->getBeginLoc())))
       return true;
 
     // determine the node type
-    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef();
+    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef().str();
     if (kind == "CompoundStmt" ||
         kind == "BreakStmt" ||
         kind == "DefaultStmt" ||
@@ -267,12 +268,12 @@ public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
     clang::CompilerInstance &compiler, llvm::StringRef in_file)
   {
-    const FileEntry *fe = compiler.getFileManager().getFile(in_file);
+    const FileEntry *fe = compiler.getFileManager().getFile(in_file).get();
     if (!fe) {
       llvm::errs() << "failed to obtain file\n";
       exit(1);
     }
-    std::string filename = fe->tryGetRealPathName();
+    std::string filename = fe->tryGetRealPathName().str();
 
     return std::unique_ptr<clang::ASTConsumer>(
         new StatementConsumer(&compiler.getASTContext(), db, filename, visited_files));
@@ -294,9 +295,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       : db(db), visited_files(), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new StatementAction(db, visited_files);
+      return std::make_unique<StatementAction>(db, visited_files);
     }
 
   private:

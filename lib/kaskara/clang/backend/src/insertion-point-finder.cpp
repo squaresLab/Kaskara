@@ -12,6 +12,7 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 
 #include <clang/AST/ASTTypeTraits.h>
+#include <clang/AST/ParentMapContext.h>
 
 #include <clang/AST/DeclBase.h>
 #include <clang/AST/DeclLookups.h>
@@ -62,7 +63,7 @@ public:
   bool VisitStmt(clang::Stmt *stmt)
   {
     // determine the node type
-    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef();
+    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef().str();
     if (kind == "CompoundStmt" ||
         kind == "BreakStmt" ||
         kind == "DefaultStmt" ||
@@ -102,7 +103,7 @@ public:
     if (!file_entry)
       return true;
 
-    std::string filename = file_entry->tryGetRealPathName();
+    std::string filename = file_entry->tryGetRealPathName().str();
     std::string location =
       fmt::format(fmt("{0}@{1}:{2}"),
                   filename,
@@ -133,7 +134,7 @@ public:
 
       // FIXME getQualifiedNameAsString // getName
       // std::string name = nd->getQualifiedNameAsString();
-      std::string name = nd->getName();
+      std::string name = nd->getName().str();
       visible.emplace(name);
     }
 
@@ -207,9 +208,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       : db(db), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new InsertionPointAction(db);
+      return std::make_unique<InsertionPointAction>(db);
     }
 
   private:

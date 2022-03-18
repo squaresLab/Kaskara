@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <clang/AST/Stmt.h>
+
 #include "util.h"
 
 using json = nlohmann::json;

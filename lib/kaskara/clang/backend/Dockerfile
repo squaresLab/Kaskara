@@ -1,5 +1,6 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
-FROM christimperley/clang as cpp
+# FROM christimperley/clang as cpp
+FROM christimperley/llvm11 as cpp
 
 # install compile-time dependencies
 RUN apt-get update && \
@@ -24,17 +25,23 @@ RUN cd /tmp \
  && cd json* \
  && mkdir build \
  && cd build \
- && cmake .. \
+ && cmake -DCMAKE_BUILD_TYPE=Debug .. \
  && make -j4 \
  && make install \
  && rm -rf /tmp/*
 
 # build and install
 ADD . /tmp/kaskara
-RUN mkdir /tmp/kaskara/build && \
-    cd /tmp/kaskara/build && \
-    cmake .. && \
-    make -j4
+RUN mkdir /tmp/kaskara/build \
+ && cd /tmp/kaskara/build \
+ && cmake \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_PREFIX_PATH=/opt/llvm11 \
+      -DCMAKE_CXX_COMPILER=/opt/llvm11/bin/clang++ \
+      -DCMAKE_LINKER=/opt/llvm11/bin/lld \
+      -DCMAKE_CXX_FLAGS="-I/opt/llvm11/include -g -std=c++14 -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS" \
+      .. \
+ && make -j4
 RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-loop-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-statement-finder /opt/kaskara/bin \
@@ -42,7 +49,7 @@ RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-insertion-point-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-snippet-extractor /opt/kaskara/bin
 RUN mkdir -p /opt/kaskara/clang \
- && cp -r /usr/local/lib/clang/5.0.0/include/* /opt/kaskara/clang
+ && cp -r /opt/llvm11/include/* /opt/kaskara/clang
 
 # install scripts
 FROM alpine:3.7 as minimal
