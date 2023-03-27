@@ -29,6 +29,7 @@ RUN cd /tmp \
  && make install \
  && rm -rf /tmp/*
 
+RUN [ ! -e /opt/llvm11 ] && [ -e /opt/llvm ] && ln -sf /opt/llvm /opt/llvm11
 # build and install
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
