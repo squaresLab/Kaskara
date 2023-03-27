@@ -19,8 +19,8 @@ RUN cd /tmp \
 
 # install nlohmann/json
 RUN cd /tmp \
- && wget -nv https://github.com/nlohmann/json/archive/v3.1.2.tar.gz \
- && tar -xf v3.1.2.tar.gz \
+ && wget https://github.com/nlohmann/json/archive/v3.11.2.tar.gz \
+ && tar -xf v3.11.2.tar.gz \
  && cd json* \
  && mkdir build \
  && cd build \
@@ -29,6 +29,7 @@ RUN cd /tmp \
  && make install \
  && rm -rf /tmp/*
 
+RUN [ ! -e /opt/llvm11 ] && [ -e /opt/llvm ] && ln -sf /opt/llvm /opt/llvm11
 # build and install
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
