@@ -19,7 +19,7 @@ RUN cd /tmp \
 
 # install nlohmann/json
 RUN cd /tmp \
- && wget -nv https://github.com/nlohmann/json/archive/v3.1.2.tar.gz \
+ && wget https://github.com/nlohmann/json/archive/v3.1.2.tar.gz \
  && tar -xf v3.1.2.tar.gz \
  && cd json* \
  && mkdir build \
