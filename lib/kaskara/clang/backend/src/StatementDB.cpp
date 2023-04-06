@@ -113,6 +113,11 @@ void StatementDB::add(clang::ASTContext const *ctx,
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
   llvm::outs() << "DEBUG: obtained statement location: " << loc_str << "\n";
+  if (source_range.isInvalid() || source_range.getEnd() < source_range.getBegin()) {
+    llvm::outs() << "WARNING: skipping statement with invalid location: " << loc_str << "\n";
+    return;
+  }
+
   std::string txt = read_source(*ctx, source_range);
   llvm::outs() << "DEBUG: obtained source for statement: " << txt << "\n";
 
