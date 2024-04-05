@@ -1,10 +1,14 @@
+plugins {
+  id 'application'
+}
+
 apply plugin: 'application'
 apply plugin: 'checkstyle'
 apply plugin: 'java'
 
 application {
   applicationName = 'kaskara'
-  mainClassName = 'christimperley.kaskara.Main'
+  mainClass = 'christimperley.kaskara.Main'
 }
 
 checkstyle {
