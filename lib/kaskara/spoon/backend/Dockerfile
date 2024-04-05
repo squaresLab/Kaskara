@@ -1,10 +1,12 @@
-FROM openjdk:11-slim AS build
+FROM eclipse-temurin:21 AS build
 COPY . /opt/kaskara
 WORKDIR /opt/kaskara
+RUN pwd
+RUN ls
 RUN ./gradlew build \
  && ./gradlew installDist
 
-FROM openjdk:11-slim AS run
+FROM eclipse-temurin:21 AS run
 WORKDIR /opt/kaskara
 ENV PATH "/opt/kaskara/bin:${PATH}"
 CMD ["/bin/bash"]
