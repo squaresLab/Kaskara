@@ -5,8 +5,16 @@ functions contained within a program.
 """
 __all__ = ('Function', 'ProgramFunctions')
 
-from typing import List, Dict, Tuple, Optional, Iterator, Iterable, Any
-from typing_extensions import final
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    final,
+)
 import abc
 
 from .core import FileLocationRange, FileLocation

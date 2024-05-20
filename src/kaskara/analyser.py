@@ -2,7 +2,7 @@
 __all__ = ('Analyser',)
 
 import abc
-from typing_extensions import final
+from typing import final
 
 from .analysis import Analysis
 from .project import Project
