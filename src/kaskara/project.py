@@ -49,10 +49,13 @@ class Project:
             docker_kaskara = create(KASKARA_IMAGE)
             stack.callback(docker_kaskara.remove, force=True)
 
-            docker_project = launch(self.image, '/bin/sh',
-                                    stdin_open=True,
-                                    volumes_from=[docker_kaskara.id],
-                                    detach=True)
+            docker_project = launch(
+                self.image,
+                '/bin/sh',
+                stdin_open=True,
+                volumes_from=[docker_kaskara.id],
+                detach=True,
+            )
             stack.callback(docker_project.remove, force=True)
 
             dockerblade = self._dockerblade.attach(docker_project.id)

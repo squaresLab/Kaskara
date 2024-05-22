@@ -16,6 +16,7 @@
 #include <clang/AST/DeclBase.h>
 #include <clang/AST/DeclLookups.h>
 #include <clang/AST/Decl.h>
+#include <clang/AST/ParentMapContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 
 #include "util.h"
@@ -25,7 +26,6 @@ using namespace kaskara;
 
 using namespace clang;
 using namespace clang::tooling;
-using namespace clang::ast_type_traits;
 
 static llvm::cl::OptionCategory MyToolCategory("kaskara-statement-finder options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
@@ -64,10 +64,10 @@ public:
     }
   }
 
-  bool is_inside_array_subscript(const DynTypedNode &n)
+  bool is_inside_array_subscript(const clang::DynTypedNode &n)
   {
     llvm::outs() << "DEBUG: statement visitor: checking whether statement is inside array subscript...\n";
-    std::string kind = n.getNodeKind().asStringRef();
+    std::string kind = n.getNodeKind().asStringRef().str();
     if (kind == "ArraySubscriptExpr")
       return true;
     if (kind == "CompoundStmt")
@@ -81,7 +81,7 @@ public:
   bool is_inside_loop_header(clang::Stmt *stmt)
   {
     llvm::outs() << "DEBUG: statement visitor: checking whether statement is inside loop header...\n";
-    const DynTypedNode n = DynTypedNode::create(*stmt);
+    const clang::DynTypedNode n = clang::DynTypedNode::create(*stmt);
     auto const parents = ctx->getParents(n);
     if (parents.empty())
       return false;
@@ -103,14 +103,14 @@ public:
     if (!stmt || stmt->getSourceRange().isInvalid())
       return true;
 
-    if (!SM.isInMainFile(stmt->getLocStart()))
+    if (!SM.isInMainFile(stmt->getBeginLoc()))
         return true;
 
-    if (!SM.getFileEntryForID(SM.getFileID(stmt->getLocStart())))
+    if (!SM.getFileEntryForID(SM.getFileID(stmt->getBeginLoc())))
       return true;
 
     // determine the node type
-    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef();
+    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef().str();
     if (kind == "CompoundStmt" ||
         kind == "BreakStmt" ||
         kind == "DefaultStmt" ||
@@ -146,7 +146,7 @@ public:
     //   p.dump(llvm::outs(), SM);
     // }
 
-    if (is_inside_array_subscript(DynTypedNode::create(*stmt)))
+    if (is_inside_array_subscript(clang::DynTypedNode::create(*stmt)))
       return true;
     if (is_inside_loop_header(stmt))
       return true;
@@ -171,7 +171,7 @@ public:
       if (!d)
         continue;
 
-      DynTypedNode node = DynTypedNode::create(*d);
+      clang::DynTypedNode node = clang::DynTypedNode::create(*d);
       if (clang::VarDecl const *vd = node.get<clang::VarDecl>()) {
         if (vd->getIdentifier())
           visible.emplace(vd);
@@ -267,12 +267,12 @@ public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
     clang::CompilerInstance &compiler, llvm::StringRef in_file)
   {
-    const FileEntry *fe = compiler.getFileManager().getFile(in_file);
+    const FileEntry *fe = compiler.getFileManager().getFile(in_file).get();
     if (!fe) {
       llvm::errs() << "failed to obtain file\n";
       exit(1);
     }
-    std::string filename = fe->tryGetRealPathName();
+    std::string filename = fe->tryGetRealPathName().str();
 
     return std::unique_ptr<clang::ASTConsumer>(
         new StatementConsumer(&compiler.getASTContext(), db, filename, visited_files));
@@ -294,9 +294,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       : db(db), visited_files(), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new StatementAction(db, visited_files);
+      return std::make_unique<StatementAction>(db, visited_files);
     }
 
   private:
@@ -310,7 +310,13 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
 
 int main(int argc, const char **argv)
 {
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
   Tool.setDiagnosticConsumer(new clang::IgnoringDiagConsumer());

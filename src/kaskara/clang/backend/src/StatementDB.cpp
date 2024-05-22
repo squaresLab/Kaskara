@@ -14,7 +14,6 @@
 
 using json = nlohmann::json;
 using namespace kaskara;
-using namespace clang::ast_type_traits;
 
 namespace kaskara {
 
@@ -24,17 +23,19 @@ StatementDB::StatementDB() : contents()
 StatementDB::~StatementDB()
 { }
 
-StatementDB::Entry::Entry(std::string const &location,
-                          std::string const &content,
-                          std::string const &canonical,
-                          std::string const &kind,
-                          std::unordered_set<std::string> const &reads,
-                          std::unordered_set<std::string> const &writes,
-                          std::unordered_set<std::string> const &decls,
-                          std::unordered_set<std::string> const &visible,
-                          std::unordered_set<std::string> const &live_before,
-                          std::unordered_set<std::string> const &live_after,
-                          StatementSyntaxScope const &syntax_scope)
+StatementDB::Entry::Entry(
+  std::string const &location,
+  std::string const &content,
+  std::string const &canonical,
+  std::string const &kind,
+  std::unordered_set<std::string> const &reads,
+  std::unordered_set<std::string> const &writes,
+  std::unordered_set<std::string> const &decls,
+  std::unordered_set<std::string> const &visible,
+  std::unordered_set<std::string> const &live_before,
+  std::unordered_set<std::string> const &live_after,
+  StatementSyntaxScope const &syntax_scope
+)
   : location(location),
     content(content),
     canonical(canonical),

@@ -33,19 +33,19 @@ set(LLVM_LIBS
   LLVMXCoreCodeGen
   LLVMXCoreDesc
   LLVMXCoreInfo
-  LLVMXCoreAsmPrinter
+  # LLVMXCoreAsmPrinter
   LLVMSystemZDisassembler
   LLVMSystemZCodeGen
   LLVMSystemZAsmParser
   LLVMSystemZDesc
   LLVMSystemZInfo
-  LLVMSystemZAsmPrinter
+  # LLVMSystemZAsmPrinter
   LLVMSparcDisassembler
   LLVMSparcCodeGen
   LLVMSparcAsmParser
   LLVMSparcDesc
   LLVMSparcInfo
-  LLVMSparcAsmPrinter
+  # LLVMSparcAsmPrinter
   LLVMRISCVDesc
   LLVMRISCVCodeGen
   LLVMRISCVInfo
@@ -54,26 +54,26 @@ set(LLVM_LIBS
   LLVMPowerPCAsmParser
   LLVMPowerPCDesc
   LLVMPowerPCInfo
-  LLVMPowerPCAsmPrinter
+  # LLVMPowerPCAsmPrinter
   LLVMNVPTXCodeGen
   LLVMNVPTXDesc
   LLVMNVPTXInfo
-  LLVMNVPTXAsmPrinter
+  # LLVMNVPTXAsmPrinter
   LLVMMSP430CodeGen
   LLVMMSP430Desc
   LLVMMSP430Info
-  LLVMMSP430AsmPrinter
+  # LLVMMSP430AsmPrinter
   LLVMMipsDisassembler
   LLVMMipsCodeGen
   LLVMMipsAsmParser
   LLVMMipsDesc
   LLVMMipsInfo
-  LLVMMipsAsmPrinter
+  # LLVMMipsAsmPrinter
   LLVMLanaiDisassembler
   LLVMLanaiCodeGen
   LLVMLanaiAsmParser
   LLVMLanaiDesc
-  LLVMLanaiAsmPrinter
+  # LLVMLanaiAsmPrinter
   LLVMLanaiInfo
   LLVMHexagonDisassembler
   LLVMHexagonCodeGen
@@ -84,26 +84,26 @@ set(LLVM_LIBS
   LLVMBPFCodeGen
   LLVMBPFDesc
   LLVMBPFInfo
-  LLVMBPFAsmPrinter
+  # LLVMBPFAsmPrinter
   LLVMARMDisassembler
   LLVMARMCodeGen
   LLVMARMAsmParser
   LLVMARMDesc
   LLVMARMInfo
-  LLVMARMAsmPrinter
+  # LLVMARMAsmPrinter
   LLVMAMDGPUDisassembler
   LLVMAMDGPUCodeGen
   LLVMAMDGPUAsmParser
   LLVMAMDGPUDesc
   LLVMAMDGPUInfo
-  LLVMAMDGPUAsmPrinter
+  # LLVMAMDGPUAsmPrinter
   LLVMAMDGPUUtils
   LLVMAArch64Disassembler
   LLVMAArch64CodeGen
   LLVMAArch64AsmParser
   LLVMAArch64Desc
   LLVMAArch64Info
-  LLVMAArch64AsmPrinter
+  # LLVMAArch64AsmPrinter
   LLVMAArch64Utils
   LLVMObjectYAML
   LLVMLibDriver
@@ -113,14 +113,14 @@ set(LLVM_LIBS
   LLVMX86CodeGen
   LLVMGlobalISel
   LLVMSelectionDAG
-  LLVMAsmPrinter
+  # LLVMAsmPrinter
   LLVMDebugInfoCodeView
   LLVMDebugInfoMSF
   LLVMX86Desc
   LLVMMCDisassembler
   LLVMX86Info
-  LLVMX86AsmPrinter
-  LLVMX86Utils
+  # LLVMX86AsmPrinter
+  # LLVMX86Utils
   LLVMMCJIT
   LLVMLineEditor
   LLVMInterpreter

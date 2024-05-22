@@ -41,8 +41,8 @@ public:
     if (!decl->isThisDeclarationADefinition())
       return true;
 
-    clang::FullSourceLoc loc = ctx->getFullLoc(decl->getLocStart());
-    std::string filename = SM.getFilename(loc);
+    clang::FullSourceLoc loc = ctx->getFullLoc(decl->getBeginLoc());
+    std::string filename = SM.getFilename(loc).str();
     if (filename != in_file) {
       return true;
     }
@@ -120,9 +120,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       : db_func(db_func), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new FindFunctionAction(db_func);
+      return std::make_unique<FindFunctionAction>(db_func);
     }
 
   private:
@@ -136,7 +136,13 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
 int main(int argc, const char **argv)
 {
   using namespace clang::tooling;
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 

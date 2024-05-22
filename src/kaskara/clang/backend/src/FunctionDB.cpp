@@ -48,7 +48,7 @@ void FunctionDB::add(clang::ASTContext *ctx, clang::FunctionDecl const *decl)
   std::string loc_str = build_loc_str(decl->getSourceRange(), ctx);
   std::string body = build_loc_str(decl->getBody()->getSourceRange(), ctx);
   std::string return_type = decl->getReturnType().getAsString();
-  bool pure = decl->isPure();
+  bool pure = decl->isPureVirtual();
   bool global = decl->isGlobal();
   contents.emplace_back(name, loc_str, body, return_type, pure, global);
 }

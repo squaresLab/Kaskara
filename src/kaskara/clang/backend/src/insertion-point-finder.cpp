@@ -16,9 +16,9 @@
 #include <clang/AST/DeclBase.h>
 #include <clang/AST/DeclLookups.h>
 #include <clang/AST/Decl.h>
+#include <clang/AST/ParentMapContext.h>
 
 #include <clang/AST/RecursiveASTVisitor.h>
-//#include <clang/AST/LexicallyOrderedRecursiveASTVisitor.h>
 
 #include "util.h"
 #include "InsertionPointDB.h"
@@ -27,7 +27,6 @@ using namespace kaskara;
 
 using namespace clang;
 using namespace clang::tooling;
-using namespace clang::ast_type_traits;
 
 static llvm::cl::OptionCategory MyToolCategory("kaskara-insertion-point-finder options");
 static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
@@ -62,7 +61,7 @@ public:
   bool VisitStmt(clang::Stmt *stmt)
   {
     // determine the node type
-    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef();
+    std::string kind = ASTNodeKind::getFromNode(*stmt).asStringRef().str();
     if (kind == "CompoundStmt" ||
         kind == "BreakStmt" ||
         kind == "DefaultStmt" ||
@@ -102,12 +101,13 @@ public:
     if (!file_entry)
       return true;
 
-    std::string filename = file_entry->tryGetRealPathName();
-    std::string location =
-      fmt::format(fmt("{0}@{1}:{2}"),
-                  filename,
-                  loc_insertion.getSpellingLineNumber(),
-                  loc_insertion.getSpellingColumnNumber());
+    std::string filename = file_entry->tryGetRealPathName().str();
+    std::string location = fmt::format(
+      "{0}@{1}:{2}",
+      filename,
+      loc_insertion.getSpellingLineNumber(),
+      loc_insertion.getSpellingColumnNumber()
+    );
 
     // record insertion point
     db->add(location, visible);
@@ -133,7 +133,7 @@ public:
 
       // FIXME getQualifiedNameAsString // getName
       // std::string name = nd->getQualifiedNameAsString();
-      std::string name = nd->getName();
+      std::string name = nd->getName().str();
       visible.emplace(name);
     }
 
@@ -207,9 +207,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       : db(db), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new InsertionPointAction(db);
+      return std::make_unique<InsertionPointAction>(db);
     }
 
   private:
@@ -222,7 +222,13 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
 
 int main(int argc, const char **argv)
 {
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 

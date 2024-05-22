@@ -80,10 +80,10 @@ public:
       if (!stmt || stmt->getSourceRange().isInvalid())
         return;
 
-      if (!SM->isInMainFile(stmt->getLocStart()))
+      if (!SM->isInMainFile(stmt->getBeginLoc()))
           return;
 
-      FileID fid = SM->getFileID(stmt->getLocStart());
+      FileID fid = SM->getFileID(stmt->getBeginLoc());
       FileEntry const *fe = SM->getFileEntryForID(fid);
       if (!fe)
         return;
@@ -101,7 +101,13 @@ private:
 
 int main(int argc, const char **argv)
 {
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 

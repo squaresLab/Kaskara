@@ -10,13 +10,13 @@
 
 #include "util.h"
 
-using namespace clang::ast_type_traits;
+// using namespace clang::ast_type_traits;
 using namespace std::experimental;
 
 namespace kaskara {
 
 // FIXME take non-const? use const cast?
-optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
+optional<std::string> resolve_member_expr(clang::MemberExpr const *e, clang::ASTContext const *ctx)
 {
   if (e == nullptr) {
     llvm::errs() << "[FATAL ERROR] null pointer provided to resolve_member_expr\n";
@@ -63,7 +63,7 @@ optional<std::string> resolve_member_expr(clang::MemberExpr const *e)
       break;
     } else {
       llvm::errs() << "[ERROR] Failed to resolve member expression:\n";
-      e->dump(llvm::errs());
+      e->dump(llvm::errs(), *ctx);
       llvm::errs() << "[/ERROR]\n";
       break;
     }
@@ -117,7 +117,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
     writes.emplace(dre->getNameInfo().getAsString());
   }
   if (auto *mex = clang::dyn_cast<clang::MemberExpr>(expr)) {
-    if (auto resolved_name = resolve_member_expr(mex))
+    if (auto resolved_name = resolve_member_expr(mex, ctx))
       writes.emplace(*resolved_name);
   }
 }
@@ -130,11 +130,11 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
     if (!d)
       continue;
 
-    clang::NamedDecl const *nd = DynTypedNode::create(*d).get<clang::NamedDecl>();
+    clang::NamedDecl const *nd = clang::DynTypedNode::create(*d).get<clang::NamedDecl>();
     if (!nd)
       continue;
 
-    std::string name = nd->getName();
+    std::string name = nd->getName().str();
     decls.emplace(name);
     writes.emplace(name);
   }
@@ -143,16 +143,15 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
 {
   llvm::outs() << "[DEBUG] visiting member expr...\n";
-  if (auto resolved = resolve_member_expr(expr))
+  if (auto resolved = resolve_member_expr(expr, ctx))
     reads.emplace(*resolved);
 }
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
 {
   llvm::outs() << "[DEBUG] visiting decl ref expr...\n";
-  // expr->dump();
   // NOTE we do not record enum values
-  if (auto const *var = DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())
+  if (auto const *var = clang::DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())
     reads.emplace(var->getNameAsString());
 }
 

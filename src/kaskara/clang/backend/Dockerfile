@@ -1,15 +1,22 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
-FROM christimperley/clang as cpp
+FROM christimperley/llvm18 as cpp
 
 # install compile-time dependencies
-RUN apt-get update && \
-    apt-get install -y vim gdb wget zip less
+RUN apt-get update \
+ && apt-get install -y \
+        gdb \
+        less \
+        libssl-dev \
+        vim \
+        wget \
+        zip
 
 # install fmt
+ARG FMT_VERSION=10.2.1
 RUN cd /tmp \
- && wget https://github.com/fmtlib/fmt/archive/5.0.0.tar.gz \
- && tar -xf 5.0.0.tar.gz \
- && cd fmt-5.0.0 \
+ && wget -nv "https://github.com/fmtlib/fmt/archive/${FMT_VERSION}.tar.gz" \
+ && tar -xf "${FMT_VERSION}.tar.gz" \
+ && cd "fmt-${FMT_VERSION}" \
  && mkdir build \
  && cd build \
  && cmake .. \
@@ -18,9 +25,10 @@ RUN cd /tmp \
  && rm -rf /tmp/*
 
 # install nlohmann/json
+ARG NLOHMANN_JSON_VERSION=3.11.3
 RUN cd /tmp \
- && wget https://github.com/nlohmann/json/archive/v3.11.2.tar.gz \
- && tar -xf v3.11.2.tar.gz \
+ && wget -nv "https://github.com/nlohmann/json/archive/v${NLOHMANN_JSON_VERSION}.tar.gz" \
+ && tar -xf "v${NLOHMANN_JSON_VERSION}.tar.gz" \
  && cd json* \
  && mkdir build \
  && cd build \
@@ -29,7 +37,6 @@ RUN cd /tmp \
  && make install \
  && rm -rf /tmp/*
 
-RUN [ ! -e /opt/llvm11 ] && [ -e /opt/llvm ] && ln -sf /opt/llvm /opt/llvm11
 # build and install
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build && \
@@ -42,8 +49,9 @@ RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-function-scanner /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-insertion-point-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-snippet-extractor /opt/kaskara/bin
+
 RUN mkdir -p /opt/kaskara/clang \
- && cp -r /usr/local/lib/clang/5.0.0/include/* /opt/kaskara/clang
+ && cp -r /opt/llvm/lib/clang/18/include/* /opt/kaskara/clang
 
 # install scripts
 FROM alpine:3.7 as minimal

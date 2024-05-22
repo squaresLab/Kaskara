@@ -34,8 +34,8 @@ public:
 
   bool VisitWhileStmt(clang::WhileStmt const *stmt)
   {
-    clang::FullSourceLoc loc = ctx->getFullLoc(stmt->getLocStart());
-    std::string filename = SM.getFilename(loc);
+    clang::FullSourceLoc loc = ctx->getFullLoc(stmt->getBeginLoc());
+    std::string filename = SM.getFilename(loc).str();
 
     if (filename != in_file) {
       return true;
@@ -50,8 +50,8 @@ public:
 
   bool VisitForStmt(clang::ForStmt const *stmt)
   {
-    clang::FullSourceLoc loc = ctx->getFullLoc(stmt->getLocStart());
-    std::string filename = SM.getFilename(loc);
+    clang::FullSourceLoc loc = ctx->getFullLoc(stmt->getBeginLoc());
+    std::string filename = SM.getFilename(loc).str();
 
     if (filename != in_file) {
       return true;
@@ -118,9 +118,9 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> loopFinderFactory(
       : db_loop(db_loop), clang::tooling::FrontendActionFactory()
     { }
 
-    clang::FrontendAction *create() override
+    std::unique_ptr<clang::FrontendAction> create() override
     {
-      return new FindLoopAction(db_loop);
+      return std::make_unique<FindLoopAction>(db_loop);
     }
 
   private:
@@ -134,7 +134,13 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> loopFinderFactory(
 int main(int argc, const char **argv)
 {
   using namespace clang::tooling;
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
