@@ -1,6 +1,5 @@
-"""This module is responsible for installing the backend for the Spoon plugin.
-"""
-__all__ = ("post_install,")
+"""Responsible for installing the backend for the Spoon plugin."""
+__all__ = ("post_install",)
 
 import contextlib
 

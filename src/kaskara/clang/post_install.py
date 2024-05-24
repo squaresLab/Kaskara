@@ -1,6 +1,7 @@
-"""This module is responsible for installing the backend for the C++ plugin.
-"""
-__all__ = ("post_install,")
+"""Responsible for installing the backend for the C++ plugin."""
+from __future__ import annotations
+
+__all__ = ("post_install",)
 
 import contextlib
 

@@ -1,14 +1,17 @@
 __all__ = ("collect_functions",)
 
 import ast
+import typing as t
 
-import asttokens
 from loguru import logger
 
-from ..container import ProjectContainer
-from ..functions import ProgramFunctions
-from .analysis import PythonFunction
-from .util import ast_location, ast_with_tokens
+from kaskara.container import ProjectContainer
+from kaskara.functions import ProgramFunctions
+from kaskara.python.analysis import PythonFunction
+from kaskara.python.util import ast_location, ast_with_tokens
+
+if t.TYPE_CHECKING:
+    import asttokens
 
 
 def collect_functions(container: ProjectContainer) -> ProgramFunctions:

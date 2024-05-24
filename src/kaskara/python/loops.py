@@ -1,14 +1,18 @@
 __all__ = ("collect_loops",)
 
 import ast
+import typing as t
 
-import asttokens
 from loguru import logger
 
-from ..container import ProjectContainer
-from ..core import FileLocationRange
-from ..loops import ProgramLoops
-from .util import ast_location, ast_with_tokens
+from kaskara.container import ProjectContainer
+from kaskara.loops import ProgramLoops
+from kaskara.python.util import ast_location, ast_with_tokens
+
+if t.TYPE_CHECKING:
+    import asttokens
+
+    from kaskara.core import FileLocationRange
 
 
 def collect_loops(container: ProjectContainer) -> ProgramLoops:

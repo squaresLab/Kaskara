@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 __all__ = ("collect_statements",)
 
 import ast
+import typing as t
 
 import astor
-import asttokens
 from loguru import logger
 
-from ..container import ProjectContainer
-from ..statements import ProgramStatements
-from .analysis import PythonStatement
-from .util import ast_location, ast_with_tokens
+from kaskara.python.analysis import PythonStatement
+from kaskara.python.util import ast_location, ast_with_tokens
+from kaskara.statements import ProgramStatements
+
+if t.TYPE_CHECKING:
+    import asttokens
+
+    from kaskara.container import ProjectContainer
 
 STMT_CLASS_NAMES = {
     "FunctionDef",

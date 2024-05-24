@@ -5,9 +5,9 @@ from typing import Any
 
 import attr
 
-from ..core import FileLocationRange
-from ..functions import Function
-from ..statements import Statement
+from kaskara.core import FileLocationRange
+from kaskara.functions import Function
+from kaskara.statements import Statement
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)

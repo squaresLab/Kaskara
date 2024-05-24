@@ -1,15 +1,18 @@
-"""This module provides functionality for discovering and describing the set of
-functions contained within a program.
-"""
+"""Provides functionality for discovering and describing the set of functions contained within a program."""
+from __future__ import annotations
+
 __all__ = ("Function", "ProgramFunctions")
 
 import abc
-from collections.abc import Iterable, Iterator
+import typing as t
 from typing import (
     final,
 )
 
-from .core import FileLocation, FileLocationRange
+if t.TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
+    from kaskara.core import FileLocation, FileLocationRange
 
 
 class Function(abc.ABC):

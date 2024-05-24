@@ -11,13 +11,17 @@ def abs_to_rel_filename(prefix: str, filename: str) -> str:
 
 
 def abs_to_rel_floc(prefix: str, location: FileLocation) -> FileLocation:
-    return FileLocation(abs_to_rel_filename(prefix, location.filename),
-                        location.location)
+    return FileLocation(
+        abs_to_rel_filename(prefix, location.filename),
+        location.location,
+    )
 
 
 def rel_to_abs_floc(prefix: str, location: FileLocation) -> FileLocation:
-    return FileLocation(os.path.join(prefix, location.filename),
-                        location.location)
+    return FileLocation(
+        os.path.join(prefix, location.filename),
+        location.location,
+    )
 
 
 def abs_to_rel_flocrange(prefix: str,

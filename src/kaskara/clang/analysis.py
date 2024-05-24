@@ -6,11 +6,11 @@ from typing import Any
 import attr
 from loguru import logger
 
-from ..core import FileLocationRange
-from ..functions import Function
-from ..project import Project
-from ..statements import Statement
-from ..util import abs_to_rel_flocrange
+from kaskara.core import FileLocationRange
+from kaskara.functions import Function
+from kaskara.project import Project
+from kaskara.statements import Statement
+from kaskara.util import abs_to_rel_flocrange
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)

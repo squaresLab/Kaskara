@@ -1,6 +1,4 @@
-"""This module is used to install Kaskara's various language backends following
-the installation of the Kaskara Python package via setuptools/pip.
-"""
+"""Installs Kaskara's language backends following the installation of this Python package."""
 __all__ = ("post_install",)
 
 from loguru import logger

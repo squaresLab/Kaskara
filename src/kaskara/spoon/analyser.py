@@ -12,16 +12,16 @@ import attr
 from dockerblade import DockerDaemon as DockerBladeDockerDaemon
 from loguru import logger
 
-from ..analyser import Analyser
-from ..analysis import Analysis
-from ..container import ProjectContainer
-from ..core import FileLocationRange
-from ..functions import ProgramFunctions
-from ..loops import ProgramLoops
-from ..project import Project
-from ..statements import ProgramStatements
-from .analysis import SpoonFunction, SpoonStatement
-from .post_install import IMAGE_NAME as SPOON_IMAGE_NAME
+from kaskara.analyser import Analyser
+from kaskara.analysis import Analysis
+from kaskara.container import ProjectContainer
+from kaskara.core import FileLocationRange
+from kaskara.functions import ProgramFunctions
+from kaskara.loops import ProgramLoops
+from kaskara.project import Project
+from kaskara.spoon.analysis import SpoonFunction, SpoonStatement
+from kaskara.spoon.post_install import IMAGE_NAME as SPOON_IMAGE_NAME
+from kaskara.statements import ProgramStatements
 
 
 @attr.s

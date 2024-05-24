@@ -4,23 +4,27 @@ __all__ = ("ClangAnalyser",)
 
 import json
 import os
-from collections.abc import Mapping, Sequence
+import typing as t
 from typing import Any
 
 import dockerblade as _dockerblade
 from loguru import logger
 
-from ..analyser import Analyser
-from ..analysis import Analysis
-from ..container import ProjectContainer
-from ..core import FileLocationRange
-from ..exceptions import KaskaraException
-from ..functions import ProgramFunctions
-from ..loops import ProgramLoops
-from ..project import Project
-from ..statements import ProgramStatements
-from ..util import abs_to_rel_flocrange
-from .analysis import ClangFunction, ClangStatement
+from kaskara.analyser import Analyser
+from kaskara.analysis import Analysis
+from kaskara.clang.analysis import ClangFunction, ClangStatement
+from kaskara.core import FileLocationRange
+from kaskara.exceptions import KaskaraException
+from kaskara.functions import ProgramFunctions
+from kaskara.loops import ProgramLoops
+from kaskara.statements import ProgramStatements
+from kaskara.util import abs_to_rel_flocrange
+
+if t.TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from kaskara.container import ProjectContainer
+    from kaskara.project import Project
 
 
 class ClangAnalyser(Analyser):
@@ -78,8 +82,7 @@ class ClangAnalyser(Analyser):
             if maybe_error:
                 message = "{message}: {maybe_error_message}"
                 raise KaskaraException(message) from maybe_error
-            else:
-                raise KaskaraException(message)
+            raise KaskaraException(message)
 
         if analysis_completed and maybe_error_message:
             message = f"{analysis_name}: completed with errors:\n{maybe_error_message}"

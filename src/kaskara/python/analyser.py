@@ -2,13 +2,13 @@ __all__ = ("PythonAnalyser",)
 
 from loguru import logger
 
-from ..analyser import Analyser
-from ..analysis import Analysis
-from ..container import ProjectContainer
-from ..project import Project
-from .functions import collect_functions
-from .loops import collect_loops
-from .statements import collect_statements
+from kaskara.analyser import Analyser
+from kaskara.analysis import Analysis
+from kaskara.container import ProjectContainer
+from kaskara.project import Project
+from kaskara.python.functions import collect_functions
+from kaskara.python.loops import collect_loops
+from kaskara.python.statements import collect_statements
 
 
 class PythonAnalyser(Analyser):

@@ -49,7 +49,7 @@ src = ["src"]
 select = [
     "ALL",  # includes all rules (including new ones)
 ]
-per-file-ignores = {"*/__init__.py" = ["F401"]}
+per-file-ignores = {"*/__init__.py" = ["F401"], "src/kaskara/core.py" = ["F401"], "src/kaskara/python/*.py" = ["N802", "N815"]}
 extend-ignore = [
     "ANN101",   # missing type annotation for 'self' in method
     "ANN102",   # missing type annotation for 'cls' in classmethod
@@ -82,6 +82,12 @@ extend-ignore = [
     "ARG001",   # unused function argument
     "PLR0913",  # too many arguments in function definition
     "PLR0911",  # too many return statements
+    "PTH118",   # `os.path.join()` should be replaced by `Path` with `/` operator
+    "S604",     # function call with `shell=True` parameter identified, security issue
+    "S602",     # subprocess call with shell=True identified, security issue
+    "D107",     # missing docstring in `__init__`
+    "N818",     # exception name should be named with an Error suffix
+    "PTH117",   # `os.path.isabs()` should be replaced by `Path.is_absolute()`
 ]
 
 [build-system]

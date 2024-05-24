@@ -7,8 +7,8 @@ from collections.abc import Sequence
 import asttokens
 from loguru import logger
 
-from ..container import ProjectContainer
-from ..core import FileLocationRange, Location, LocationRange
+from kaskara.container import ProjectContainer
+from kaskara.core import FileLocationRange, Location, LocationRange
 
 
 def ast_with_tokens(container: ProjectContainer,

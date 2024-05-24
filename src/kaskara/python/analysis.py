@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 __all__ = ("PythonFunction", "PythonStatement")
 
+import typing as t
 
 import attr
 
-from ..core import FileLocationRange
-from ..functions import Function
-from ..statements import Statement
+from kaskara.functions import Function
+from kaskara.statements import Statement
+
+if t.TYPE_CHECKING:
+    from kaskara.core import FileLocationRange
 
 
 @attr.s(frozen=True, auto_attribs=True, slots=True)

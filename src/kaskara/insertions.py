@@ -35,9 +35,7 @@ class ProgramInsertionPoints(Iterable[InsertionPoint]):
         yield from self.__file_insertions.get(filename, [])
 
     def at_line(self, line: FileLine) -> Iterator[InsertionPoint]:
-        """Returns an iterator over all of the insertion points located at a
-        given line.
-        """
+        """Returns an iterator over all insertion points at a given line."""
         logger.debug(f"finding insertion points at line: {line}")
         filename: str = line.filename
         line_num: int = line.num
