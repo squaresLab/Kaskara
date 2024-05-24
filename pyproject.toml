@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kaskara"
-version = "0.2.0"
+version = "0.2.1"
 description = "A simple, unified API for various static analysers"
 authors = ["Chris Timperley <ctimperley@cmu.edu>"]
 license = "Apache-2.0"
