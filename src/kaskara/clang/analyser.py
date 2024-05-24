@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 __all__ = ('ClangAnalyser',)
 
 from typing import Any, List, Mapping, Sequence
@@ -27,7 +29,10 @@ class ClangAnalyser(Analyser):
         with project.provision() as container:
             return self._analyse_container(container)
 
-    def _analyse_container(self, container: ProjectContainer) -> Analysis:
+    def _analyse_container(
+        self,
+        container: ProjectContainer,
+    ) -> Analysis:
         loops = self._find_loops(container)
         functions = self._find_functions(container)
         statements = self._find_statements(container)
@@ -38,59 +43,99 @@ class ClangAnalyser(Analyser):
                         statements=statements,
                         insertions=insertions)
 
-    def _find_statements(self,
-                         container: ProjectContainer
-                         ) -> ProgramStatements:
+    def _execute_command(
+        self,
+        container: ProjectContainer,
+        command_args: list[str],
+        output_filename: str,
+        *,
+        analysis_name: str | None = None,
+    ) -> str:
         project = container.project
-        logger.debug(f'finding statements for project: {project}')
-
         workdir = project.directory
-        command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
-        command_args += sorted(project.files)
+
+        if not os.path.isabs(output_filename):
+            output_filename = os.path.join(workdir, output_filename)
+
+        command_args += ["2>1"]
         command = ' '.join(command_args)
-        output_filename = os.path.join(workdir, 'statements.json')
-        logger.debug(f'executing statement finder [{workdir}]: {command}')
+
+        logger.debug(f'executing {analysis_name} [{workdir}]: {command}')
+
+        analysis_name = analysis_name or output_filename
+        maybe_error_message: str | None = None
+        maybe_error: Exception | None = None
         try:
             container.shell.check_output(command, cwd=workdir, text=True)
         except _dockerblade.CalledProcessError as err:
-            msg = f'statement finder failed with code {err.returncode}'
-            logger.exception(msg)
-            logger.error(f"statement finder output: {err.output}")
-            if not project.ignore_errors:
-                raise KaskaraException(msg)
+            maybe_error = err
+            maybe_error_message = f"failed with exit code {err.returncode}: {err.output}"
 
-        logger.debug(f'reading results from file: {output_filename}')
+        analysis_completed = container.files.exists(output_filename)
+
+        if not analysis_completed:
+            message = f"{analysis_name}: failed to produce output"
+            if maybe_error:
+                message = "{message}: {maybe_error_message}"
+                raise KaskaraException(message) from maybe_error
+            else:
+                raise KaskaraException(message)
+
+        if analysis_completed and maybe_error_message:
+            message = f"{analysis_name}: completed with errors:\n{maybe_error_message}"
+            logger.warning(message)
+
+        return output_filename
+
+    def _find_statements(
+        self,
+        container: ProjectContainer
+    ) -> ProgramStatements:
+        project = container.project
+        logger.debug(f'finding statements for project: {project}')
+
+        command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
+        command_args += sorted(project.files)
+        output_filename = "statements.json"
+
+        output_filename = self._execute_command(
+            container=container,
+            command_args=command_args,
+            output_filename=output_filename,
+            analysis_name='statement finder',
+        )
+
         file_contents = container.files.read(output_filename)
         jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
         statements = \
             ProgramStatements([ClangStatement.from_dict(project, d) for d in jsn])  # noqa
-        logger.debug(f'finished reading results')
+        logger.debug("finished reading results")
         return statements
 
-    def _find_loops(self, container: ProjectContainer) -> ProgramLoops:
+    def _find_loops(
+        self,
+        container: ProjectContainer,
+    ) -> ProgramLoops:
         project = container.project
-        workdir = project.directory
         command_args = ['/opt/kaskara/scripts/kaskara-loop-finder']
         command_args += sorted(project.files)
-        command = ' '.join(command_args)
-        output_filename = os.path.join(workdir, 'loops.json')
-        logger.debug(f'executing loop finder [{workdir}]: {command}')
-        try:
-            container.shell.check_call(command, cwd=workdir)
-        except _dockerblade.CalledProcessError as err:
-            msg = f'loop finder failed with code {err.returncode}'
-            logger.exception(msg)
-            if not project.ignore_errors:
-                raise KaskaraException(msg)
+        output_filename = "loops.json"
 
-        logger.debug(f'reading results from file: {output_filename}')
+        output_filename = self._execute_command(
+            container=container,
+            command_args=command_args,
+            output_filename=output_filename,
+            analysis_name='loop finder',
+        )
+
         file_contents = container.files.read(output_filename)
         return self._read_loops_from_file_contents(project, file_contents)
 
-    def _read_loops_from_file_contents(self,
-                                       project: Project,
-                                       contents: str
-                                       ) -> 'ProgramLoops':
+    def _read_loops_from_file_contents(
+        self,
+        project: Project,
+        contents: str
+    ) -> ProgramLoops:
         loop_bodies: List[FileLocationRange] = []
         jsn: Sequence[Mapping[str, str]] = json.loads(contents)
         for loop_info in jsn:
@@ -100,24 +145,22 @@ class ClangAnalyser(Analyser):
         logger.debug(f'finished reading loop analysis results')
         return ProgramLoops.from_body_location_ranges(loop_bodies)
 
-    def _find_functions(self, container: ProjectContainer) -> ProgramFunctions:
+    def _find_functions(
+        self,
+        container: ProjectContainer,
+    ) -> ProgramFunctions:
         project = container.project
-        workdir = project.directory
-        output_filename = os.path.join(workdir, 'functions.json')
+        output_filename = "functions.json"
         command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
         command_args += sorted(project.files)
-        command = ' '.join(command_args)
 
-        logger.debug(f'executing function scanner [{workdir}]: {command}')
-        try:
-            container.shell.check_call(command, cwd=workdir)
-        except _dockerblade.CalledProcessError as err:
-            msg = f'function scanner failed with code {err.returncode}'
-            logger.exception(msg)
-            if not project.ignore_errors:
-                raise KaskaraException(msg)
+        output_filename = self._execute_command(
+            container=container,
+            command_args=command_args,
+            output_filename=output_filename,
+            analysis_name='function scanner',
+        )
 
-        logger.debug(f'reading results from file: {output_filename}')
         file_contents = container.files.read(output_filename)
         jsn = json.loads(file_contents)
         return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)  # noqa
