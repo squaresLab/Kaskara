@@ -39,6 +39,7 @@ ruff = ">=0.4.4"
 [tool.mypy]
 ignore_missing_imports = false
 strict = true
+implicit_reexport = true
 
 [tool.ruff]
 line-length = 120
