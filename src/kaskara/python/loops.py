@@ -1,22 +1,19 @@
-# -*- coding: utf-8 -*-
-__all__ = ('collect_loops',)
+__all__ = ("collect_loops",)
 
-from typing import Union, List
 import ast
 
-from loguru import logger
 import asttokens
-import astor
+from loguru import logger
 
-from .util import ast_with_tokens, ast_location
 from ..container import ProjectContainer
 from ..core import FileLocationRange
 from ..loops import ProgramLoops
+from .util import ast_location, ast_with_tokens
 
 
 def collect_loops(container: ProjectContainer) -> ProgramLoops:
     """Finds all loops within a Python project given a container."""
-    logger.debug(f'collecting loops for project [{container.project}]')
+    logger.debug(f"collecting loops for project [{container.project}]")
     visitor = CollectLoopsVisitor(container)
     for filename in container.project.files:
         visitor.collect(filename)
@@ -28,10 +25,10 @@ class CollectLoopsVisitor(ast.NodeVisitor):
         super().__init__()
         self.atok: asttokens.ASTTokens
         self.container = container
-        self.locations: List[FileLocationRange] = []
+        self.locations: list[FileLocationRange] = []
 
     def visit_loop(self,
-                   node: Union[ast.For, ast.AsyncFor, ast.While]
+                   node: ast.For | ast.AsyncFor | ast.While,
                    ) -> None:
         self.locations.append(ast_location(self.atok, node.body))
         if node.orelse:
@@ -44,6 +41,6 @@ class CollectLoopsVisitor(ast.NodeVisitor):
     def collect(self, filename: str) -> None:
         self.atok = ast_with_tokens(self.container, filename)
         project = self.container
-        logger.debug(f'collecting loops in file {filename} '
-                     f'for project [{project}]')
+        logger.debug(f"collecting loops in file {filename} "
+                     f"for project [{project}]")
         self.visit(self.atok.tree)

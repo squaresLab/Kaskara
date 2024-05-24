@@ -1,51 +1,48 @@
-# -*- coding: utf-8 -*-
-__all__ = ('collect_statements',)
+__all__ = ("collect_statements",)
 
-from typing import Iterator, Collection, List
 import ast
-import asttokens
 
 import astor
+import asttokens
 from loguru import logger
 
-from .analysis import PythonStatement
-from .util import ast_with_tokens, ast_location
 from ..container import ProjectContainer
-from ..core import Location, FileLocationRange, LocationRange
-from ..statements import Statement, ProgramStatements
+from ..statements import ProgramStatements
+from .analysis import PythonStatement
+from .util import ast_location, ast_with_tokens
 
 STMT_CLASS_NAMES = {
-    'FunctionDef',
-    'AsyncFunctionDef',
-    'ClassDef',
-    'Return',
-    'Delete',
-    'Assign',
-    'AugAssign',
-    'AnnAssign',
-    'For',
-    'AsyncFor',
-    'While',
-    'If',
-    'With',
-    'AsyncWith',
-    'Raise',
-    'Try',
-    'Assert',
-    'Import',
-    'ImportFrom',
-    'Global',
-    'Nonlocal',
-    'Expr',
-    'Pass',
-    'Break',
-    'Continue'
+    "FunctionDef",
+    "AsyncFunctionDef",
+    "ClassDef",
+    "Return",
+    "Delete",
+    "Assign",
+    "AugAssign",
+    "AnnAssign",
+    "For",
+    "AsyncFor",
+    "While",
+    "If",
+    "With",
+    "AsyncWith",
+    "Raise",
+    "Try",
+    "Assert",
+    "Import",
+    "ImportFrom",
+    "Global",
+    "Nonlocal",
+    "Expr",
+    "Pass",
+    "Break",
+    "Continue",
 }
 
 
 def collect_statements(container: ProjectContainer) -> ProgramStatements:
     """Finds all statements within a Python project given a container."""
-    logger.debug(f'collecting statements for project [{container.project}]')
+    logger.debug(f"collecting statements for project [{container.project}]")
     visitor = CollectStatementsVisitor(container)
     for filename in container.project.files:
         visitor.collect(filename)
@@ -57,7 +54,7 @@ class CollectStatementsVisitor(ast.NodeVisitor):
         super().__init__()
         self.atok: asttokens.ASTTokens
         self.container = container
-        self.statements: List[PythonStatement] = []
+        self.statements: list[PythonStatement] = []
 
     def visit_Module(self, node: ast.Module) -> None:
         for stmt in node.body:
@@ -90,6 +87,6 @@ class CollectStatementsVisitor(ast.NodeVisitor):
     def collect(self, filename: str) -> None:
         self.atok = ast_with_tokens(self.container, filename)
         project = self.container
-        logger.debug(f'collecting statements in file {filename} '
-                     f'for project [{project}]')
+        logger.debug(f"collecting statements in file {filename} "
+                     f"for project [{project}]")
         self.visit(self.atok.tree)

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-__all__ = ('PythonFunction', 'PythonStatement')
+__all__ = ("PythonFunction", "PythonStatement")
 
-from typing import Sequence, Optional, FrozenSet
 
 import attr
 
@@ -17,7 +15,7 @@ class PythonFunction(Function):
     body_location: FileLocationRange
 
     @property
-    def return_type(self) -> Optional[str]:
+    def return_type(self) -> str | None:
         return None
 
 
@@ -29,5 +27,5 @@ class PythonStatement(Statement):
     location: FileLocationRange
 
     @property
-    def visible(self) -> Optional[FrozenSet[str]]:
+    def visible(self) -> frozenset[str] | None:
         return None

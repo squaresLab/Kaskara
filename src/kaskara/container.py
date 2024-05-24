@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-__all__ = ('ProjectContainer',)
+__all__ = ("ProjectContainer",)
 
 import typing
 
@@ -25,11 +24,11 @@ class ProjectContainer:
     files: dockerblade.FileSystem
         Provides root-level access to the filesystem for this container.
     """
-    project: 'Project'
+    project: "Project"
     dockerblade: _dockerblade.Container
     shell: _dockerblade.Shell = attr.ib(init=False)
     files: _dockerblade.FileSystem = attr.ib(init=False)
 
     def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, 'shell', self.dockerblade.shell('/bin/sh'))
-        object.__setattr__(self, 'files', self.dockerblade.filesystem())
+        object.__setattr__(self, "shell", self.dockerblade.shell("/bin/sh"))
+        object.__setattr__(self, "files", self.dockerblade.filesystem())

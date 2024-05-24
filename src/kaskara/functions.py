@@ -1,23 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-This module provides functionality for discovering and describing the set of
+"""This module provides functionality for discovering and describing the set of
 functions contained within a program.
 """
-__all__ = ('Function', 'ProgramFunctions')
+__all__ = ("Function", "ProgramFunctions")
 
+import abc
+from collections.abc import Iterable, Iterator
 from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
     final,
 )
-import abc
 
-from .core import FileLocationRange, FileLocation
+from .core import FileLocation, FileLocationRange
 
 
 class Function(abc.ABC):
@@ -43,7 +35,7 @@ class Function(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def return_type(self) -> Optional[str]:
+    def return_type(self) -> str | None:
         ...
 
     @property
@@ -66,14 +58,14 @@ class ProgramFunctions:
     """Represents the set of functions within an associated program."""
     def __init__(self, functions: Iterable[Function]) -> None:
         self.__length = 0
-        self.__filename_to_functions: Dict[str, List[Function]] = {}
+        self.__filename_to_functions: dict[str, list[Function]] = {}
         for f in functions:
             if f.filename not in self.__filename_to_functions:
                 self.__filename_to_functions[f.filename] = []
             self.__filename_to_functions[f.filename].append(f)
             self.__length += 1
 
-    def encloses(self, location: FileLocation) -> Optional[Function]:
+    def encloses(self, location: FileLocation) -> Function | None:
         """Returns the enclosing function, if any, for a given location."""
         for func in self.in_file(location.filename):
             if location in func.location:

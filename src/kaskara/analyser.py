@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Analyser',)
+__all__ = ("Analyser",)
 
 import abc
 from typing import final

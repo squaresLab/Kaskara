@@ -1,26 +1,26 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
-__all__ = ('ClangAnalyser',)
+__all__ = ("ClangAnalyser",)
 
-from typing import Any, List, Mapping, Sequence
 import json
 import os
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import dockerblade as _dockerblade
 from loguru import logger
 
-from .analysis import ClangFunction, ClangStatement
 from ..analyser import Analyser
 from ..analysis import Analysis
-from ..core import FileLocationRange
 from ..container import ProjectContainer
+from ..core import FileLocationRange
 from ..exceptions import KaskaraException
 from ..functions import ProgramFunctions
 from ..loops import ProgramLoops
 from ..project import Project
 from ..statements import ProgramStatements
 from ..util import abs_to_rel_flocrange
+from .analysis import ClangFunction, ClangStatement
 
 
 class ClangAnalyser(Analyser):
@@ -58,9 +58,9 @@ class ClangAnalyser(Analyser):
             output_filename = os.path.join(workdir, output_filename)
 
         command_args += ["2>1"]
-        command = ' '.join(command_args)
+        command = " ".join(command_args)
 
-        logger.debug(f'executing {analysis_name} [{workdir}]: {command}')
+        logger.debug(f"executing {analysis_name} [{workdir}]: {command}")
 
         analysis_name = analysis_name or output_filename
         maybe_error_message: str | None = None
@@ -89,12 +89,12 @@ class ClangAnalyser(Analyser):
 
     def _find_statements(
         self,
-        container: ProjectContainer
+        container: ProjectContainer,
     ) -> ProgramStatements:
         project = container.project
-        logger.debug(f'finding statements for project: {project}')
+        logger.debug(f"finding statements for project: {project}")
 
-        command_args = ['/opt/kaskara/scripts/kaskara-statement-finder']
+        command_args = ["/opt/kaskara/scripts/kaskara-statement-finder"]
         command_args += sorted(project.files)
         output_filename = "statements.json"
 
@@ -102,13 +102,13 @@ class ClangAnalyser(Analyser):
             container=container,
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name='statement finder',
+            analysis_name="statement finder",
         )
 
         file_contents = container.files.read(output_filename)
         jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
         statements = \
-            ProgramStatements([ClangStatement.from_dict(project, d) for d in jsn])  # noqa
+            ProgramStatements([ClangStatement.from_dict(project, d) for d in jsn])
         logger.debug("finished reading results")
         return statements
 
@@ -117,7 +117,7 @@ class ClangAnalyser(Analyser):
         container: ProjectContainer,
     ) -> ProgramLoops:
         project = container.project
-        command_args = ['/opt/kaskara/scripts/kaskara-loop-finder']
+        command_args = ["/opt/kaskara/scripts/kaskara-loop-finder"]
         command_args += sorted(project.files)
         output_filename = "loops.json"
 
@@ -125,7 +125,7 @@ class ClangAnalyser(Analyser):
             container=container,
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name='loop finder',
+            analysis_name="loop finder",
         )
 
         file_contents = container.files.read(output_filename)
@@ -134,15 +134,15 @@ class ClangAnalyser(Analyser):
     def _read_loops_from_file_contents(
         self,
         project: Project,
-        contents: str
+        contents: str,
     ) -> ProgramLoops:
-        loop_bodies: List[FileLocationRange] = []
+        loop_bodies: list[FileLocationRange] = []
         jsn: Sequence[Mapping[str, str]] = json.loads(contents)
         for loop_info in jsn:
-            loc = FileLocationRange.from_string(loop_info['body'])
+            loc = FileLocationRange.from_string(loop_info["body"])
             loc = abs_to_rel_flocrange(project.directory, loc)
             loop_bodies.append(loc)
-        logger.debug(f'finished reading loop analysis results')
+        logger.debug("finished reading loop analysis results")
         return ProgramLoops.from_body_location_ranges(loop_bodies)
 
     def _find_functions(
@@ -151,16 +151,16 @@ class ClangAnalyser(Analyser):
     ) -> ProgramFunctions:
         project = container.project
         output_filename = "functions.json"
-        command_args = ['/opt/kaskara/scripts/kaskara-function-scanner']
+        command_args = ["/opt/kaskara/scripts/kaskara-function-scanner"]
         command_args += sorted(project.files)
 
         output_filename = self._execute_command(
             container=container,
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name='function scanner',
+            analysis_name="function scanner",
         )
 
         file_contents = container.files.read(output_filename)
         jsn = json.loads(file_contents)
-        return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)  # noqa
+        return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)

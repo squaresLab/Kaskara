@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Analysis',)
+__all__ = ("Analysis",)
 
 import attr
 
@@ -40,4 +39,4 @@ class Analysis:
 
     def is_inside_void_function(self, location: FileLocation) -> bool:
         f = self.functions.encloses(location)
-        return f is not None and f.return_type == 'void'
+        return f is not None and f.return_type == "void"

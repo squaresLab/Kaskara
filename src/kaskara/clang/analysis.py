@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-__all__ = ('ClangFunction', 'ClangStatement')
+__all__ = ("ClangFunction", "ClangStatement")
 
-from typing import Any, FrozenSet, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import attr
 from loguru import logger
@@ -23,15 +23,15 @@ class ClangFunction(Function):
     is_pure: bool
 
     @staticmethod
-    def from_dict(project: Project, d: Mapping[str, Any]) -> 'ClangFunction':
-        name = d['name']
-        location = FileLocationRange.from_string(d['location'])
+    def from_dict(project: Project, d: Mapping[str, Any]) -> "ClangFunction":
+        name = d["name"]
+        location = FileLocationRange.from_string(d["location"])
         location = abs_to_rel_flocrange(project.directory, location)
-        body = FileLocationRange.from_string(d['body'])
+        body = FileLocationRange.from_string(d["body"])
         body = abs_to_rel_flocrange(project.directory, body)
-        return_type = d['return-type']
-        is_global = d['global']
-        is_pure = d['pure']
+        return_type = d["return-type"]
+        is_global = d["global"]
+        is_pure = d["pure"]
         return ClangFunction(name=name,
                              location=location,
                              body_location=body,
@@ -46,28 +46,28 @@ class ClangStatement(Statement):
     canonical: str
     kind: str
     location: FileLocationRange
-    reads: FrozenSet[str]
-    writes: FrozenSet[str]
-    visible: FrozenSet[str]
-    declares: FrozenSet[str]
-    live_before: FrozenSet[str]
-    live_after: FrozenSet[str]
-    requires_syntax: FrozenSet[str]
+    reads: frozenset[str]
+    writes: frozenset[str]
+    visible: frozenset[str]
+    declares: frozenset[str]
+    live_before: frozenset[str]
+    live_after: frozenset[str]
+    requires_syntax: frozenset[str]
 
     @staticmethod
-    def from_dict(project: Project, d: Mapping[str, Any]) -> 'ClangStatement':
-        location = FileLocationRange.from_string(d['location'])
+    def from_dict(project: Project, d: Mapping[str, Any]) -> "ClangStatement":
+        location = FileLocationRange.from_string(d["location"])
         location = abs_to_rel_flocrange(project.directory, location)
-        statement = ClangStatement(d['content'],
-                                   d['canonical'],
-                                   d['kind'],
+        statement = ClangStatement(d["content"],
+                                   d["canonical"],
+                                   d["kind"],
                                    location,
-                                   frozenset(d.get('reads', [])),
-                                   frozenset(d.get('writes', [])),
-                                   frozenset(d.get('visible', [])),
-                                   frozenset(d.get('decls', [])),
-                                   frozenset(d.get('live_before', [])),
-                                   frozenset(d.get('live_after', [])),
-                                   frozenset(d.get('requires_syntax', [])))
+                                   frozenset(d.get("reads", [])),
+                                   frozenset(d.get("writes", [])),
+                                   frozenset(d.get("visible", [])),
+                                   frozenset(d.get("decls", [])),
+                                   frozenset(d.get("live_before", [])),
+                                   frozenset(d.get("live_after", [])),
+                                   frozenset(d.get("requires_syntax", [])))
         logger.debug(f"loaded statement: {statement}")
         return statement

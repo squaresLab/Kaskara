@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-__all__ = ('ProgramLoops',)
+__all__ = ("ProgramLoops",)
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import attr
 
@@ -15,8 +14,8 @@ class ProgramLoops:
 
     @classmethod
     def from_body_location_ranges(cls,
-                                  bodies: Iterable[FileLocationRange]
-                                  ) -> 'ProgramLoops':
+                                  bodies: Iterable[FileLocationRange],
+                                  ) -> "ProgramLoops":
         return ProgramLoops(FileLocationRangeSet(bodies))
 
     def is_within_loop(self, location: FileLocation) -> bool:

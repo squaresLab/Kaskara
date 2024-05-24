@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
+from . import functions, loops, statements
 from .analyser import PythonAnalyser
-from .analysis import PythonStatement, PythonFunction
-from . import statements
-from . import functions
-from . import loops
+from .analysis import PythonFunction, PythonStatement

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 import os
 
-from .core import FileLocationRange, FileLocation
+from .core import FileLocation, FileLocationRange
 
 
 def abs_to_rel_filename(prefix: str, filename: str) -> str:
-    if prefix[-1] != '/':
-        prefix = prefix + '/'
+    if prefix[-1] != "/":
+        prefix = prefix + "/"
     assert filename.startswith(prefix)
     return filename[len(prefix):]
 
@@ -22,14 +21,14 @@ def rel_to_abs_floc(prefix: str, location: FileLocation) -> FileLocation:
 
 
 def abs_to_rel_flocrange(prefix: str,
-                         location: FileLocationRange
+                         location: FileLocationRange,
                          ) -> FileLocationRange:
     return FileLocationRange(abs_to_rel_filename(prefix, location.filename),
                              location.location_range)
 
 
 def rel_to_abs_flocrange(prefix: str,
-                         location: FileLocationRange
+                         location: FileLocationRange,
                          ) -> FileLocationRange:
     return FileLocationRange(os.path.join(prefix, location.filename),
                              location.location_range)

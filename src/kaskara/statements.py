@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Statement', 'ProgramStatements')
+__all__ = ("Statement", "ProgramStatements")
 
-from typing import FrozenSet, Dict, List, Iterable, Iterator, Optional
 import abc
+from collections.abc import Iterable, Iterator
 
 from loguru import logger
 
-from .core import FileLocationRange, FileLocation, FileLine
-from .insertions import ProgramInsertionPoints, InsertionPoint
+from .core import FileLine, FileLocation, FileLocationRange
+from .insertions import InsertionPoint, ProgramInsertionPoints
 
 
 class Statement(abc.ABC):
@@ -43,7 +42,7 @@ class Statement(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def visible(self) -> Optional[FrozenSet[str]]:
+    def visible(self) -> frozenset[str] | None:
         ...
 
     @property
@@ -56,15 +55,15 @@ class ProgramStatements:
     def __init__(self, statements: Iterable[Statement]) -> None:
         self.__statements = list(statements)
         logger.debug("indexing statements by file")
-        self.__file_to_statements: Dict[str, List[Statement]] = {}
+        self.__file_to_statements: dict[str, list[Statement]] = {}
         for statement in statements:
             filename = statement.location.filename
             if filename not in self.__file_to_statements:
                 self.__file_to_statements[filename] = []
             self.__file_to_statements[filename].append(statement)
-        summary = '\n'.join(f"  {fn}: {len(stmts)} statements" for (fn, stmts)
+        summary = "\n".join(f"  {fn}: {len(stmts)} statements" for (fn, stmts)
                             in self.__file_to_statements.items())
-        logger.debug(f'indexed statements by file:\n{summary}')
+        logger.debug(f"indexed statements by file:\n{summary}")
 
     def __len__(self) -> int:
         """Returns the number of statements in this collection."""
@@ -85,8 +84,8 @@ class ProgramStatements:
                 yield stmt
 
     def insertions(self) -> ProgramInsertionPoints:
-        logger.debug('computing insertion points')
-        points: List[InsertionPoint] = []
+        logger.debug("computing insertion points")
+        points: list[InsertionPoint] = []
         for stmt in self:
             location = FileLocation(stmt.location.filename,
                                     stmt.location.stop)
@@ -96,5 +95,5 @@ class ProgramStatements:
 
             points.append(point)
         db = ProgramInsertionPoints(points)
-        logger.debug('computed insertion points')
+        logger.debug("computed insertion points")
         return db

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-__all__ = ('PythonAnalyser',)
+__all__ = ("PythonAnalyser",)
 
 from loguru import logger
 
-from .functions import collect_functions
-from .statements import collect_statements
-from .loops import collect_loops
 from ..analyser import Analyser
 from ..analysis import Analysis
 from ..container import ProjectContainer
 from ..project import Project
+from .functions import collect_functions
+from .loops import collect_loops
+from .statements import collect_statements
 
 
 class PythonAnalyser(Analyser):

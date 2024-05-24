@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-__all__ = ('SpoonStatement',)
+__all__ = ("SpoonStatement",)
 
-from typing import Any, FrozenSet, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 import attr
 
@@ -18,11 +18,11 @@ class SpoonFunction(Function):
     return_type: str
 
     @staticmethod
-    def from_dict(dict_: Mapping[str, Any]) -> 'SpoonFunction':
-        name: str = dict_['name']
-        location = FileLocationRange.from_string(dict_['location'])
-        body_location = FileLocationRange.from_string(dict_['body'])
-        return_type = dict_['return-type']
+    def from_dict(dict_: Mapping[str, Any]) -> "SpoonFunction":
+        name: str = dict_["name"]
+        location = FileLocationRange.from_string(dict_["location"])
+        body_location = FileLocationRange.from_string(dict_["body"])
+        return_type = dict_["return-type"]
         return SpoonFunction(name, location, body_location, return_type)
 
 
@@ -34,13 +34,13 @@ class SpoonStatement(Statement):
     location: FileLocationRange
 
     @staticmethod
-    def from_dict(dict_: Mapping[str, Any]) -> 'SpoonStatement':
-        kind: str = dict_['kind']
-        content: str = dict_['source']
-        canonical: str = dict_['canonical']
-        location = FileLocationRange.from_string(dict_['location'])
+    def from_dict(dict_: Mapping[str, Any]) -> "SpoonStatement":
+        kind: str = dict_["kind"]
+        content: str = dict_["source"]
+        canonical: str = dict_["canonical"]
+        location = FileLocationRange.from_string(dict_["location"])
         return SpoonStatement(kind, content, canonical, location)
 
     @property
-    def visible(self) -> Optional[FrozenSet[str]]:
+    def visible(self) -> frozenset[str] | None:
         return None

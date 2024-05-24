@@ -1,19 +1,15 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Project',)
-
-import typing
-from typing import FrozenSet, Iterator
+__all__ = ("Project",)
 
 import contextlib
+from collections.abc import Iterator
 
 import attr
-import docker as _docker
 import dockerblade as _dockerblade
 
 from .container import ProjectContainer
 
 # FIXME the plugin container shouldn't be launched from here
-KASKARA_IMAGE = 'christimperley/kaskara:cpp'
+KASKARA_IMAGE = "christimperley/kaskara:cpp"
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
@@ -37,7 +33,7 @@ class Project:
     _dockerblade: _dockerblade.DockerDaemon
     image: str
     directory: str
-    files: FrozenSet[str]
+    files: frozenset[str]
     ignore_errors: bool = attr.ib(default=True)
 
     @contextlib.contextmanager
@@ -51,7 +47,7 @@ class Project:
 
             docker_project = launch(
                 self.image,
-                '/bin/sh',
+                "/bin/sh",
                 stdin_open=True,
                 volumes_from=[docker_kaskara.id],
                 detach=True,

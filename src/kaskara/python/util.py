@@ -1,24 +1,22 @@
-# -*- coding: utf-8 -*-
-__all__ = ('ast_with_tokens', 'ast_location')
+__all__ = ("ast_with_tokens", "ast_location")
 
-from typing import Sequence, Union
-import os
-
-from ..core import Location, FileLocationRange, LocationRange
-
-from loguru import logger
 import ast
+import os
+from collections.abc import Sequence
+
 import asttokens
+from loguru import logger
 
 from ..container import ProjectContainer
+from ..core import FileLocationRange, Location, LocationRange
 
 
 def ast_with_tokens(container: ProjectContainer,
-                    filename: str
+                    filename: str,
                     ) -> asttokens.ASTTokens:
     """Retrieves the AST (with tokens) for a given file in a container."""
-    logger.debug(f'retrieving AST for file [{filename}] '
-                 f'in project [{container.project}]')
+    logger.debug(f"retrieving AST for file [{filename}] "
+                 f"in project [{container.project}]")
     assert not os.path.isabs(filename)
     abs_filename = os.path.join(container.project.directory, filename)
     file_contents = container.files.read(abs_filename)
@@ -26,7 +24,7 @@ def ast_with_tokens(container: ProjectContainer,
 
 
 def ast_location(atok: asttokens.ASTTokens,
-                 node: Union[ast.AST, Sequence[ast.AST]]
+                 node: ast.AST | Sequence[ast.AST],
                  ) -> FileLocationRange:
     """Determines the source location of a node in an AST."""
     # mypy doesn't know that AST nodes are dynamically instrumented to
