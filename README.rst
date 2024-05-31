@@ -3,9 +3,6 @@
 Kaskara
 =======
 
-.. image:: https://travis-ci.com/ChrisTimperley/Kaskara.svg?branch=master
-    :target: https://travis-ci.com/ChrisTimperley/Kaskara
-
 .. image:: https://badge.fury.io/py/kaskara.svg
     :target: https://badge.fury.io/py/kaskara
 
@@ -32,6 +29,6 @@ should execute the following code to complete the installation by building the
 support backends:
 
 .. code:: python
-  
+
     import kaskara
     kaskara.post_install()
