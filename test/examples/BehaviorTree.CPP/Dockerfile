@@ -1,0 +1,22 @@
+FROM alpine:3.20.0
+
+RUN apk add --no-cache \
+      bear \
+      build-base \
+      boost-dev \
+      cmake \
+      git \
+      openssl-dev
+
+ARG GIT_REVISION=095358f769b0232ae11874ae26a7e1968b3f837c
+ARG GIT_URL=https://github.com/BehaviorTree/BehaviorTree.CPP
+RUN git clone "${GIT_URL}" /workspace \
+ && cd /workspace \
+ && git checkout "${GIT_REVISION}"
+
+WORKDIR /workspace
+
+RUN mkdir build \
+ && cd build \
+ && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. \
+ && make
