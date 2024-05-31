@@ -68,7 +68,10 @@ class SpoonAnalyser(Analyser):
     def _analyse_container(self, container: ProjectContainer) -> Analysis:
         dir_source = "/workspace"
         dir_output = "/output"
-        container.shell.check_output(f"kaskara {dir_source} -o {dir_output}")
+        container.shell.check_output(
+            f"kaskara {dir_source} -o {dir_output}",
+            text=True,
+        )
 
         # load statements
         filename_statements = os.path.join(dir_output, "statements.json")
