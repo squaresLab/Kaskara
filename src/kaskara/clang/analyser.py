@@ -73,7 +73,9 @@ class ClangAnalyser(Analyser):
             container.shell.check_output(command, cwd=workdir, text=True)
         except _dockerblade.CalledProcessError as err:
             maybe_error = err
-            maybe_error_message = f"failed with exit code {err.returncode}: {err.output}"
+            output = err.output
+            assert isinstance(output, str)
+            maybe_error_message = f"failed with exit code {err.returncode}: {output}"
 
         analysis_completed = container.files.exists(output_filename)
 

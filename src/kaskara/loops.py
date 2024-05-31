@@ -20,4 +20,5 @@ class ProgramLoops:
 
     def is_within_loop(self, location: FileLocation) -> bool:
         """Checks whether a given location is enclosed within a loop."""
-        return self._covered_by_loop_bodies.contains(location)
+        is_within: bool = self._covered_by_loop_bodies.contains(location)
+        return is_within

@@ -54,7 +54,8 @@ class Function(abc.ABC):
     @final
     @property
     def filename(self) -> str:
-        return self.location.filename
+        filename: str = self.location.filename
+        return filename
 
 
 class ProgramFunctions:

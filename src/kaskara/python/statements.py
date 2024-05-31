@@ -95,4 +95,4 @@ class CollectStatementsVisitor(ast.NodeVisitor):
         project = self.container
         logger.debug(f"collecting statements in file {filename} "
                      f"for project [{project}]")
-        self.visit(self.atok.tree)
+        self.visit(self.atok.tree)  # type: ignore
