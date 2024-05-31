@@ -36,6 +36,7 @@ pytest = "^7.4.3"
 python = "^3.11"
 ruff = ">=0.4.4"
 types-docker = "^7.0.0.20240524"
+types-setuptools = "^70.0.0.20240524"
 
 [tool.mypy]
 ignore_missing_imports = false
