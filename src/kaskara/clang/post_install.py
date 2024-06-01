@@ -81,12 +81,7 @@ def post_install(
                 image=image.id,
                 command="true",
                 remove=True,
-                volumes={
-                    VOLUME_NAME: {
-                        "bind": VOLUME_LOCATION,
-                        "mode": "rw",
-                    },
-                },
+                volumes=[f"{VOLUME_NAME}:{VOLUME_LOCATION}"],
             )
 
     logger.info("installed C++ plugin backend")
