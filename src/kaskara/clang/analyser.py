@@ -27,6 +27,11 @@ if t.TYPE_CHECKING:
     from kaskara.project import Project
 
 
+PATH_STATEMENT_FINDER = "/opt/kaskara/scripts/kaskara-statement-finder"
+PATH_LOOP_FINDER = "/opt/kaskara/scripts/kaskara-loop-finder"
+PATH_FUNCTION_SCANNER = "/opt/kaskara/scripts/kaskara-function-scanner"
+
+
 class ClangAnalyser(Analyser):
     def analyse(self, project: Project) -> Analysis:
         logger.debug(f"analysing Clang project: {project}")
@@ -41,11 +46,13 @@ class ClangAnalyser(Analyser):
         functions = self._find_functions(container)
         statements = self._find_statements(container)
         insertions = statements.insertions()
-        return Analysis(project=container.project,
-                        loops=loops,
-                        functions=functions,
-                        statements=statements,
-                        insertions=insertions)
+        return Analysis(
+            project=container.project,
+            loops=loops,
+            functions=functions,
+            statements=statements,
+            insertions=insertions,
+        )
 
     def _execute_command(
         self,
@@ -57,6 +64,12 @@ class ClangAnalyser(Analyser):
     ) -> str:
         project = container.project
         workdir = project.directory
+
+        driver = command_args[0]
+        assert os.path.isabs(driver)
+        if not container.files.exists(driver):
+            error_message = f"driver {driver} does not exist"
+            raise KaskaraException(error_message)
 
         if not os.path.isabs(output_filename):
             output_filename = os.path.join(workdir, output_filename)
@@ -82,7 +95,7 @@ class ClangAnalyser(Analyser):
         if not analysis_completed:
             message = f"{analysis_name}: failed to produce output"
             if maybe_error:
-                message = "{message}: {maybe_error_message}"
+                message = f"{message}: {maybe_error_message}"
                 raise KaskaraException(message) from maybe_error
             raise KaskaraException(message)
 
@@ -99,7 +112,7 @@ class ClangAnalyser(Analyser):
         project = container.project
         logger.debug(f"finding statements for project: {project}")
 
-        command_args = ["/opt/kaskara/scripts/kaskara-statement-finder"]
+        command_args = [PATH_STATEMENT_FINDER]
         command_args += sorted(project.files)
         output_filename = "statements.json"
 
@@ -122,7 +135,7 @@ class ClangAnalyser(Analyser):
         container: ProjectContainer,
     ) -> ProgramLoops:
         project = container.project
-        command_args = ["/opt/kaskara/scripts/kaskara-loop-finder"]
+        command_args = [PATH_LOOP_FINDER]
         command_args += sorted(project.files)
         output_filename = "loops.json"
 
@@ -156,7 +169,7 @@ class ClangAnalyser(Analyser):
     ) -> ProgramFunctions:
         project = container.project
         output_filename = "functions.json"
-        command_args = ["/opt/kaskara/scripts/kaskara-function-scanner"]
+        command_args = [PATH_FUNCTION_SCANNER]
         command_args += sorted(project.files)
 
         output_filename = self._execute_command(
