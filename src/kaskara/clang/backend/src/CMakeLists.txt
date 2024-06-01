@@ -26,14 +26,27 @@ add_executable(kaskara-insertion-point-finder
   util.cpp
   insertion-point-finder.cpp)
 
-set(KASKARA_LIBS
-  fmt
-  stdc++fs
-  ${LLVM_LIBS}
-  ${CLANG_LIBS})
+set_target_properties(kaskara-loop-finder
+  PROPERTIES
+    CXX_STANDARD 17
+    CMAKE_CXX_STANDARD_REQUIRED ON
+)
 
-target_link_libraries(kaskara-function-scanner ${KASKARA_LIBS})
-target_link_libraries(kaskara-loop-finder ${KASKARA_LIBS})
-target_link_libraries(kaskara-statement-finder ${KASKARA_LIBS})
-target_link_libraries(kaskara-snippet-extractor ${KASKARA_LIBS})
-target_link_libraries(kaskara-insertion-point-finder ${KASKARA_LIBS})
+if(KASKARA_BUILD_STATIC)
+  set_target_properties(kaskara-loop-finder
+    PROPERTIES
+      LINK_SEARCH_START_STATIC ON
+      LINK_SEARCH_END_STATIC ON
+  )
+endif()
+
+set(KASKARA_LIBS
+  ${LLVM_LIBS}
+  ${CLANG_LIBS}
+)
+
+target_link_libraries(kaskara-function-scanner PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
+target_link_libraries(kaskara-loop-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
+target_link_libraries(kaskara-statement-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
+target_link_libraries(kaskara-snippet-extractor PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
+target_link_libraries(kaskara-insertion-point-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)

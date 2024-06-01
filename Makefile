@@ -12,4 +12,7 @@ test:
 install:
 	poetry install --with dev
 
+postinstall:
+	poetry run python -m kaskara.post_install
+
 check: lint test

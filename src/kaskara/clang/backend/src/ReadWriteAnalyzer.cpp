@@ -3,20 +3,17 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <experimental/optional>
+#include <optional>
 #include <stack>
 
 #include <clang/AST/ASTTypeTraits.h>
 
 #include "util.h"
 
-// using namespace clang::ast_type_traits;
-using namespace std::experimental;
-
 namespace kaskara {
 
 // FIXME take non-const? use const cast?
-optional<std::string> resolve_member_expr(clang::MemberExpr const *e, clang::ASTContext const *ctx)
+std::optional<std::string> resolve_member_expr(clang::MemberExpr const *e, clang::ASTContext const *ctx)
 {
   if (e == nullptr) {
     llvm::errs() << "[FATAL ERROR] null pointer provided to resolve_member_expr\n";

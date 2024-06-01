@@ -1,16 +1,6 @@
 # https://stackoverflow.com/questions/40431161/clang-tool-cannot-find-required-libraries-on-ubuntu-16-10
 FROM christimperley/llvm18 as cpp
 
-# install compile-time dependencies
-RUN apt-get update \
- && apt-get install -y \
-        gdb \
-        less \
-        libssl-dev \
-        vim \
-        wget \
-        zip
-
 # install fmt
 ARG FMT_VERSION=10.2.1
 RUN cd /tmp \
@@ -38,11 +28,19 @@ RUN cd /tmp \
  && rm -rf /tmp/*
 
 # build and install
+# -DKASKARA_BUILD_STATIC=TRUE \
+# -DBUILD_SHARED_LIBS=FALSE \
+# TODO: -l:libm.a
 ADD . /tmp/kaskara
-RUN mkdir /tmp/kaskara/build && \
-    cd /tmp/kaskara/build && \
-    cmake .. && \
-    make -j4
+RUN mkdir /tmp/kaskara/build \
+ && cd /tmp/kaskara/build \
+ && cmake \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -static-libstdc++ -fPIC" \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+      -DCMAKE_LINKER=ld.lld \
+      .. \
+ && make -j4
 RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-loop-finder /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-statement-finder /opt/kaskara/bin \
@@ -51,12 +49,12 @@ RUN mkdir -p /opt/kaskara/bin \
  && cp /tmp/kaskara/build/src/kaskara-snippet-extractor /opt/kaskara/bin
 
 RUN mkdir -p /opt/kaskara/clang \
- && cp -r /opt/llvm/lib/clang/18/include/* /opt/kaskara/clang
+ && cp -r /opt/llvm/lib/clang/*/include/* /opt/kaskara/clang
 
-# install scripts
-FROM alpine:3.7 as minimal
-COPY --from=cpp /opt/kaskara /opt/kaskara
-COPY scripts /opt/kaskara/scripts
-WORKDIR /opt/kaskara
-ENV PATH "/opt/kaskara/scripts:${PATH}"
-VOLUME /opt/kaskara
+# # install scripts
+# FROM alpine:3.7 as minimal
+# COPY --from=cpp /opt/kaskara /opt/kaskara
+# COPY scripts /opt/kaskara/scripts
+# WORKDIR /opt/kaskara
+# ENV PATH "/opt/kaskara/scripts:${PATH}"
+# VOLUME /opt/kaskara
