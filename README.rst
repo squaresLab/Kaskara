@@ -9,6 +9,7 @@ Kaskara
 .. image:: https://img.shields.io/pypi/pyversions/kaskara.svg
     :target: https://pypi.org/project/kaskara
 
+.. image:: ./logo.png
 
 A simple, unified API for performing static analysis on programs in a variety
 of languages. Kaskara avoids dependency hell when analysing programs by making
