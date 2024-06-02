@@ -18,6 +18,7 @@ DIR_HERE = os.path.dirname(__file__)
 
 @pytest.fixture
 def flask():
+    docker_url: str = os.environ.get("DOCKER_HOST")
     docker = _docker.from_env()
     docker_image_name = 'kaskara/examples:flask'
     docker_directory = os.path.join(DIR_HERE, 'examples/flask')
@@ -25,7 +26,7 @@ def flask():
     # build the Docker image
     docker.images.build(path=docker_directory, tag=docker_image_name, rm=True)
 
-    with _dockerblade.DockerDaemon() as dockerblade:
+    with _dockerblade.DockerDaemon(docker_url) as dockerblade:
         files = {
             'flask/signals.py',
             'flask/helpers.py'
