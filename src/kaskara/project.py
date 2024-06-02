@@ -7,9 +7,8 @@ import attr
 import dockerblade as _dockerblade
 
 from .container import ProjectContainer
-
-# FIXME the plugin container shouldn't be launched from here
-KASKARA_IMAGE = "christimperley/kaskara:cpp"
+from .clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
+from .clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
@@ -39,20 +38,20 @@ class Project:
     @contextlib.contextmanager
     def provision(self) -> Iterator[ProjectContainer]:
         """Provisions a Docker container for the project."""
-        create = self._dockerblade.client.containers.create
         launch = self._dockerblade.client.containers.run
         with contextlib.ExitStack() as stack:
-            docker_kaskara = create(KASKARA_IMAGE)
-            stack.callback(docker_kaskara.remove, force=True)
-
             docker_project = launch(
                 self.image,
                 "/bin/sh",
                 stdin_open=True,
-                volumes_from=[docker_kaskara.id],
+                volumes={
+                    KASKARA_CLANG_VOLUME_NAME: {
+                        "bind": KASKARA_CLANG_VOLUME_LOCATION,
+                        "mode": "ro",
+                    },
+                },
                 detach=True,
             )
             stack.callback(docker_project.remove, force=True)
-
             dockerblade = self._dockerblade.attach(docker_project.id)
             yield ProjectContainer(project=self, dockerblade=dockerblade)

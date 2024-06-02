@@ -7,7 +7,7 @@ import docker as _docker
 import dockerblade as _dockerblade
 
 import kaskara
-from kaskara.clang import ClangAnalyser
+from kaskara.clang.analyser import ClangAnalyser
 from kaskara.clang.post_install import post_install as install_clang_backend
 
 DIR_HERE = os.path.dirname(__file__)

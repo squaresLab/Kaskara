@@ -1,0 +1,6 @@
+IMAGE_NAME: str = "christimperley/kaskara:cpp"
+VOLUME_NAME: str = "kaskara-clang"
+VOLUME_LOCATION: str = "/opt/kaskara"
+IMAGE_ID_LABEL: str = "kaskara.built-from-image-id"
+PLUGIN_LABEL: str = "kaskara.plugin"
+VERSION_LABEL: str = "kaskara.version"
