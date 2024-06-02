@@ -26,3 +26,9 @@ After installing the `kaskara` package as a dependency of your project, you shou
 
     import kaskara
     kaskara.post_install()
+
+Requirements
+------------
+
+* **WARNING:** The clang backend only works with glibc-based Docker images.
+  Images that rely on an alternative libc implementation (e.g., Alpine relies on musl) are not supported.
