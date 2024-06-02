@@ -50,10 +50,8 @@ RUN mkdir /tmp/kaskara/build \
 RUN mkdir -p /opt/kaskara/clang \
  && cp -r /opt/llvm/lib/clang/*/include/* /opt/kaskara/clang
 
-# # install scripts
-# FROM alpine:3.7 as minimal
-# COPY --from=cpp /opt/kaskara /opt/kaskara
-# COPY scripts /opt/kaskara/scripts
-# WORKDIR /opt/kaskara
-# ENV PATH "/opt/kaskara/scripts:${PATH}"
-# VOLUME /opt/kaskara
+FROM ubuntu:22.04 as minimal
+COPY --from=cpp /opt/kaskara /opt/kaskara
+COPY scripts /opt/kaskara/scripts
+WORKDIR /opt/kaskara
+ENV PATH "/opt/kaskara/scripts:${PATH}"
