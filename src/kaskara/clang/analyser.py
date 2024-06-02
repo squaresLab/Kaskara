@@ -61,7 +61,7 @@ class ClangAnalyser(Analyser):
         output_filename: str,
         *,
         analysis_name: str | None = None,
-    ) -> str:
+    ) -> t.Any:  # noqa: ANN401
         project = container.project
         workdir = project.directory
 
@@ -103,7 +103,8 @@ class ClangAnalyser(Analyser):
             message = f"{analysis_name}: completed with errors:\n{maybe_error_message}"
             logger.warning(message)
 
-        return output_filename
+        output = container.files.read(output_filename)
+        return json.loads(output)
 
     def _find_statements(
         self,
@@ -116,17 +117,15 @@ class ClangAnalyser(Analyser):
         command_args += sorted(project.files)
         output_filename = "statements.json"
 
-        output_filename = self._execute_command(
+        output_jsn: Sequence[Mapping[str, Any]] = self._execute_command(
             container=container,
             command_args=command_args,
             output_filename=output_filename,
             analysis_name="statement finder",
         )
-
-        file_contents = container.files.read(output_filename)
-        jsn: Sequence[Mapping[str, Any]] = json.loads(file_contents)
-        statements = \
-            ProgramStatements([ClangStatement.from_dict(project, d) for d in jsn])
+        statements = ProgramStatements(
+            [ClangStatement.from_dict(project, d) for d in output_jsn],
+        )
         logger.debug("finished reading results")
         return statements
 
@@ -139,23 +138,21 @@ class ClangAnalyser(Analyser):
         command_args += sorted(project.files)
         output_filename = "loops.json"
 
-        output_filename = self._execute_command(
+        output_jsn = self._execute_command(
             container=container,
             command_args=command_args,
             output_filename=output_filename,
             analysis_name="loop finder",
         )
 
-        file_contents = container.files.read(output_filename)
-        return self._read_loops_from_file_contents(project, file_contents)
+        return self._read_loops_from_jsn(project, output_jsn)
 
-    def _read_loops_from_file_contents(
+    def _read_loops_from_jsn(
         self,
         project: Project,
-        contents: str,
+        jsn: Sequence[Mapping[str, str]],
     ) -> ProgramLoops:
         loop_bodies: list[FileLocationRange] = []
-        jsn: Sequence[Mapping[str, str]] = json.loads(contents)
         for loop_info in jsn:
             loc = FileLocationRange.from_string(loop_info["body"])
             loc = abs_to_rel_flocrange(project.directory, loc)
@@ -172,13 +169,13 @@ class ClangAnalyser(Analyser):
         command_args = [PATH_FUNCTION_SCANNER]
         command_args += sorted(project.files)
 
-        output_filename = self._execute_command(
+        output_jsn = self._execute_command(
             container=container,
             command_args=command_args,
             output_filename=output_filename,
             analysis_name="function scanner",
         )
 
-        file_contents = container.files.read(output_filename)
-        jsn = json.loads(file_contents)
-        return ProgramFunctions(ClangFunction.from_dict(project, d) for d in jsn)
+        return ProgramFunctions(
+            ClangFunction.from_dict(project, d) for d in output_jsn
+        )
