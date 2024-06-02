@@ -32,3 +32,17 @@ Requirements
 
 * **WARNING:** The clang backend only works with glibc-based Docker images.
   Images that rely on an alternative libc implementation (e.g., Alpine relies on musl) are not supported.
+
+Development
+-----------
+
+If you want to play with the Kaskara Clang backend from within a Docker container, you can use the following commands:
+
+.. code:: bash
+
+    make postinstall
+    docker run --rm -v kaskara-clang:/opt/kaskara:ro -it your-image-name
+
+This will first install Kaskara to a Docker volume, containing portable binaries and libraries, and then run a container with the volume mounted at `/opt/kaskara`.
+
+
