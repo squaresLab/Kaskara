@@ -1,5 +1,4 @@
-#ifndef H_INSERTION_POINT_DB
-#define H_INSERTION_POINT_DB
+#pragma once
 
 #include <vector>
 #include <unordered_set>
@@ -40,5 +39,3 @@ private:
 }; // InsertionPointDB
 
 } // kaskara
-
-#endif // H_INSERTION_POINT_DB

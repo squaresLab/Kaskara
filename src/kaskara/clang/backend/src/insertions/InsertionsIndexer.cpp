@@ -1,5 +1,7 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
 // https://github.com/eschulte/clang-mutate/blob/master/ASTMutate.cpp
+#include "InsertionsIndexer.h"
+
 #include <vector>
 #include <unordered_set>
 
@@ -20,16 +22,12 @@
 
 #include <clang/AST/RecursiveASTVisitor.h>
 
-#include "util.h"
-#include "InsertionPointDB.h"
-
-using namespace kaskara;
+#include "../util.h"
 
 using namespace clang;
 using namespace clang::tooling;
 
-static llvm::cl::OptionCategory MyToolCategory("kaskara-insertion-point-finder options");
-static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
+namespace kaskara {
 
 class InsertionPointVisitor
   : public clang::RecursiveASTVisitor<InsertionPointVisitor>
@@ -196,9 +194,9 @@ private:
   InsertionPointDB *db;
 };
 
-std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
-  InsertionPointDB *db)
-{
+std::unique_ptr<clang::tooling::FrontendActionFactory> insertionPointFinderFactory(
+  InsertionPointDB *db
+) {
   class InsertionPointActionFactory
     : public clang::tooling::FrontendActionFactory
   {
@@ -220,20 +218,16 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       new InsertionPointActionFactory(db));
 };
 
-int main(int argc, const char **argv)
-{
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
-    return 1;
-  }
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+std::unique_ptr<InsertionPointDB> IndexInsertions(
+    clang::tooling::CommonOptionsParser &optionsParser
+) {
+  auto db = std::make_unique<InsertionPointDB>();
+  clang::tooling::ClangTool Tool(
+    optionsParser.getCompilations(),
+    optionsParser.getSourcePathList()
+  );
+  Tool.run(insertionPointFinderFactory(db.get()).get());
+  return db;
+}
 
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-
-  std::unique_ptr<InsertionPointDB> db(new InsertionPointDB);
-  int res = Tool.run(functionFinderFactory(db.get()).get());
-  db->to_file("insertion-points.json");
-  return res;
 }

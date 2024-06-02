@@ -1,7 +1,7 @@
 /**
  * Finds all loops within a set of files.
  */
-#include <memory>
+#include "LoopIndexer.h"
 
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -11,13 +11,9 @@
 #include <clang/Tooling/Tooling.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 
-#include "util.h"
-#include "LoopDB.h"
+#include "../util.h"
 
-using namespace kaskara;
-
-static llvm::cl::OptionCategory MyToolCategory("my-tool options");
-static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
+namespace kaskara {
 
 class FindLoopVisitor
   : public clang::RecursiveASTVisitor<FindLoopVisitor>
@@ -131,24 +127,16 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> loopFinderFactory(
       new LoopFinderActionFactory(db_loop));
 };
 
-int main(int argc, const char **argv)
-{
-  using namespace clang::tooling;
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
-    return 1;
-  }
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+std::unique_ptr<LoopDB> IndexLoops(
+    clang::tooling::CommonOptionsParser &optionsParser
+) {
+  auto db = std::make_unique<LoopDB>();
+  clang::tooling::ClangTool Tool(
+    optionsParser.getCompilations(),
+    optionsParser.getSourcePathList()
+  );
+  Tool.run(loopFinderFactory(*db).get());
+  return db;
+}
 
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-
-  std::unique_ptr<LoopDB> db_loop(new LoopDB);
-  auto res = Tool.run(loopFinderFactory(*db_loop).get());
-
-  db_loop->dump();
-  db_loop->to_file("loops.json");
-
-  return res;
 }

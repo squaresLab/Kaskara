@@ -1,5 +1,4 @@
-#ifndef H_READ_WRITE_ANALYZER
-#define H_READ_WRITE_ANALYZER
+#pragma once
 
 #include <unordered_set>
 #include <string>
@@ -37,5 +36,3 @@ private:
 };
 
 } // kaskara
-
-#endif // H_READ_WRITE_ANALYZER

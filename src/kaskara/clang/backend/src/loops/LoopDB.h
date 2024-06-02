@@ -1,5 +1,4 @@
-#ifndef H_LOOP_DB
-#define H_LOOP_DB
+#pragma once
 
 #include <vector>
 #include <string>
@@ -41,5 +40,3 @@ private:
 }; // LoopDB
 
 } // kaskara
-
-#endif // H_LOOP_DB

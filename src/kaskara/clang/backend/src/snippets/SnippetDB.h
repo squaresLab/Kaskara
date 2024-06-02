@@ -1,5 +1,4 @@
-#ifndef H_SNIPPET_DB
-#define H_SNIPPET_DB
+#pragma once
 
 #include <unordered_map>
 #include <string>
@@ -46,5 +45,3 @@ private:
 }; // SnippetDB
 
 } // kaskara
-
-#endif // H_SNIPPET_DB

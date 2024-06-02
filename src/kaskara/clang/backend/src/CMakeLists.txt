@@ -1,52 +1,40 @@
-add_executable(kaskara-loop-finder
-  LoopDB.cpp
+add_executable(kaskara
+  Kaskara.cpp
+  common/ReadWriteAnalyzer.cpp
+  common/SyntaxScopeAnalyzer.cpp
+  functions/FunctionDB.cpp
+  functions/FunctionIndexer.cpp
+  insertions/InsertionPointDB.cpp
+  insertions/InsertionsIndexer.cpp
+  loops/LoopDB.cpp
+  loops/LoopIndexer.cpp
+  snippets/SnippetDB.cpp
+  snippets/SnippetIndexer.cpp
+  statements/StatementDB.cpp
+  statements/StatementIndexer.cpp
   util.cpp
-  loop-finder.cpp)
+)
 
-add_executable(kaskara-statement-finder
-  SyntaxScopeAnalyzer.cpp
-  ReadWriteAnalyzer.cpp
-  StatementDB.cpp
-  util.cpp
-  statement-finder.cpp)
-
-add_executable(kaskara-function-scanner
-  FunctionDB.cpp
-  util.cpp
-  function-scanner.cpp)
-
-add_executable(kaskara-snippet-extractor
-  ReadWriteAnalyzer.cpp
-  SnippetDB.cpp
-  util.cpp
-  snippet-extractor.cpp)
-
-add_executable(kaskara-insertion-point-finder
-  InsertionPointDB.cpp
-  util.cpp
-  insertion-point-finder.cpp)
-
-set_target_properties(kaskara-loop-finder
+set_target_properties(kaskara
   PROPERTIES
     CXX_STANDARD 17
     CMAKE_CXX_STANDARD_REQUIRED ON
 )
 
 if(KASKARA_BUILD_STATIC)
-  set_target_properties(kaskara-loop-finder
+  set_target_properties(kaskara
     PROPERTIES
       LINK_SEARCH_START_STATIC ON
       LINK_SEARCH_END_STATIC ON
   )
 endif()
 
-set(KASKARA_LIBS
-  ${LLVM_LIBS}
-  ${CLANG_LIBS}
+target_link_libraries(kaskara
+  PRIVATE
+    ${LLVM_LIBS} ${CLANG_LIBS} fmt::fmt-header-only
 )
 
-target_link_libraries(kaskara-function-scanner PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
-target_link_libraries(kaskara-loop-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
-target_link_libraries(kaskara-statement-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
-target_link_libraries(kaskara-snippet-extractor PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
-target_link_libraries(kaskara-insertion-point-finder PRIVATE ${KASKARA_LIBS} fmt::fmt-header-only)
+# TODO add install macro
+# TODO https://cmake.org/cmake/help/latest/command/install.html#runtime-dependency-set
+# TODO https://cmake.org/cmake/help/latest/command/file.html#get-runtime-dependencies
+# TODO https://discourse.cmake.org/t/copying-dependent-dlls-to-executable-directory/852/4

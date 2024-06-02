@@ -9,8 +9,8 @@
 #include <clang/Analysis/CFGStmtMap.h>
 #include <llvm/Support/raw_ostream.h>
 
-#include "util.h"
-#include "ReadWriteAnalyzer.h"
+#include "../util.h"
+#include "../common/ReadWriteAnalyzer.h"
 
 using json = nlohmann::json;
 using namespace kaskara;

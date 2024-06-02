@@ -1,6 +1,7 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
+#include "SnippetIndexer.h"
+
 #include <vector>
-#include <memory>
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -17,17 +18,14 @@
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 
 #include "SnippetDB.h"
-#include "util.h"
+#include "../util.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
 using namespace clang::tooling;
 
-using namespace kaskara;
 
-static llvm::cl::OptionCategory MyToolCategory("kaskara-snippet-extractor options");
-static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
-
+namespace kaskara {
 
 StatementMatcher VoidCallMatcher =
   callExpr(isExpansionInMainFile(),
@@ -99,19 +97,15 @@ private:
   std::string kind;
 };
 
-int main(int argc, const char **argv)
-{
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
-    return 1;
-  }
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+std::unique_ptr<SnippetDB> IndexSnippets(
+    clang::tooling::CommonOptionsParser &optionsParser
+) {
+  auto db = std::make_unique<SnippetDB>();
+  clang::tooling::ClangTool Tool(
+    optionsParser.getCompilations(),
+    optionsParser.getSourcePathList()
+  );
 
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-
-  std::unique_ptr<SnippetDB> db(new SnippetDB);
   MatchFinder finder;
 
   SnippetFinder finder_return = SnippetFinder("guarded-return", db.get());
@@ -123,8 +117,9 @@ int main(int argc, const char **argv)
   SnippetFinder finder_void_call = SnippetFinder("void-call", db.get());
   finder.addMatcher(VoidCallMatcher, &finder_void_call);
 
-  auto res = Tool.run(newFrontendActionFactory(&finder).get());
-  db->dump();
-  db->to_file("snippets.json");
-  return res;
+  Tool.run(newFrontendActionFactory(&finder).get());
+
+  return db;
+}
+
 }

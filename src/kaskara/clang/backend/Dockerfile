@@ -42,11 +42,7 @@ RUN mkdir /tmp/kaskara/build \
       .. \
  && make -j4
 RUN mkdir -p /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara-loop-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara-statement-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara-function-scanner /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara-insertion-point-finder /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara-snippet-extractor /opt/kaskara/bin
+ && cp /tmp/kaskara/build/src/kaskara /opt/kaskara/bin
 
 RUN mkdir -p /opt/kaskara/clang \
  && cp -r /opt/llvm/lib/clang/*/include/* /opt/kaskara/clang

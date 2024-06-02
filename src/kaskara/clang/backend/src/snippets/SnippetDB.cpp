@@ -5,8 +5,8 @@
 
 #include <clang/AST/StmtVisitor.h>
 
-#include "util.h"
-#include "ReadWriteAnalyzer.h"
+#include "../util.h"
+#include "../common/ReadWriteAnalyzer.h"
 
 using json = nlohmann::json;
 using namespace kaskara;

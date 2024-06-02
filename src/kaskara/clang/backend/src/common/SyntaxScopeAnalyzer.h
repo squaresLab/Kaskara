@@ -1,5 +1,4 @@
-#ifndef H_SYNTAX_SCOPE_ANALYZER
-#define H_SYNTAX_SCOPE_ANALYZER
+#pragma once
 
 #include <clang/AST/StmtVisitor.h>
 
@@ -36,5 +35,3 @@ private:
 };
 
 } // kaskara
-
-#endif // H_SYNTAX_SCOPE_ANALYZER

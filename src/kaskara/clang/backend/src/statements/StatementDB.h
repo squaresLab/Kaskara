@@ -1,5 +1,4 @@
-#ifndef H_STATEMENT_DB
-#define H_STATEMENT_DB
+#pragma once
 
 #include <vector>
 #include <string>
@@ -10,7 +9,7 @@
 #include <clang/AST/Decl.h>
 #include <clang/Analysis/Analyses/LiveVariables.h>
 
-#include "SyntaxScopeAnalyzer.h"
+#include "../common/SyntaxScopeAnalyzer.h"
 
 namespace kaskara {
 
@@ -63,5 +62,3 @@ private:
 }; // StatementDB
 
 } // kaskara
-
-#endif // H_STATEMENT_DB

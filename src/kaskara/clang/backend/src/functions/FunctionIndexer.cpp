@@ -1,6 +1,9 @@
 /**
  * Finds all functions within a set of files.
  */
+
+#include "FunctionIndexer.h"
+
 #include <memory>
 
 #include <clang/AST/ASTConsumer.h>
@@ -15,13 +18,9 @@
 #include <clang/AST/DeclLookups.h>
 #include <clang/AST/Decl.h>
 
-#include "util.h"
-#include "FunctionDB.h"
+#include "../util.h"
 
-using namespace kaskara;
-
-static llvm::cl::OptionCategory MyToolCategory("kaskara-function-scanner options");
-static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
+namespace kaskara {
 
 class FindFunctionVisitor
   : public clang::RecursiveASTVisitor<FindFunctionVisitor>
@@ -133,21 +132,16 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       new FunctionFinderActionFactory(db_func));
 };
 
-int main(int argc, const char **argv)
-{
-  using namespace clang::tooling;
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
-    return 1;
-  }
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
-
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-
+std::unique_ptr<FunctionDB> IndexFunctions(
+    clang::tooling::CommonOptionsParser &optionsParser
+) {
   std::unique_ptr<FunctionDB> db_func(new FunctionDB);
-  auto res = Tool.run(functionFinderFactory(*db_func).get());
-  db_func->to_file("functions.json");
-  return res;
+  clang::tooling::ClangTool Tool(
+    optionsParser.getCompilations(),
+    optionsParser.getSourcePathList()
+  );
+  Tool.run(functionFinderFactory(*db_func).get());
+  return db_func;
+}
+
 }

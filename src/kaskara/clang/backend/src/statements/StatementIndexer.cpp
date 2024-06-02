@@ -1,6 +1,8 @@
 // https://clang.llvm.org/docs/LibASTMatchersReference.html
 // https://github.com/eschulte/clang-mutate/blob/master/ASTMutate.cpp
-#include <vector>
+
+#include "StatementIndexer.h"
+
 #include <unordered_set>
 #include <sstream>
 
@@ -19,20 +21,17 @@
 #include <clang/AST/ParentMapContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 
-#include "util.h"
+#include "../util.h"
 #include "StatementDB.h"
-
-using namespace kaskara;
 
 using namespace clang;
 using namespace clang::tooling;
 
-static llvm::cl::OptionCategory MyToolCategory("kaskara-statement-finder options");
-static llvm::cl::extrahelp CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
-
-
 // FIXME hide this class; expose StatementDB::build(*ctx)
 // https://clang.llvm.org/doxygen/classclang_1_1LexicallyOrderedRecursiveASTVisitor.html
+
+namespace kaskara {
+
 class StatementVisitor
   : public clang::RecursiveASTVisitor<StatementVisitor>
 {
@@ -283,9 +282,9 @@ private:
   std::unordered_set<std::string> &visited_files;
 };
 
-std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
-  StatementDB *db)
-{
+std::unique_ptr<clang::tooling::FrontendActionFactory> statementFinderFactory(
+  StatementDB *db
+) {
   class StatementActionFactory
     : public clang::tooling::FrontendActionFactory
   {
@@ -308,20 +307,18 @@ std::unique_ptr<clang::tooling::FrontendActionFactory> functionFinderFactory(
       new StatementActionFactory(db));
 };
 
-int main(int argc, const char **argv)
-{
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
-    return 1;
-  }
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+std::unique_ptr<StatementDB> IndexStatements(
+    clang::tooling::CommonOptionsParser &optionsParser
+) {
+  auto db = std::make_unique<StatementDB>();
 
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-  Tool.setDiagnosticConsumer(new clang::IgnoringDiagConsumer());
-  std::unique_ptr<StatementDB> db(new StatementDB);
-  int res = Tool.run(functionFinderFactory(db.get()).get());
-  db->to_file("statements.json");
-  return res;
+  clang::tooling::ClangTool tool(
+    optionsParser.getCompilations(),
+    optionsParser.getSourcePathList()
+  );
+  tool.setDiagnosticConsumer(new clang::IgnoringDiagConsumer());
+  tool.run(statementFinderFactory(db.get()).get());
+  return db;
+}
+
 }
