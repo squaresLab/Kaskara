@@ -40,31 +40,25 @@ def bt_project():
         yield project
 
 
-@pytest.mark.xfail
-def test_find_loops(bt_project) -> None:
-    l = FileLocation
-
+@pytest.fixture
+def bt_container(bt_project):
     with bt_project.provision() as container:
-        analyzer = ClangAnalyser()
-        loops = analyzer._find_loops(container)
-
-        def assert_in_loop(location_str: str) -> None:
-            location = FileLocation.from_string(location_str)
-            assert loops.is_within_loop(location)
-
-        def assert_not_in_loop(location_str: str) -> None:
-            location = FileLocation.from_string(location_str)
-            assert not loops.is_within_loop(location)
-
-        assert_in_loop("/workspace/src/blackboard.cpp@54:1")
-        assert_in_loop("/workspace/src/blackboard.cpp@84:1")
-        assert_not_in_loop("/workspace/src/blackboard.cpp@86:1")
+        yield container
 
 
+@pytest.mark.xfail
+def test_find_loops(bt_container) -> None:
+    analyzer = ClangAnalyser()
+    loops = analyzer._find_loops(bt_container)
 
+    def assert_in_loop(location_str: str) -> None:
+        location = FileLocation.from_string(location_str)
+        assert loops.is_within_loop(location)
 
+    def assert_not_in_loop(location_str: str) -> None:
+        location = FileLocation.from_string(location_str)
+        assert not loops.is_within_loop(location)
 
-
-
-
-
+    assert_in_loop("/workspace/src/blackboard.cpp@54:1")
+    assert_in_loop("/workspace/src/blackboard.cpp@84:1")
+    assert_not_in_loop("/workspace/src/blackboard.cpp@86:1")
