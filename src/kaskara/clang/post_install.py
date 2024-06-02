@@ -44,7 +44,6 @@ def post_install(
         image, _ = docker_client.images.build(
             path=backend_directory,
             tag=IMAGE_NAME,
-            pull=True,
             labels={
                 PLUGIN_LABEL: "clang",
                 VERSION_LABEL: kaskara_version,
