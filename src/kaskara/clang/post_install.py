@@ -53,6 +53,7 @@ def post_install(
         volume: docker.models.volumes.Volume | None = None
         try:
             volume = docker_client.volumes.get(VOLUME_NAME)
+            logger.info("found C++ plugin Docker volume")
         except docker.errors.NotFound:
             logger.info("C++ plugin Docker volume doesn't exist")
         else:
