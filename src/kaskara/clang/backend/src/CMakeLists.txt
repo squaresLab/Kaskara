@@ -27,12 +27,30 @@ if(KASKARA_BUILD_STATIC)
       LINK_SEARCH_START_STATIC ON
       LINK_SEARCH_END_STATIC ON
   )
+  target_link_options(kaskara
+    PRIVATE
+      -static-libstdc++ -static
+  )
 endif()
 
 target_link_libraries(kaskara
   PRIVATE
     ${LLVM_LIBS} ${CLANG_LIBS} fmt::fmt-header-only
 )
+
+target_include_directories(kaskara
+  PUBLIC
+    ${CLANG_INCLUDE_DIRS}
+    ${LLVM_INCLUDE_DIRS}
+    nlohmann_json::nlohmann_json
+    fmt::fmt
+)
+
+target_compile_definitions(kaskara
+  PUBLIC ${CLANG_DEFINITIONS}
+)
+
+target_compile_options(kaskara PRIVATE -O0 -ggdb)
 
 # TODO add install macro
 # TODO https://cmake.org/cmake/help/latest/command/install.html#runtime-dependency-set
