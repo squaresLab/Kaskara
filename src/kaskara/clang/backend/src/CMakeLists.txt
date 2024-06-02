@@ -52,7 +52,46 @@ target_compile_definitions(kaskara
 
 target_compile_options(kaskara PRIVATE -O0 -ggdb)
 
-# TODO add install macro
+install(
+  TARGETS kaskara
+  DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+
 # TODO https://cmake.org/cmake/help/latest/command/install.html#runtime-dependency-set
 # TODO https://cmake.org/cmake/help/latest/command/file.html#get-runtime-dependencies
 # TODO https://discourse.cmake.org/t/copying-dependent-dlls-to-executable-directory/852/4
+install(CODE [[
+  include(GNUInstallDirs)
+  message(STATUS "Copying runtime dependencies...")
+
+  file(GET_RUNTIME_DEPENDENCIES
+    RESOLVED_DEPENDENCIES_VAR resolved_deps
+    UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
+    EXECUTABLES $<TARGET_FILE:kaskara>
+  )
+
+  foreach(dep IN LISTS resolved_deps)
+    message(STATUS "Copying runtime dependency: ${dep}")
+    get_filename_component(dep_name "${dep}" NAME)
+    get_filename_component(dep_ext "${dep_name}" EXT)
+
+    if("${dep_ext}" STREQUAL ".so" OR "${dep_ext}" STREQUAL ".dylib" OR "${dep_ext}" MATCHES "^\\.so\\.[0-9]+$")
+      set(dep_dest "${CMAKE_INSTALL_LIBDIR}")
+    elseif("${dep_ext}" STREQUAL ".dll")
+      set(dep_dest "${CMAKE_INSTALL_BINDIR}")
+    else()
+      set(dep_dest "${CMAKE_INSTALL_BINDIR}")
+    endif()
+
+    file(INSTALL
+      DESTINATION "${dep_dest}"
+      TYPE FILE
+      FILES "${dep}"
+    )
+    message(STATUS "Copied runtime dependency [${dep_name}] to ${dep_dest}")
+  endforeach()
+
+  if(unresolved_deps)
+    message(WARNING "Unresolved dependencies: ${unresolved_deps}")
+  endif()
+]])

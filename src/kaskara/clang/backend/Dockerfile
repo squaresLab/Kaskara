@@ -31,19 +31,22 @@ RUN cd /tmp \
 # -DKASKARA_BUILD_STATIC=TRUE \
 # -DBUILD_SHARED_LIBS=FALSE \
 # TODO: -l:libm.a
+
+#      -DCMAKE_PREFIX_PATH=/opt/kaskara \
 ADD . /tmp/kaskara
 RUN mkdir /tmp/kaskara/build \
  && cd /tmp/kaskara/build \
  && cmake \
+      -DCMAKE_INSTALL_PREFIX=/opt/kaskara \
       -DCMAKE_CXX_COMPILER=clang++ \
       -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -static-libstdc++ -fPIC" \
       -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
       -DCMAKE_LINKER=ld.lld \
       .. \
- && make -j4
-RUN mkdir -p /opt/kaskara/bin \
- && cp /tmp/kaskara/build/src/kaskara /opt/kaskara/bin
+ && make -j8 \
+ && make install
 
+# FIXME this should be part of the CMake install
 RUN mkdir -p /opt/kaskara/clang \
  && cp -r /opt/llvm/lib/clang/*/include/* /opt/kaskara/clang
 
