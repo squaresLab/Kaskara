@@ -6,9 +6,9 @@ from collections.abc import Iterator
 import attr
 import dockerblade as _dockerblade
 
-from .container import ProjectContainer
-from .clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
 from .clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
+from .clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
+from .container import ProjectContainer
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)

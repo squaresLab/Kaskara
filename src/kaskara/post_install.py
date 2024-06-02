@@ -3,7 +3,7 @@ __all__ = ("post_install",)
 
 from loguru import logger
 
-from .clang import post_install as post_install_clang
+from .clang.post_install import post_install as post_install_clang
 
 
 def post_install() -> None:
