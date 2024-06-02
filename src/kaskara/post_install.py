@@ -10,3 +10,7 @@ def post_install() -> None:
     logger.info("performing post-installation of Kaskara")
     post_install_clang()
     logger.info("completed post-installation of Kaskara")
+
+
+if __name__ == "__main__":
+    post_install()
