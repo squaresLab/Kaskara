@@ -1,29 +1,43 @@
+from __future__ import annotations
+
 __all__ = ("PythonAnalyser",)
+
+import contextlib
+import typing as t
+from dataclasses import dataclass
 
 from loguru import logger
 
 from kaskara.analyser import Analyser
 from kaskara.analysis import Analysis
-from kaskara.container import ProjectContainer
-from kaskara.project import Project
 from kaskara.python.functions import collect_functions
 from kaskara.python.loops import collect_loops
 from kaskara.python.statements import collect_statements
 
+if t.TYPE_CHECKING:
+    from kaskara.container import ProjectContainer
+    from kaskara.project import Project
 
+
+@dataclass
 class PythonAnalyser(Analyser):
-    def analyse(self, project: Project) -> Analysis:
+    _project: Project
+    _container: ProjectContainer
+
+    @classmethod
+    @contextlib.contextmanager
+    def for_project(cls, project: Project) -> t.Iterator[t.Self]:
         logger.debug(f"analysing Python project: {project}")
         with project.provision() as container:
-            return self._analyse_container(container)
+            yield cls(project, container)
 
-    def _analyse_container(self, container: ProjectContainer) -> Analysis:
-        functions = collect_functions(container)
-        statements = collect_statements(container)
-        loops = collect_loops(container)
+    def run(self) -> Analysis:
+        functions = collect_functions()
+        statements = collect_statements()
+        loops = collect_loops()
         insertions = statements.insertions()
         return Analysis(
-            project=container.project,
+            project=self._project,
             functions=functions,
             statements=statements,
             insertions=insertions,
