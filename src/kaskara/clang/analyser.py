@@ -82,8 +82,9 @@ class ClangAnalyser(Analyser):
         analysis_name = analysis_name or output_filename
         maybe_error_message: str | None = None
         maybe_error: Exception | None = None
+        output: str = ""
         try:
-            container.shell.check_output(command, cwd=workdir, text=True)
+            output = container.shell.check_output(command, cwd=workdir, text=True)
         except _dockerblade.CalledProcessError as err:
             maybe_error = err
             output = err.output
@@ -176,6 +177,7 @@ class ClangAnalyser(Analyser):
             analysis_name="function scanner",
         )
 
-        return ProgramFunctions(
-            ClangFunction.from_dict(project, d) for d in output_jsn
+        return ProgramFunctions.from_functions(
+            project=project,
+            functions=(ClangFunction.from_dict(project, d) for d in output_jsn),
         )

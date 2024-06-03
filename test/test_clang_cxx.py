@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
-import pytest
-
 import os
 
 import docker as _docker
 import dockerblade as _dockerblade
+import pytest
 
 import kaskara
-from kaskara.core import FileLocation
 from kaskara.clang.analyser import ClangAnalyser
 from kaskara.clang.post_install import post_install as install_clang_backend
+from kaskara.core import FileLocation
 
 DIR_HERE = os.path.dirname(__file__)
 
 
-@pytest.fixture
+@pytest.fixture()
 def bt_project():
     # make sure that the clang analyser backend has been built
     install_clang_backend()
@@ -29,24 +27,24 @@ def bt_project():
 
     with _dockerblade.DockerDaemon(docker_url) as dockerblade:
         files = {
-            '/workspace/src/blackboard.cpp',
+            "/workspace/src/blackboard.cpp",
         }
         project = kaskara.Project(
             dockerblade=dockerblade,
             image=docker_image_name,
-            directory='/workspace',
+            directory="/workspace",
             files=files,
         )
         yield project
 
 
-@pytest.fixture
+@pytest.fixture()
 def bt_container(bt_project):
     with bt_project.provision() as container:
         yield container
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail()
 def test_find_loops(bt_container) -> None:
     analyzer = ClangAnalyser()
     loops = analyzer._find_loops(bt_container)
@@ -62,3 +60,13 @@ def test_find_loops(bt_container) -> None:
     assert_in_loop("/workspace/src/blackboard.cpp@54:1")
     assert_in_loop("/workspace/src/blackboard.cpp@84:1")
     assert_not_in_loop("/workspace/src/blackboard.cpp@86:1")
+
+
+def test_find_functions(bt_container) -> None:
+    analyzer = ClangAnalyser()
+    functions = analyzer._find_functions(bt_container)
+
+    functions_in_file = list(functions.in_file("/workspace/src/blackboard.cpp"))
+
+    assert len(functions) == 5
+    assert len(functions_in_file) == 5

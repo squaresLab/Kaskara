@@ -5,6 +5,7 @@ __all__ = ("Function", "ProgramFunctions")
 
 import abc
 import typing as t
+from dataclasses import dataclass
 from typing import (
     final,
 )
@@ -13,6 +14,7 @@ if t.TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from kaskara.core import FileLocation, FileLocationRange
+    from kaskara.project import Project
 
 
 class Function(abc.ABC):
@@ -58,16 +60,33 @@ class Function(abc.ABC):
         return filename
 
 
+@dataclass(frozen=True)
 class ProgramFunctions:
     """Represents the set of functions within an associated program."""
-    def __init__(self, functions: Iterable[Function]) -> None:
-        self.__length = 0
-        self.__filename_to_functions: dict[str, list[Function]] = {}
+    _project: Project
+    _filename_to_functions: dict[str, list[Function]]
+    _num_functions: int
+
+    @classmethod
+    def from_functions(
+        cls,
+        project: Project,
+        functions: Iterable[Function],
+    ) -> ProgramFunctions:
+        num_functions = 0
+        filename_to_functions: dict[str, list[Function]] = {}
+
         for f in functions:
-            if f.filename not in self.__filename_to_functions:
-                self.__filename_to_functions[f.filename] = []
-            self.__filename_to_functions[f.filename].append(f)
-            self.__length += 1
+            if f.filename not in filename_to_functions:
+                filename_to_functions[f.filename] = []
+            filename_to_functions[f.filename].append(f)
+            num_functions += 1
+
+        return cls(
+            _project=project,
+            _filename_to_functions=filename_to_functions,
+            _num_functions=num_functions,
+        )
 
     def encloses(self, location: FileLocation) -> Function | None:
         """Returns the enclosing function, if any, for a given location."""
@@ -78,13 +97,13 @@ class ProgramFunctions:
 
     def in_file(self, filename: str) -> Iterator[Function]:
         """Returns an iterator over the functions defined in a given file."""
-        yield from self.__filename_to_functions.get(filename, [])
+        yield from self._filename_to_functions.get(filename, [])
 
     def __len__(self) -> int:
         """Returns a count of the number of functions in the program."""
-        return self.__length
+        return self._num_functions
 
     def __iter__(self) -> Iterator[Function]:
         """Returns an iterator over the functions in the program."""
-        for functions in self.__filename_to_functions.values():
+        for functions in self._filename_to_functions.values():
             yield from functions

@@ -20,7 +20,10 @@ def collect_functions(container: ProjectContainer) -> ProgramFunctions:
     visitor = CollectFunctionsVisitor(container)
     for filename in container.project.files:
         visitor.collect(filename)
-    return ProgramFunctions(visitor.functions)
+    return ProgramFunctions.from_functions(
+        project=container.project,
+        functions=visitor.functions,
+    )
 
 
 class CollectFunctionsVisitor(ast.NodeVisitor):
