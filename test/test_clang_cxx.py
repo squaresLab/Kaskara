@@ -44,7 +44,7 @@ def bt_container(bt_project):
         yield container
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail(reason="unresolved bug")
 def test_find_loops(bt_container) -> None:
     analyzer = ClangAnalyser()
     loops = analyzer._find_loops(bt_container)
@@ -69,3 +69,11 @@ def test_find_functions(bt_container) -> None:
     functions_in_file = list(functions.in_file("/workspace/src/blackboard.cpp"))
     assert len(functions) == 5
     assert len(functions_in_file) == 5
+
+
+def test_find_statements(bt_container) -> None:
+    analyzer = ClangAnalyser()
+    statements = analyzer._find_statements(bt_container)
+
+    statements_in_file = list(statements.in_file("/workspace/src/blackboard.cpp"))
+    assert len(statements_in_file) > 0

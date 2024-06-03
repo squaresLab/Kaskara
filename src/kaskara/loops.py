@@ -1,24 +1,56 @@
+from __future__ import annotations
+
 __all__ = ("ProgramLoops",)
 
-from collections.abc import Iterable
+import os
+import typing as t
+from dataclasses import dataclass
 
-import attr
+from .core import (
+    FileLocation,
+    FileLocationRange,
+    FileLocationRangeSet,
+    Location,
+)
 
-from .core import FileLocation, FileLocationRange, FileLocationRangeSet
+if t.TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from kaskara.project import Project
 
 
-@attr.s(frozen=True, slots=True, auto_attribs=True)
+@dataclass(frozen=True, slots=True)
 class ProgramLoops:
     """Maintains information about all loops within a program."""
+    project: Project
     _covered_by_loop_bodies: FileLocationRangeSet
 
     @classmethod
-    def from_body_location_ranges(cls,
-                                  bodies: Iterable[FileLocationRange],
-                                  ) -> "ProgramLoops":
-        return ProgramLoops(FileLocationRangeSet(bodies))
+    def from_body_location_ranges(
+        cls,
+        project: Project,
+        bodies: Iterable[FileLocationRange],
+    ) -> ProgramLoops:
+        return ProgramLoops(
+            project,
+            FileLocationRangeSet(bodies),
+        )
 
-    def is_within_loop(self, location: FileLocation) -> bool:
+    def is_within_loop(self, file_location: FileLocation) -> bool:
         """Checks whether a given location is enclosed within a loop."""
-        is_within: bool = self._covered_by_loop_bodies.contains(location)
+        filename = file_location.filename
+        if os.path.isabs(filename):
+            start = self.project.directory
+            filename = os.path.relpath(filename, start=start)
+            location = Location(
+                line=file_location.line,
+                column=file_location.column,
+            )
+            file_location = FileLocation(
+                filename=filename,
+                location=location,
+            )
+        is_within: bool = self._covered_by_loop_bodies.contains(
+            file_location,
+        )
         return is_within

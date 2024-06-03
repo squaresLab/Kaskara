@@ -52,7 +52,10 @@ def collect_statements(container: ProjectContainer) -> ProgramStatements:
     visitor = CollectStatementsVisitor(container)
     for filename in container.project.files:
         visitor.collect(filename)
-    return ProgramStatements(visitor.statements)
+    return ProgramStatements(
+        container.project,
+        visitor.statements,
+    )
 
 
 class CollectStatementsVisitor(ast.NodeVisitor):

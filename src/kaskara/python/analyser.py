@@ -22,8 +22,10 @@ class PythonAnalyser(Analyser):
         statements = collect_statements(container)
         loops = collect_loops(container)
         insertions = statements.insertions()
-        return Analysis(project=container.project,
-                        functions=functions,
-                        statements=statements,
-                        insertions=insertions,
-                        loops=loops)
+        return Analysis(
+            project=container.project,
+            functions=functions,
+            statements=statements,
+            insertions=insertions,
+            loops=loops,
+        )

@@ -21,7 +21,10 @@ def collect_loops(container: ProjectContainer) -> ProgramLoops:
     visitor = CollectLoopsVisitor(container)
     for filename in container.project.files:
         visitor.collect(filename)
-    return ProgramLoops.from_body_location_ranges(visitor.locations)
+    return ProgramLoops.from_body_location_ranges(
+        container.project,
+        visitor.locations,
+    )
 
 
 class CollectLoopsVisitor(ast.NodeVisitor):

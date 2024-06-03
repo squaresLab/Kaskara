@@ -82,14 +82,13 @@ class ClangAnalyser(Analyser):
         analysis_name = analysis_name or output_filename
         maybe_error_message: str | None = None
         maybe_error: Exception | None = None
-        output: str = ""
         try:
-            output = container.shell.check_output(command, cwd=workdir, text=True)
+            container.shell.check_output(command, cwd=workdir, text=True)
         except _dockerblade.CalledProcessError as err:
             maybe_error = err
-            output = err.output
-            assert isinstance(output, str)
-            maybe_error_message = f"failed with exit code {err.returncode}: {output}"
+            err_message = err.output
+            assert isinstance(err_message, str)
+            maybe_error_message = f"failed with exit code {err.returncode}: {err_message}"
 
         analysis_completed = container.files.exists(output_filename)
 
@@ -124,8 +123,9 @@ class ClangAnalyser(Analyser):
             output_filename=output_filename,
             analysis_name="statement finder",
         )
-        statements = ProgramStatements(
-            [ClangStatement.from_dict(project, d) for d in output_jsn],
+        statements = ProgramStatements.build(
+            container.project,
+            (ClangStatement.from_dict(project, d) for d in output_jsn),
         )
         logger.debug("finished reading results")
         return statements
@@ -159,7 +159,10 @@ class ClangAnalyser(Analyser):
             loc = abs_to_rel_flocrange(project.directory, loc)
             loop_bodies.append(loc)
         logger.debug("finished reading loop analysis results")
-        return ProgramLoops.from_body_location_ranges(loop_bodies)
+        return ProgramLoops.from_body_location_ranges(
+            project,
+            loop_bodies,
+        )
 
     def _find_functions(
         self,

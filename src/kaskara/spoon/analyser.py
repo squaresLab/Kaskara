@@ -76,56 +76,80 @@ class SpoonAnalyser(Analyser):
         # load statements
         filename_statements = os.path.join(dir_output, "statements.json")
         statements_dict = json.loads(container.files.read(filename_statements))
-        statements = self._load_statements_from_dict(statements_dict)
+        statements = self._load_statements_from_dict(
+            container,
+            statements_dict,
+        )
 
         # load functions
         filename_functions = os.path.join(dir_output, "functions.json")
         functions_dict = json.loads(container.files.read(filename_functions))
-        functions = self._load_functions_from_dict(functions_dict)
+        functions = self._load_functions_from_dict(
+            container,
+            functions_dict,
+        )
 
         # load loops
         filename_loops = os.path.join(dir_output, "loops.json")
         loops_dict = json.loads(container.files.read(filename_loops))
-        loops = self._load_loops_from_dict(loops_dict)
+        loops = self._load_loops_from_dict(
+            container,
+            loops_dict,
+        )
 
         # find insertion points
         insertions = statements.insertions()
 
-        return Analysis(project=container.project,
-                        loops=loops,
-                        functions=functions,
-                        statements=statements,
-                        insertions=insertions)
+        return Analysis(
+            project=container.project,
+            loops=loops,
+            functions=functions,
+            statements=statements,
+            insertions=insertions,
+        )
 
-    def _load_statements_from_dict(self,
-                                   dict_: Sequence[Mapping[str, Any]],
-                                   ) -> ProgramStatements:
+    def _load_statements_from_dict(
+        self,
+        container: ProjectContainer,
+        dict_: Sequence[Mapping[str, Any]],
+    ) -> ProgramStatements:
         """Loads the statement database from a given dictionary."""
         logger.debug("parsing statements database")
-        statements = \
-            ProgramStatements([SpoonStatement.from_dict(d) for d in dict_])
+        statements = ProgramStatements.build(
+            container.project,
+            (SpoonStatement.from_dict(d) for d in dict_),
+        )
         logger.debug(f"parsed {len(statements)} statements")
         return statements
 
-    def _load_functions_from_dict(self,
-                                  dict_: Sequence[Mapping[str, Any]],
-                                  ) -> ProgramFunctions:
+    def _load_functions_from_dict(
+        self,
+        container: ProjectContainer,
+        dict_: Sequence[Mapping[str, Any]],
+    ) -> ProgramFunctions:
         """Loads the function database from a given dictionary."""
         logger.debug("parsing function database")
-        functions = \
-            ProgramFunctions([SpoonFunction.from_dict(d) for d in dict_])
+        functions = ProgramFunctions.from_functions(
+            container.project,
+            (SpoonFunction.from_dict(d) for d in dict_),
+        )
         logger.debug(f"parsed {len(functions)} functions")
         return functions
 
-    def _load_loops_from_dict(self,
-                              dict_: Sequence[Mapping[str, Any]],
-                              ) -> ProgramLoops:
+    def _load_loops_from_dict(
+        self,
+        container: ProjectContainer,
+        dict_: Sequence[Mapping[str, Any]],
+    ) -> ProgramLoops:
         """Loads the loops database from a given dictionary."""
         logger.debug("parsing loop database")
         loop_bodies: list[FileLocationRange] = []
         for loop_info in dict_:
             loc = FileLocationRange.from_string(loop_info["body"])
             loop_bodies.append(loc)
-        loops = ProgramLoops.from_body_location_ranges(loop_bodies)
+        loops = ProgramLoops.from_body_location_ranges(
+            container.project,
+            loop_bodies,
+        )
         logger.debug("parsed loops")
         return loops

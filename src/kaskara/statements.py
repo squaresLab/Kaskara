@@ -1,13 +1,21 @@
+from __future__ import annotations
+
 __all__ = ("Statement", "ProgramStatements")
 
 import abc
-from collections.abc import Iterable, Iterator
+import os
+import typing as t
+from dataclasses import dataclass, field
 
 from loguru import logger
 
 from .core import FileLine, FileLocation, FileLocationRange
 from .insertions import InsertionPoint, ProgramInsertionPoints
 
+if t.TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
+    from kaskara.project import Project
 
 class Statement(abc.ABC):
     """Provides a description of a program statement.
@@ -51,30 +59,57 @@ class Statement(abc.ABC):
         ...
 
 
+@dataclass
 class ProgramStatements:
-    def __init__(self, statements: Iterable[Statement]) -> None:
-        self.__statements = list(statements)
-        logger.debug("indexing statements by file")
-        self.__file_to_statements: dict[str, list[Statement]] = {}
-        for statement in statements:
+    _project: Project
+    _statements: t.Sequence[Statement]
+    _file_to_statements: t.Mapping[
+        str,
+        t.Sequence[Statement],
+    ] = field(init=False)
+
+    def __post_init__(self) -> None:
+        file_to_statements: t.MutableMapping[
+            str,
+            t.MutableSequence[Statement],
+        ] = {}
+
+        for statement in self._statements:
             filename = statement.location.filename
-            if filename not in self.__file_to_statements:
-                self.__file_to_statements[filename] = []
-            self.__file_to_statements[filename].append(statement)
-        summary = "\n".join(f"  {fn}: {len(stmts)} statements" for (fn, stmts)
-                            in self.__file_to_statements.items())
+            if filename not in file_to_statements:
+                file_to_statements[filename] = []
+            file_to_statements[filename].append(statement)
+
+        self._file_to_statements = file_to_statements
+
+        summary = "\n".join(
+            f"  {fn}: {len(stmts)} statements" for (fn, stmts)
+            in self._file_to_statements.items()
+        )
         logger.debug(f"indexed statements by file:\n{summary}")
+
+    @classmethod
+    def build(
+        cls,
+        project: Project,
+        statements: Iterable[Statement],
+    ) -> ProgramStatements:
+        return cls(project, list(statements))
 
     def __len__(self) -> int:
         """Returns the number of statements in this collection."""
-        return len(self.__statements)
+        return len(self._statements)
 
     def __iter__(self) -> Iterator[Statement]:
-        yield from self.__statements
+        yield from self._statements
 
-    def in_file(self, fn: str) -> Iterator[Statement]:
+    def in_file(self, filename: str) -> Iterator[Statement]:
         """Returns an iterator over the statements belonging to a file."""
-        yield from self.__file_to_statements.get(fn, [])
+        if os.path.isabs(filename):
+            start = self._project.directory
+            filename = os.path.relpath(filename, start=start)
+
+        yield from self._file_to_statements.get(filename, [])
 
     def at_line(self, line: FileLine) -> Iterator[Statement]:
         """Returns an iterator over the statements located at a given line."""
