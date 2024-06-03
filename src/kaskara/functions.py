@@ -4,6 +4,7 @@ from __future__ import annotations
 __all__ = ("Function", "ProgramFunctions")
 
 import abc
+import os
 import typing as t
 from dataclasses import dataclass
 from typing import (
@@ -97,6 +98,9 @@ class ProgramFunctions:
 
     def in_file(self, filename: str) -> Iterator[Function]:
         """Returns an iterator over the functions defined in a given file."""
+        if os.path.isabs(filename):
+            start = self._project.directory
+            filename = os.path.relpath(filename, start=start)
         yield from self._filename_to_functions.get(filename, [])
 
     def __len__(self) -> int:

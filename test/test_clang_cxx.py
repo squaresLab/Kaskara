@@ -67,6 +67,5 @@ def test_find_functions(bt_container) -> None:
     functions = analyzer._find_functions(bt_container)
 
     functions_in_file = list(functions.in_file("/workspace/src/blackboard.cpp"))
-
     assert len(functions) == 5
     assert len(functions_in_file) == 5
