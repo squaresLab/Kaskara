@@ -32,9 +32,9 @@ class PythonAnalyser(Analyser):
             yield cls(project, container)
 
     def run(self) -> Analysis:
-        functions = collect_functions()
-        statements = collect_statements()
-        loops = collect_loops()
+        functions = collect_functions(self._container)
+        statements = collect_statements(self._container)
+        loops = collect_loops(self._container)
         insertions = statements.insertions()
         return Analysis(
             project=self._project,

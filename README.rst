@@ -45,4 +45,11 @@ If you want to play with the Kaskara Clang backend from within a Docker containe
 
 This will first install Kaskara to a Docker volume, containing portable binaries and libraries, and then run a container with the volume mounted at `/opt/kaskara`.
 
+You can also interact with Kaskara via the WIP command line:
 
+.. code:: bash
+
+    poetry run kaskara clang index \
+        kaskara/examples:BehaviorTree.CPP \
+        /workspace \
+        /workspace/src/blackboard.cpp

@@ -16,6 +16,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[tool.poetry.scripts]
+kaskara = 'kaskara.cli:cli'
+
 [tool.poetry.dependencies]
 python = ">=3.11,<4"
 attrs = ">=19.3.0"
