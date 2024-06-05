@@ -1,2 +1,5 @@
 graft lib/kaskara/clang/backend
 graft lib/kaskara/spoon/backend
+include src/kaskara/py.typed
+include README.rst
+include LICENSE
