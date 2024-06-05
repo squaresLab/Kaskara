@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 __all__ = ("InsertionPoint", "ProgramInsertionPoints")
 
+import typing as t
 from collections.abc import Iterable, Iterator
 
 import attr
 from loguru import logger
 
-from .core import FileLine, FileLocation
+if t.TYPE_CHECKING:
+    from kaskara.core import FileLine, FileLocation
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)

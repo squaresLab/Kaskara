@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 __all__ = ("Project",)
 
 import contextlib
-from collections.abc import Iterator
+import typing as t
 
 import attr
-import dockerblade as _dockerblade
 
-from .clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
-from .clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
-from .container import ProjectContainer
+from kaskara.clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
+from kaskara.clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
+from kaskara.container import ProjectContainer
+
+if t.TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    import dockerblade as _dockerblade
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
