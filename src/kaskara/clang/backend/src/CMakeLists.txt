@@ -1,4 +1,4 @@
-add_executable(kaskara
+add_executable(kaskara-clang
   Kaskara.cpp
   common/ReadWriteAnalyzer.cpp
   common/SyntaxScopeAnalyzer.cpp
@@ -15,30 +15,30 @@ add_executable(kaskara
   util.cpp
 )
 
-set_target_properties(kaskara
+set_target_properties(kaskara-clang
   PROPERTIES
     CXX_STANDARD 17
     CMAKE_CXX_STANDARD_REQUIRED ON
 )
 
 if(KASKARA_BUILD_STATIC)
-  set_target_properties(kaskara
+  set_target_properties(kaskara-clang
     PROPERTIES
       LINK_SEARCH_START_STATIC ON
       LINK_SEARCH_END_STATIC ON
   )
-  target_link_options(kaskara
+  target_link_options(kaskara-clang
     PRIVATE
       -static-libstdc++ -static
   )
 endif()
 
-target_link_libraries(kaskara
+target_link_libraries(kaskara-clang
   PRIVATE
     ${LLVM_LIBS} ${CLANG_LIBS} fmt::fmt-header-only
 )
 
-target_include_directories(kaskara
+target_include_directories(kaskara-clang
   PUBLIC
     ${CLANG_INCLUDE_DIRS}
     ${LLVM_INCLUDE_DIRS}
@@ -46,14 +46,14 @@ target_include_directories(kaskara
     fmt::fmt
 )
 
-target_compile_definitions(kaskara
+target_compile_definitions(kaskara-clang
   PUBLIC ${CLANG_DEFINITIONS}
 )
 
-target_compile_options(kaskara PRIVATE -O0 -ggdb)
+target_compile_options(kaskara-clang PRIVATE -O0 -ggdb)
 
 install(
-  TARGETS kaskara
+  TARGETS kaskara-clang
   DESTINATION "${CMAKE_INSTALL_BINDIR}"
 )
 
