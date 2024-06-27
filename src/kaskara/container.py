@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 __all__ = ("ProjectContainer",)
 
 import typing
 
 import attr
-import dockerblade as _dockerblade
 
 if typing.TYPE_CHECKING:
-    from .project import Project
+    import dockerblade as _dockerblade
+
+    from kaskara.project import Project
 
 
 @attr.s(frozen=True, slots=True, auto_attribs=True)
@@ -24,7 +27,7 @@ class ProjectContainer:
     files: dockerblade.FileSystem
         Provides root-level access to the filesystem for this container.
     """
-    project: "Project"
+    project: Project
     dockerblade: _dockerblade.Container
     shell: _dockerblade.Shell = attr.ib(init=False)
     files: _dockerblade.FileSystem = attr.ib(init=False)
