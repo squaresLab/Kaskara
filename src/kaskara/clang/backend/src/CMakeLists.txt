@@ -67,7 +67,7 @@ install(CODE [[
   file(GET_RUNTIME_DEPENDENCIES
     RESOLVED_DEPENDENCIES_VAR resolved_deps
     UNRESOLVED_DEPENDENCIES_VAR unresolved_deps
-    EXECUTABLES $<TARGET_FILE:kaskara>
+    EXECUTABLES $<TARGET_FILE:kaskara-clang>
   )
 
   foreach(dep IN LISTS resolved_deps)

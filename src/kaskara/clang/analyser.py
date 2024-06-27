@@ -28,10 +28,7 @@ if t.TYPE_CHECKING:
     from kaskara.container import ProjectContainer
     from kaskara.project import Project
 
-
-PATH_STATEMENT_FINDER = "/opt/kaskara/scripts/kaskara-statement-finder"
-PATH_LOOP_FINDER = "/opt/kaskara/scripts/kaskara-loop-finder"
-PATH_FUNCTION_SCANNER = "/opt/kaskara/scripts/kaskara-function-scanner"
+PATH_KASKARA_CLANG = "/opt/kaskara/scripts/kaskara-clang"
 
 
 @dataclass
@@ -62,14 +59,12 @@ class ClangAnalyser(Analyser):
         self,
         command_args: list[str],
         output_filename: str,
-        *,
-        analysis_name: str | None = None,
     ) -> t.Any:  # noqa: ANN401
         container = self._container
         project = self._project
         workdir = project.directory
 
-        driver = command_args[0]
+        driver = PATH_KASKARA_CLANG
         assert os.path.isabs(driver)
         if not container.files.exists(driver):
             error_message = f"driver {driver} does not exist"
@@ -78,12 +73,13 @@ class ClangAnalyser(Analyser):
         if not os.path.isabs(output_filename):
             output_filename = os.path.join(workdir, output_filename)
 
-        command_args += ["2>1"]
+        # determine the type of the analysis from the first argument
+        analysis_name = command_args[0]
+        command_args = [driver, *command_args, "2>1"]
         command = " ".join(command_args)
 
         logger.debug(f"executing {analysis_name} [{workdir}]: {command}")
 
-        analysis_name = analysis_name or output_filename
         maybe_error_message: str | None = None
         maybe_error: Exception | None = None
         try:
@@ -114,14 +110,13 @@ class ClangAnalyser(Analyser):
         project = self._project
         logger.debug(f"finding statements for project: {project}")
 
-        command_args = [PATH_STATEMENT_FINDER]
+        command_args = ["statements"]
         command_args += sorted(project.files)
         output_filename = "statements.json"
 
         output_jsn: Sequence[Mapping[str, Any]] = self._execute_command(
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name="statement finder",
         )
         statements = ProgramStatements.build(
             project,
@@ -132,14 +127,13 @@ class ClangAnalyser(Analyser):
 
     def _find_loops(self) -> ProgramLoops:
         project = self._project
-        command_args = [PATH_LOOP_FINDER]
+        command_args = ["loops"]
         command_args += sorted(project.files)
         output_filename = "loops.json"
 
         output_jsn = self._execute_command(
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name="loop finder",
         )
 
         return self._read_loops_from_jsn(output_jsn)
@@ -163,13 +157,12 @@ class ClangAnalyser(Analyser):
     def _find_functions(self) -> ProgramFunctions:
         project = self._project
         output_filename = "functions.json"
-        command_args = [PATH_FUNCTION_SCANNER]
+        command_args = ["functions"]
         command_args += sorted(project.files)
 
         output_jsn = self._execute_command(
             command_args=command_args,
             output_filename=output_filename,
-            analysis_name="function scanner",
         )
 
         return ProgramFunctions.from_functions(

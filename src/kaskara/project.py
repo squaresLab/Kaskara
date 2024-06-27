@@ -10,6 +10,7 @@ import attr
 from kaskara.clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
 from kaskara.clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
 from kaskara.container import ProjectContainer
+from kaskara.util import dockerblade_from_env
 
 if t.TYPE_CHECKING:
     from collections.abc import Iterator
@@ -40,6 +41,26 @@ class Project:
     directory: str
     files: frozenset[str]
     ignore_errors: bool = attr.ib(default=True)
+
+    @contextlib.contextmanager
+    @classmethod
+    def load(
+        cls,
+        image: str,
+        directory: str,
+        files: t.Iterable[str],
+        *,
+        ignore_errors: bool = True,
+    ) -> t.Iterator[Project]:
+        with dockerblade_from_env() as daemon:
+            project = Project(
+                dockerblade=daemon,
+                image=image,
+                directory=directory,
+                files=frozenset(files),
+                ignore_errors=ignore_errors,
+            )
+            yield project
 
     @contextlib.contextmanager
     def provision(self) -> Iterator[ProjectContainer]:

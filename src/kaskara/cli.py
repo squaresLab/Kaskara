@@ -1,42 +1,14 @@
 """Provides a simple command-line interface for Kaskara."""
 from __future__ import annotations
 
-import contextlib
-import os
 import sys
-import typing as t
 
 import click
-import dockerblade
 from loguru import logger
 
 from kaskara.clang.analyser import ClangAnalyser
 from kaskara.clang.post_install import post_install as install_clang_backend
 from kaskara.project import Project
-
-
-def dockerblade_from_env() -> dockerblade.DockerDaemon:
-    docker_url: str | None = os.environ.get("DOCKER_HOST")
-    return dockerblade.DockerDaemon(docker_url)
-
-
-@contextlib.contextmanager
-def load_project(
-    image: str,
-    directory: str,
-    files: t.Iterable[str],
-    *,
-    ignore_errors: bool = True,
-) -> t.Iterator[Project]:
-    with dockerblade_from_env() as daemon:
-        project = Project(
-            dockerblade=daemon,
-            image=image,
-            directory=directory,
-            files=frozenset(files),
-            ignore_errors=ignore_errors,
-        )
-        yield project
 
 
 def setup_logging() -> None:
@@ -103,7 +75,11 @@ def clang_index(
 ) -> None:
     """Indexes a C/C++ project using Clang."""
     with (
-        load_project(image, directory, files) as project,
+        Project.load(
+            image=image,
+            directory=directory,
+            files=files,
+        ) as project,
         ClangAnalyser.for_project(project) as analyser,
     ):
         analysis = analyser.run()

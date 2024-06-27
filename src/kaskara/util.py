@@ -1,13 +1,21 @@
 __all__ = (
     "abs_to_rel_filename",
     "abs_to_rel_floc",
-    "rel_to_abs_floc",
     "abs_to_rel_flocrange",
+    "dockerblade_from_env",
+    "rel_to_abs_floc",
 )
 
 import os
 
-from .core import FileLocation, FileLocationRange
+import dockerblade
+
+from kaskara.core import FileLocation, FileLocationRange
+
+
+def dockerblade_from_env() -> dockerblade.DockerDaemon:
+    docker_url: str | None = os.environ.get("DOCKER_HOST")
+    return dockerblade.DockerDaemon(docker_url)
 
 
 def abs_to_rel_filename(prefix: str, filename: str) -> str:
