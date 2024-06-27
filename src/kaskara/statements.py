@@ -93,6 +93,11 @@ class ProgramStatements:
         )
         logger.debug(f"indexed statements by file:\n{summary}")
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "statements": [stmt.to_dict() for stmt in self],
+        }
+
     @classmethod
     def build(
         cls,

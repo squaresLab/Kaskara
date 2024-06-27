@@ -73,6 +73,11 @@ class ProgramFunctions:
     _filename_to_functions: dict[str, list[Function]]
     _num_functions: int
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "functions": [f.to_dict() for f in self],
+        }
+
     @classmethod
     def from_functions(
         cls,

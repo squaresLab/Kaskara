@@ -25,6 +25,13 @@ class ProgramLoops:
     project: Project
     _covered_by_loop_bodies: FileLocationRangeSet
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "covered_by_loop_bodies": [
+                str(loc_range) for loc_range in self._covered_by_loop_bodies
+            ],
+        }
+
     @classmethod
     def from_body_location_ranges(
         cls,

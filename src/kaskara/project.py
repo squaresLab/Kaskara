@@ -42,6 +42,14 @@ class Project:
     files: frozenset[str]
     ignore_errors: bool = attr.ib(default=True)
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "image": self.image,
+            "directory": self.directory,
+            "files": list(self.files),
+            "ignore-errors": self.ignore_errors,
+        }
+
     @classmethod
     @contextlib.contextmanager
     def load(

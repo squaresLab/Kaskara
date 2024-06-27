@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 __all__ = ("Analysis",)
+
+import json
+import typing as t
 
 import attr
 
-from .core import FileLocation
-from .functions import ProgramFunctions
-from .insertions import ProgramInsertionPoints
-from .loops import ProgramLoops
-from .project import Project
-from .statements import ProgramStatements
+if t.TYPE_CHECKING:
+    from kaskara.core import FileLocation
+    from kaskara.functions import ProgramFunctions
+    from kaskara.insertions import ProgramInsertionPoints
+    from kaskara.loops import ProgramLoops
+    from kaskara.project import Project
+    from kaskara.statements import ProgramStatements
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -40,3 +46,14 @@ class Analysis:
     def is_inside_void_function(self, location: FileLocation) -> bool:
         f = self.functions.encloses(location)
         return f is not None and f.return_type == "void"
+
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "project": self.project.to_dict(),
+            "loops": self.loops.to_dict(),
+            "functions": self.functions.to_dict(),
+            "statements": self.statements.to_dict(),
+        }
+
+    def to_json(self, *, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent)

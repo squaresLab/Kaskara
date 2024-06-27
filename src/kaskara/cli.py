@@ -83,4 +83,4 @@ def clang_index(
         ClangAnalyser.for_project(project) as analyser,
     ):
         analysis = analyser.run()
-        print(analysis)
+        print(analysis.to_json())
