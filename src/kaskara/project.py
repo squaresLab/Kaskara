@@ -71,7 +71,9 @@ class Project:
             yield project
 
     @contextlib.contextmanager
-    def provision(self) -> Iterator[ProjectContainer]:
+    def provision(
+        self,
+    ) -> Iterator[ProjectContainer]:
         """Provisions a Docker container for the project."""
         launch = self._dockerblade.client.containers.run
         with contextlib.ExitStack() as stack:
@@ -88,5 +90,14 @@ class Project:
                 detach=True,
             )
             stack.callback(docker_project.remove, force=True)
-            dockerblade = self._dockerblade.attach(docker_project.id)
-            yield ProjectContainer(project=self, dockerblade=dockerblade)
+            with self.attach(docker_project.id) as container:
+                yield container
+
+    @contextlib.contextmanager
+    def attach(self, id_or_name: str) -> Iterator[ProjectContainer]:
+        """Attaches to a running Docker container for the project.
+
+        All necessary kaskara binaries must be installed in the container.
+        """
+        dockerblade = self._dockerblade.attach(id_or_name)
+        yield ProjectContainer(project=self, dockerblade=dockerblade)
