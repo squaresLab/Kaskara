@@ -73,22 +73,27 @@ class Project:
     @contextlib.contextmanager
     def provision(
         self,
+        *,
+        mount_kaskara_clang: bool = True,
     ) -> Iterator[ProjectContainer]:
         """Provisions a Docker container for the project."""
         launch = self._dockerblade.client.containers.run
         with contextlib.ExitStack() as stack:
+            volumes: dict[str, t.Any] = {}
+            if mount_kaskara_clang:
+                volumes[KASKARA_CLANG_VOLUME_NAME] = {
+                    "bind": KASKARA_CLANG_VOLUME_LOCATION,
+                    "mode": "ro",
+                }
+
             docker_project = launch(
                 self.image,
                 "/bin/sh",
                 stdin_open=True,
-                volumes={
-                    KASKARA_CLANG_VOLUME_NAME: {
-                        "bind": KASKARA_CLANG_VOLUME_LOCATION,
-                        "mode": "ro",
-                    },
-                },
+                volumes=volumes,
                 detach=True,
             )
+
             stack.callback(docker_project.remove, force=True)
             with self.attach(docker_project.id) as container:
                 yield container
