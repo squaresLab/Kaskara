@@ -30,6 +30,7 @@ dockerblade = "^0.6"
 asttokens = "^2.0"
 astor = "^0.8"
 importlib_resources = ">=1.0"
+overrides = "^7.7.0"
 
 [tool.poetry.group.dev]
 optional = true
