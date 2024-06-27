@@ -42,8 +42,8 @@ class Project:
     files: frozenset[str]
     ignore_errors: bool = attr.ib(default=True)
 
-    @contextlib.contextmanager
     @classmethod
+    @contextlib.contextmanager
     def load(
         cls,
         image: str,
