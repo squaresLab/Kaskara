@@ -1,7 +1,9 @@
 """Provides a simple command-line interface for Kaskara."""
 from __future__ import annotations
 
+import json
 import sys
+from pathlib import Path
 
 import click
 from loguru import logger
@@ -68,10 +70,17 @@ def clang_install(force: bool) -> None:
     "files",
     nargs=-1,
 )
+@click.option(
+    "--save-to",
+    type=click.Path(file_okay=True, dir_okay=False, writable=True, resolve_path=True, path_type=Path),
+    default=None,
+)
 def clang_index(
     image: str,
     directory: str,
     files: list[str],
+    *,
+    save_to: Path | None = None,
 ) -> None:
     """Indexes a C/C++ project using Clang."""
     with (
@@ -83,4 +92,7 @@ def clang_index(
         ClangAnalyser.for_project(project) as analyser,
     ):
         analysis = analyser.run()
-        print(analysis.to_json())
+
+        if save_to:
+            with save_to.open("w") as file:
+                json.dump(analysis.to_dict(), file, indent=2)
