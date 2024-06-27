@@ -60,6 +60,11 @@ class Function(abc.ABC):
         filename: str = self.location.filename
         return filename
 
+    @abc.abstractmethod
+    def to_dict(self) -> dict[str, t.Any]:
+        """Returns a JSON-serializable dictionary representation of the function."""
+        raise NotImplementedError
+
 
 @dataclass(frozen=True)
 class ProgramFunctions:

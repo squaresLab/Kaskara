@@ -85,10 +85,12 @@ class CollectStatementsVisitor(ast.NodeVisitor):
         canonical = astor.to_source(node)
         location = ast_location(self.atok, node)
         source = self.atok.get_text(node)
-        stmt = PythonStatement(kind=kind,
-                               content=source,
-                               canonical=canonical,
-                               location=location)
+        stmt = PythonStatement(
+            kind=kind,
+            content=source,
+            canonical=canonical,
+            location=location,
+        )
         logger.debug(f"found statement: {stmt}")
         logger.debug(f"statement at location: {location}")
         self.statements.append(stmt)

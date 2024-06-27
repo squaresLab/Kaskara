@@ -58,6 +58,11 @@ class Statement(abc.ABC):
     def location(self) -> FileLocationRange:
         ...
 
+    @abc.abstractmethod
+    def to_dict(self) -> dict[str, t.Any]:
+        """Returns a JSON-serializable dictionary representation of the statement."""
+        raise NotImplementedError
+
 
 @dataclass
 class ProgramStatements:

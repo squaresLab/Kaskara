@@ -5,6 +5,7 @@ __all__ = ("PythonFunction", "PythonStatement")
 import typing as t
 
 import attr
+from overrides import overrides
 
 from kaskara.functions import Function
 from kaskara.statements import Statement
@@ -19,6 +20,14 @@ class PythonFunction(Function):
     location: FileLocationRange
     body_location: FileLocationRange
 
+    @overrides
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "name": self.name,
+            "location": str(self.location),
+            "body": str(self.body_location),
+        }
+
     @property
     def return_type(self) -> str | None:
         return None
@@ -30,6 +39,15 @@ class PythonStatement(Statement):
     content: str
     canonical: str
     location: FileLocationRange
+
+    @overrides
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "kind": self.kind,
+            "source": self.content,
+            "canonical": self.canonical,
+            "location": str(self.location),
+        }
 
     @property
     def visible(self) -> frozenset[str] | None:
