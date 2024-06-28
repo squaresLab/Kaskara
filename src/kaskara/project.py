@@ -10,6 +10,8 @@ import attr
 from kaskara.clang.common import VOLUME_LOCATION as KASKARA_CLANG_VOLUME_LOCATION
 from kaskara.clang.common import VOLUME_NAME as KASKARA_CLANG_VOLUME_NAME
 from kaskara.container import ProjectContainer
+from kaskara.spoon.common import VOLUME_LOCATION as KASKARA_SPOON_VOLUME_LOCATION
+from kaskara.spoon.common import VOLUME_NAME as KASKARA_SPOON_VOLUME_NAME
 from kaskara.util import dockerblade_from_env
 
 if t.TYPE_CHECKING:
@@ -75,6 +77,7 @@ class Project:
         self,
         *,
         mount_kaskara_clang: bool = True,
+        mount_kaskara_spoon: bool = False,
     ) -> Iterator[ProjectContainer]:
         """Provisions a Docker container for the project."""
         launch = self._dockerblade.client.containers.run
@@ -83,6 +86,12 @@ class Project:
             if mount_kaskara_clang:
                 volumes[KASKARA_CLANG_VOLUME_NAME] = {
                     "bind": KASKARA_CLANG_VOLUME_LOCATION,
+                    "mode": "ro",
+                }
+
+            if mount_kaskara_spoon:
+                volumes[KASKARA_SPOON_VOLUME_NAME] = {
+                    "bind": KASKARA_SPOON_VOLUME_LOCATION,
                     "mode": "ro",
                 }
 

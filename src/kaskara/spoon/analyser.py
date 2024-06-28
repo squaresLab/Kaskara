@@ -3,13 +3,10 @@ __all__ = ("SpoonAnalyser",)
 import contextlib
 import json
 import os
-import shlex
-import subprocess
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+import typing as t
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
-import attr
-from dockerblade import DockerDaemon as DockerBladeDockerDaemon
 from loguru import logger
 
 from kaskara.analyser import Analyser
@@ -20,52 +17,27 @@ from kaskara.functions import ProgramFunctions
 from kaskara.loops import ProgramLoops
 from kaskara.project import Project
 from kaskara.spoon.analysis import SpoonFunction, SpoonStatement
-from kaskara.spoon.post_install import IMAGE_NAME as SPOON_IMAGE_NAME
 from kaskara.statements import ProgramStatements
 
 
-@attr.s
+@dataclass
 class SpoonAnalyser(Analyser):
-    _dockerblade: DockerBladeDockerDaemon = attr.ib(repr=False)
+    _project: Project
+    _container: ProjectContainer
 
+    @classmethod
     @contextlib.contextmanager
-    def _container(self, project: Project) -> Iterator[ProjectContainer]:
-        """Provisions an ephemeral container for a given project."""
-        launch = self._dockerblade.client.containers.run
-        with contextlib.ExitStack() as stack:
-            # create a temporary volume from the project image
-            volume_name = "kaskaraspoon"
-            cmd_create_volume = (f"docker run --rm -v {volume_name}:"
-                                 f"{shlex.quote(project.directory)} "
-                                 f"{project.image} /bin/true")
-            cmd_kill_volume = f"docker volume rm {volume_name}"
-            logger.debug(f"created temporary volume [{volume_name}] "
-                         f"from project image [{project.image}] "
-                         f"via command: {cmd_create_volume}")
-            subprocess.check_output(cmd_create_volume, shell=True)
-            stack.callback(subprocess.call, cmd_kill_volume,
-                           shell=True,
-                           stderr=subprocess.DEVNULL,
-                           stdout=subprocess.DEVNULL,
-                           stdin=subprocess.DEVNULL)
+    def for_project(
+        cls,
+        project: Project,
+        *,
+        mount_binaries: bool = True,
+    ) -> t.Iterator[t.Self]:
+        with project.provision(mount_kaskara_spoon=mount_binaries) as container:
+            yield cls(project, container)
 
-            docker_analyser = launch(SPOON_IMAGE_NAME, "/bin/sh",
-                                     stdin_open=True,
-                                     volumes={volume_name: {
-                                         "bind": "/workspace",
-                                         "mode": "ro"}},
-                                     detach=True)
-            stack.callback(docker_analyser.remove, force=True)
-
-            dockerblade = self._dockerblade.attach(docker_analyser.id)
-            yield ProjectContainer(project=project, dockerblade=dockerblade)
-
-    def analyse(self, project: Project) -> Analysis:
-        logger.debug(f"analysing Spoon project: {project}")
-        with self._container(project) as container:
-            return self._analyse_container(container)
-
-    def _analyse_container(self, container: ProjectContainer) -> Analysis:
+    def run(self) -> Analysis:
+        container = self._container
         dir_source = "/workspace"
         dir_output = "/output"
         container.shell.check_output(
@@ -111,7 +83,7 @@ class SpoonAnalyser(Analyser):
     def _load_statements_from_dict(
         self,
         container: ProjectContainer,
-        dict_: Sequence[Mapping[str, Any]],
+        dict_: Sequence[Mapping[str, t.Any]],
     ) -> ProgramStatements:
         """Loads the statement database from a given dictionary."""
         logger.debug("parsing statements database")
@@ -125,7 +97,7 @@ class SpoonAnalyser(Analyser):
     def _load_functions_from_dict(
         self,
         container: ProjectContainer,
-        dict_: Sequence[Mapping[str, Any]],
+        dict_: Sequence[Mapping[str, t.Any]],
     ) -> ProgramFunctions:
         """Loads the function database from a given dictionary."""
         logger.debug("parsing function database")
@@ -139,7 +111,7 @@ class SpoonAnalyser(Analyser):
     def _load_loops_from_dict(
         self,
         container: ProjectContainer,
-        dict_: Sequence[Mapping[str, Any]],
+        dict_: Sequence[Mapping[str, t.Any]],
     ) -> ProgramLoops:
         """Loads the loops database from a given dictionary."""
         logger.debug("parsing loop database")
