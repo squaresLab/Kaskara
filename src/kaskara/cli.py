@@ -11,6 +11,7 @@ from loguru import logger
 from kaskara.clang.analyser import ClangAnalyser
 from kaskara.clang.post_install import post_install as install_clang_backend
 from kaskara.project import Project
+from kaskara.spoon.post_install import post_install as install_spoon_backend
 
 
 def setup_logging() -> None:
@@ -35,6 +36,26 @@ def cli(verbose: bool) -> None:
 
 
 @cli.group()
+def spoon() -> None:
+    pass
+
+
+@spoon.command(
+    "install",
+    help="Installs the Spoon analyser backend.",
+)
+@click.option(
+    "-f", "--force",
+    is_flag=True,
+    help="forces reinstallation of the backend.",
+)
+def spoon_install(force: bool) -> None:
+    """Installs the Spoon analyser backend."""
+    install_spoon_backend(force=force)
+
+
+
+@cli.group()
 def clang() -> None:
     pass
 
@@ -51,7 +72,6 @@ def clang() -> None:
 def clang_install(force: bool) -> None:
     """Installs the Clang analyser backend."""
     install_clang_backend(force=force)
-    print("HELLO")
 
 
 @clang.command(

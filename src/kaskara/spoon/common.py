@@ -4,6 +4,7 @@ __all__ = (
     "VOLUME_LOCATION",
     "IMAGE_ID_LABEL",
     "PLUGIN_LABEL",
+    "PLUGIN_LABEL_VALUE",
     "VERSION_LABEL",
 )
 
@@ -12,4 +13,5 @@ VOLUME_NAME: str = "kaskara-spoon"
 VOLUME_LOCATION: str = "/opt/kaskara-spoon"
 IMAGE_ID_LABEL: str = "kaskara.built-from-image-id"
 PLUGIN_LABEL: str = "kaskara.plugin"
+PLUGIN_LABEL_VALUE: str = "spoon"
 VERSION_LABEL: str = "kaskara.version"
