@@ -95,14 +95,12 @@ class Project:
             )
 
             stack.callback(docker_project.remove, force=True)
-            with self.attach(docker_project.id) as container:
-                yield container
+            yield self.attach(docker_project.id)
 
-    @contextlib.contextmanager
-    def attach(self, id_or_name: str) -> Iterator[ProjectContainer]:
+    def attach(self, id_or_name: str) -> ProjectContainer:
         """Attaches to a running Docker container for the project.
 
         All necessary kaskara binaries must be installed in the container.
         """
         dockerblade = self._dockerblade.attach(id_or_name)
-        yield ProjectContainer(project=self, dockerblade=dockerblade)
+        return ProjectContainer(project=self, dockerblade=dockerblade)
