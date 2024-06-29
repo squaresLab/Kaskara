@@ -3,7 +3,7 @@ apply plugin: 'checkstyle'
 apply plugin: 'java'
 
 application {
-  applicationName = 'kaskara'
+  applicationName = 'kaskara-spoon'
   mainClassName = 'christimperley.kaskara.Main'
 }
 
@@ -24,6 +24,6 @@ dependencies {
 }
 
 jar {
-  archiveBaseName = 'kaskara-java'
+  archiveBaseName = 'kaskara-spoon'
   archiveVersion = '0.0.1'
 }

@@ -18,6 +18,7 @@ from kaskara.functions import ProgramFunctions
 from kaskara.loops import ProgramLoops
 from kaskara.project import Project
 from kaskara.spoon.analysis import SpoonFunction, SpoonStatement
+from kaskara.spoon.common import BINARY_PATH
 from kaskara.statements import ProgramStatements
 
 
@@ -43,8 +44,10 @@ class SpoonAnalyser(Analyser):
         container = self._container
         dir_source = "/workspace"
         dir_output = "/output"
+        command_args = [BINARY_PATH, dir_source, "-o", dir_output]
+        command = " ".join(command_args)
         container.shell.check_output(
-            f"kaskara {dir_source} -o {dir_output}",
+            command,
             text=True,
         )
 
