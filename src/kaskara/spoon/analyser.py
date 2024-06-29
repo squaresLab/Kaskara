@@ -7,6 +7,7 @@ import typing as t
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+import dockerblade
 from loguru import logger
 from overrides import overrides
 
@@ -42,17 +43,28 @@ class SpoonAnalyser(Analyser):
     @overrides
     def run(self) -> Analysis:
         container = self._container
-        dir_source = "/workspace"
-        dir_output = "/output"
-        command_args = [BINARY_PATH, dir_source, "-o", dir_output]
+        dir_source = self._project.directory
+        container_output_dir = container.files.mktemp()
+        container.files.remove(container_output_dir)
+        container.files.makedirs(container_output_dir)
+        command_args = [
+            BINARY_PATH,
+            dir_source,
+            "-o",
+            container_output_dir,
+        ]
         command = " ".join(command_args)
-        container.shell.check_output(
-            command,
-            text=True,
-        )
+        try:
+            container.shell.check_output(
+                command,
+                text=True,
+            )
+        except dockerblade.exceptions.CalledProcessError as err:
+            print(err.output)
+            raise
 
         # load statements
-        filename_statements = os.path.join(dir_output, "statements.json")
+        filename_statements = os.path.join(container_output_dir, "statements.json")
         statements_dict = json.loads(container.files.read(filename_statements))
         statements = self._load_statements_from_dict(
             container,
@@ -60,7 +72,7 @@ class SpoonAnalyser(Analyser):
         )
 
         # load functions
-        filename_functions = os.path.join(dir_output, "functions.json")
+        filename_functions = os.path.join(container_output_dir, "functions.json")
         functions_dict = json.loads(container.files.read(filename_functions))
         functions = self._load_functions_from_dict(
             container,
@@ -68,7 +80,7 @@ class SpoonAnalyser(Analyser):
         )
 
         # load loops
-        filename_loops = os.path.join(dir_output, "loops.json")
+        filename_loops = os.path.join(container_output_dir, "loops.json")
         loops_dict = json.loads(container.files.read(filename_loops))
         loops = self._load_loops_from_dict(
             container,
