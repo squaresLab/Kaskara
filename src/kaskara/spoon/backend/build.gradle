@@ -28,29 +28,6 @@ dependencies {
   testImplementation "junit:junit:4.12"
 }
 
-graalvmNative {
-  binaries.all {
-    resources.autodetect()
-  }
-
-  binaries {
-    main {
-      javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.matching("GraalVM")
-      }
-
-      imageName.set("kaskara-spoon")
-      mainClass.set("christimperley.kaskara.Main")
-      buildArgs.add("--verbose")
-      buildArgs.add('--no-fallback')
-      buildArgs.add('--initialize-at-build-time')
-    }
-  }
-
-  toolchainDetection = false
-}
-
 shadowJar {
   archiveBaseName.set('kaskara-spoon')
   archiveVersion.set('0.1.0')
@@ -62,8 +39,6 @@ shadowJar {
 
 jar {
   enabled = false
-  archiveBaseName = 'kaskara-spoon'
-  archiveVersion = '0.1.0'
 }
 
 tasks.build {
