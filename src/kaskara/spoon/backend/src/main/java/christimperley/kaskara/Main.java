@@ -14,13 +14,17 @@ import picocli.CommandLine;
 
 @CommandLine.Command(name = "kaskara", mixinStandardHelpOptions = true)
 public class Main implements Callable<Integer> {
-    @CommandLine.Parameters(index = "0",
-            description = "The root source code directory for the project.")
+    @CommandLine.Parameters(
+        index = "0",
+        description = "The root source code directory for the project."
+    )
     private String directory;
 
-    @CommandLine.Option(names = "-o",
+    @CommandLine.Option(
+        names = "-o",
         defaultValue = ".",
-        description = "The directory to which results should be written.")
+        description = "The directory to which results should be written."
+    )
     private String outputDirectory;
 
     private ObjectMapper mapper;

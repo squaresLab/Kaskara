@@ -18,12 +18,12 @@ repositories {
 
 dependencies {
   implementation 'info.picocli:picocli:4.1.4'
-  implementation "fr.inria.gforge.spoon:spoon-core:8.0.0"
-  implementation "com.fasterxml.jackson.core:jackson-core:2.10.2"
+  implementation "fr.inria.gforge.spoon:spoon-core:11.0.0"
+  implementation "com.fasterxml.jackson.core:jackson-core:2.17.1"
   testImplementation "junit:junit:4.12"
 }
 
 jar {
   archiveBaseName = 'kaskara-spoon'
-  archiveVersion = '0.0.1'
+  archiveVersion = '0.1.0'
 }

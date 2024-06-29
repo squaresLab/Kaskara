@@ -1,10 +1,10 @@
-FROM openjdk:11-slim AS build
+FROM openjdk:17-slim AS build
 COPY . /opt/kaskara-spoon
 WORKDIR /opt/kaskara-spoon
 RUN ./gradlew build \
  && ./gradlew installDist
 
-FROM openjdk:11-slim AS run
+FROM openjdk:17-slim AS run
 WORKDIR /opt/kaskara-spoon
 ENV PATH "/opt/kaskara-spoon/bin:${PATH}"
 CMD ["/bin/bash"]
