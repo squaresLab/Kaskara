@@ -11,6 +11,7 @@ from typing import Any
 
 import dockerblade as _dockerblade
 from loguru import logger
+from overrides import overrides
 
 from kaskara.analyser import Analyser
 from kaskara.analysis import Analysis
@@ -38,10 +39,12 @@ class ClangAnalyser(Analyser):
 
     @classmethod
     @contextlib.contextmanager
+    @overrides
     def for_project(cls, project: Project) -> t.Iterator[t.Self]:
         with project.provision() as container:
             yield cls(project, container)
 
+    @overrides
     def run(self) -> Analysis:
         loops = self._find_loops()
         functions = self._find_functions()

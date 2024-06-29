@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from loguru import logger
+from overrides import overrides
 
 from kaskara.analyser import Analyser
 from kaskara.analysis import Analysis
@@ -27,6 +28,7 @@ class SpoonAnalyser(Analyser):
 
     @classmethod
     @contextlib.contextmanager
+    @overrides
     def for_project(
         cls,
         project: Project,
@@ -36,6 +38,7 @@ class SpoonAnalyser(Analyser):
         with project.provision(mount_kaskara_spoon=mount_binaries) as container:
             yield cls(project, container)
 
+    @overrides
     def run(self) -> Analysis:
         container = self._container
         dir_source = "/workspace"

@@ -11,6 +11,7 @@ from loguru import logger
 from kaskara.clang.analyser import ClangAnalyser
 from kaskara.clang.post_install import post_install as install_clang_backend
 from kaskara.project import Project
+from kaskara.spoon.analyser import SpoonAnalyser
 from kaskara.spoon.post_install import post_install as install_spoon_backend
 
 
@@ -52,6 +53,60 @@ def spoon() -> None:
 def spoon_install(force: bool) -> None:
     """Installs the Spoon analyser backend."""
     install_spoon_backend(force=force)
+
+
+@spoon.command(
+    "index",
+    help="Indexes a Java project using Spoon.",
+)
+@click.argument(
+    "image",
+    type=str,
+)
+@click.argument(
+    "directory",
+    type=str,
+)
+@click.argument(
+    "files",
+    nargs=-1,
+)
+@click.option(
+    "--save-to",
+    type=click.Path(file_okay=True, dir_okay=False, writable=True, resolve_path=True, path_type=Path),
+    default=None,
+)
+@click.option(
+    "--mount-binaries/--no-mount-binaries",
+    default=True,
+    help="mounts the project binaries into the Docker container.",
+)
+def spoon_index(
+    image: str,
+    directory: str,
+    files: list[str],
+    *,
+    save_to: Path | None = None,
+    mount_binaries: bool = True,
+) -> None:
+    """Indexes a Java project using Spoon."""
+    with (
+        Project.load(
+            image=image,
+            directory=directory,
+            files=files,
+        ) as project,
+        SpoonAnalyser.for_project(
+            project=project,
+            mount_binaries=mount_binaries,
+        ) as analyser,
+    ):
+        analysis = analyser.run()
+
+        if save_to:
+            with save_to.open("w") as file:
+                json.dump(analysis.to_dict(), file, indent=2)
+
 
 
 
