@@ -1,6 +1,10 @@
-apply plugin: 'application'
-apply plugin: 'checkstyle'
-apply plugin: 'java'
+plugins {
+  id 'application'
+  id 'checkstyle'
+  id 'java'
+  id 'org.graalvm.buildtools.native' version '0.9.12'
+  id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
 
 application {
   applicationName = 'kaskara-spoon'
@@ -14,16 +18,54 @@ checkstyle {
 
 repositories {
   mavenCentral()
+  gradlePluginPortal()
 }
 
 dependencies {
-  implementation 'info.picocli:picocli:4.1.4'
+  implementation 'info.picocli:picocli:4.7.6'
   implementation "fr.inria.gforge.spoon:spoon-core:11.0.0"
   implementation "com.fasterxml.jackson.core:jackson-core:2.17.1"
   testImplementation "junit:junit:4.12"
 }
 
+graalvmNative {
+  binaries.all {
+    resources.autodetect()
+  }
+
+  binaries {
+    main {
+      javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.matching("GraalVM")
+      }
+
+      imageName.set("kaskara-spoon")
+      mainClass.set("christimperley.kaskara.Main")
+      buildArgs.add("--verbose")
+      buildArgs.add('--no-fallback')
+      buildArgs.add('--initialize-at-build-time')
+    }
+  }
+
+  toolchainDetection = false
+}
+
+shadowJar {
+  archiveBaseName.set('kaskara-spoon')
+  archiveVersion.set('0.1.0')
+  mergeServiceFiles()
+  manifest {
+    attributes 'Main-Class': 'christimperley.kaskara.Main'
+  }
+}
+
 jar {
+  enabled = false
   archiveBaseName = 'kaskara-spoon'
   archiveVersion = '0.1.0'
+}
+
+tasks.build {
+    dependsOn shadowJar
 }
