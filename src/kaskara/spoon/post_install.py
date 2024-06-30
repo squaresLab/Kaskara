@@ -73,7 +73,7 @@ def post_install(*, force: bool = False) -> None:
             assert isinstance(image.id, str)
             docker_client.containers.run(
                 image=image.id,
-                command="true",
+                command="/bin/sh",
                 remove=True,
                 volumes=[f"{VOLUME_NAME}:{VOLUME_LOCATION}"],
             )
