@@ -52,6 +52,14 @@ class SpoonStatement(Statement):
     canonical: str
     location: FileLocationRange
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "kind": self.kind,
+            "source": self.content,
+            "canonical": self.canonical,
+            "location": str(self.location),
+        }
+
     @classmethod
     def from_dict(cls, dict_: Mapping[str, t.Any]) -> t.Self:
         kind: str = dict_["kind"]
