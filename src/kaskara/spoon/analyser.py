@@ -6,6 +6,7 @@ import os
 import typing as t
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 import dockerblade
 from loguru import logger
@@ -43,13 +44,27 @@ class SpoonAnalyser(Analyser):
     @overrides
     def run(self) -> Analysis:
         container = self._container
-        dir_source = self._project.directory
+        dir_source = Path(self._project.directory)
+        assert dir_source.is_absolute()
+
         container_output_dir = container.files.mktemp()
         container.files.remove(container_output_dir)
         container.files.makedirs(container_output_dir)
+
+        paths_to_index: list[Path]
+        if self._project.files:
+            paths_to_index = [Path(filename) for filename in self._project.files]
+            paths_to_index = [
+                path if path.is_absolute() else dir_source / path
+                for path in paths_to_index
+            ]
+        else:
+            paths_to_index = [dir_source]
+
+        paths_to_index_arg = " ".join(str(path) for path in paths_to_index)
         command_args = [
             BINARY_PATH,
-            dir_source,
+            paths_to_index_arg,
             "-o",
             container_output_dir,
         ]

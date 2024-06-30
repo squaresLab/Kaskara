@@ -8,22 +8,23 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
 
-@CommandLine.Command(name = "kaskara", mixinStandardHelpOptions = true)
+@CommandLine.Command(name = "kaskara-spoon", mixinStandardHelpOptions = true)
 public class Main implements Callable<Integer> {
     @CommandLine.Parameters(
-        index = "0",
-        description = "The root source code directory for the project."
+        index = "0..*",
+        description = "Paths to the source files or directories that should be indexed."
     )
-    private String directory;
+    private List<String> paths;
 
     @CommandLine.Option(
         names = "-o",
         defaultValue = ".",
-        description = "The directory to which results should be written."
+        description = "Directory to which results should be written."
     )
     private String outputDirectory;
 
@@ -110,7 +111,7 @@ public class Main implements Callable<Integer> {
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        var project = Project.build(this.directory);
+        var project = Project.build(this.paths);
         this.findStatements(project);
         this.findFunctions(project);
         this.findLoops(project);

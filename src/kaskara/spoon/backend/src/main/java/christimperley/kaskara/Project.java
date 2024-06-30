@@ -1,5 +1,6 @@
 package christimperley.kaskara;
 
+import java.util.List;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 
@@ -10,14 +11,16 @@ public class Project {
     private final CtModel model;
 
     /**
-     * Constructs a description of a project whose source code is in a given directory.
-     * @param sourceDirectory   The absolute path to the source code directory.
+     * Constructs a description of a Java project.
+     * @param paths A list of paths to the source files or directories that should be indexed.
      * @return  A description of the project.
      */
-    public static Project build(String sourceDirectory) {
+    public static Project build(List<String> paths) {
         var launcher = new Launcher();
         launcher.getEnvironment().setAutoImports(true);
-        launcher.addInputResource(sourceDirectory);
+        for (var path : paths) {
+            launcher.addInputResource(path);
+        }
         var model = launcher.buildModel();
         return new Project(model);
     }
