@@ -23,6 +23,14 @@ class SpoonFunction(Function):
     return_type: str
 
     @overrides
+    def with_relative_locations(self, base: str) -> t.Self:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+            body_location=self.body_location.with_relative_location(base),
+        )
+
+    @overrides
     def to_dict(self) -> dict[str, t.Any]:
         return {
             "name": self.name,
@@ -51,6 +59,13 @@ class SpoonStatement(Statement):
     content: str
     canonical: str
     location: FileLocationRange
+
+    @overrides
+    def with_relative_locations(self, base: str) -> t.Self:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+        )
 
     def to_dict(self) -> dict[str, t.Any]:
         return {

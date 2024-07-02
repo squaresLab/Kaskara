@@ -61,6 +61,11 @@ class Function(abc.ABC):
         return filename
 
     @abc.abstractmethod
+    def with_relative_locations(self, base: str) -> t.Self:
+        """Creates a new instance with relative file locations."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def to_dict(self) -> dict[str, t.Any]:
         """Returns a JSON-serializable dictionary representation of the function."""
         raise NotImplementedError
@@ -77,6 +82,13 @@ class ProgramFunctions:
         return {
             "functions": [f.to_dict() for f in self],
         }
+
+    def with_relative_locations(self, base: str) -> ProgramFunctions:
+        """Creates a new instance with relative file locations."""
+        functions = [f.with_relative_locations(base) for f in self]
+        result = self.from_functions(self._project, functions)
+        assert len(result) == len(self)
+        return result
 
     @classmethod
     def from_functions(

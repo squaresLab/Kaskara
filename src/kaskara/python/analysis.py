@@ -21,6 +21,14 @@ class PythonFunction(Function):
     body_location: FileLocationRange
 
     @overrides
+    def with_relative_locations(self, base: str) -> t.Self:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+            body_location=self.body_location.with_relative_location(base),
+        )
+
+    @overrides
     def to_dict(self) -> dict[str, t.Any]:
         return {
             "name": self.name,
@@ -39,6 +47,13 @@ class PythonStatement(Statement):
     content: str
     canonical: str
     location: FileLocationRange
+
+    @overrides
+    def with_relative_locations(self, base: str) -> PythonStatement:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+        )
 
     @overrides
     def to_dict(self) -> dict[str, t.Any]:

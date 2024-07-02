@@ -37,6 +37,15 @@ class Analysis:
     statements: ProgramStatements
     insertions: ProgramInsertionPoints
 
+    def with_relative_locations(self, base: str) -> Analysis:
+        return attr.evolve(
+            self,
+            loops=self.loops.with_relative_locations(base),
+            functions=self.functions.with_relative_locations(base),
+            statements=self.statements.with_relative_locations(base),
+            insertions=self.insertions.with_relative_locations(base),
+        )
+
     def is_inside_loop(self, location: FileLocation) -> bool:
         return self.loops.is_within_loop(location)
 

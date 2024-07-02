@@ -69,6 +69,7 @@ class SpoonAnalyser(Analyser):
             container_output_dir,
         ]
         command = " ".join(command_args)
+        logger.info(f"running kaskara-spoon: {command}")
         try:
             container.shell.check_output(
                 command,

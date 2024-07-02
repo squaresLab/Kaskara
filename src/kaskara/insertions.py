@@ -17,6 +17,12 @@ class InsertionPoint:
     location: FileLocation
     visible: frozenset[str] | None = attr.ib(eq=False, hash=False)
 
+    def with_relative_location(self, base: str) -> InsertionPoint:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+        )
+
 
 class ProgramInsertionPoints(Iterable[InsertionPoint]):
     def __init__(self, contents: list[InsertionPoint]) -> None:
@@ -29,6 +35,12 @@ class ProgramInsertionPoints(Iterable[InsertionPoint]):
             if filename not in self.__file_insertions:
                 self.__file_insertions[filename] = []
             self.__file_insertions[filename].append(ins)
+
+    def with_relative_locations(self, base: str) -> ProgramInsertionPoints:
+        return ProgramInsertionPoints([
+            insertion_point.with_relative_location(base)
+            for insertion_point in self
+        ])
 
     def __iter__(self) -> Iterator[InsertionPoint]:
         yield from self.__contents

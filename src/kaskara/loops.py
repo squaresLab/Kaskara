@@ -43,6 +43,16 @@ class ProgramLoops:
             FileLocationRangeSet(bodies),
         )
 
+    def with_relative_locations(self, base: str) -> ProgramLoops:
+        """Creates a new instance with relative file locations."""
+        covered_by_loop_bodies = self._covered_by_loop_bodies.with_relative_locations(
+            base,
+        )
+        return ProgramLoops(
+            project=self.project,
+            _covered_by_loop_bodies=covered_by_loop_bodies,
+        )
+
     def is_within_loop(self, file_location: FileLocation) -> bool:
         """Checks whether a given location is enclosed within a loop."""
         filename = file_location.filename

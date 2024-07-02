@@ -104,6 +104,7 @@ class Project:
             )
 
             stack.callback(docker_project.remove, force=True)
+            assert docker_project.id is not None
             yield self.attach(docker_project.id)
 
     def attach(self, id_or_name: str) -> ProjectContainer:

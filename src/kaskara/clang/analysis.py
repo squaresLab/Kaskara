@@ -29,6 +29,14 @@ class ClangFunction(Function):
     is_pure: bool
 
     @overrides
+    def with_relative_locations(self, base: str) -> t.Self:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+            body_location=self.body_location.with_relative_location(base),
+        )
+
+    @overrides
     def to_dict(self) -> dict[str, t.Any]:
         return {
             "name": self.name,
@@ -76,6 +84,13 @@ class ClangStatement(Statement):
     live_before: frozenset[str]
     live_after: frozenset[str]
     requires_syntax: frozenset[str]
+
+    @overrides
+    def with_relative_locations(self, base: str) -> t.Self:
+        return attr.evolve(
+            self,
+            location=self.location.with_relative_location(base),
+        )
 
     @overrides
     def to_dict(self) -> dict[str, t.Any]:

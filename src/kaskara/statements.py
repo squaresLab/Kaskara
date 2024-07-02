@@ -59,6 +59,11 @@ class Statement(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def with_relative_locations(self, base: str) -> t.Self:
+        """Creates a new instance with relative file locations."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def to_dict(self) -> dict[str, t.Any]:
         """Returns a JSON-serializable dictionary representation of the statement."""
         raise NotImplementedError
@@ -92,6 +97,13 @@ class ProgramStatements:
             in self._file_to_statements.items()
         )
         logger.debug(f"indexed statements by file:\n{summary}")
+
+    def with_relative_locations(self, base: str) -> ProgramStatements:
+        """Creates a new instance with relative file locations."""
+        return self.build(
+            project=self._project,
+            statements=(stmt.with_relative_locations(base) for stmt in self),
+        )
 
     def to_dict(self) -> dict[str, t.Any]:
         return {
