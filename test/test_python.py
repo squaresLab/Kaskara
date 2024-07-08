@@ -48,7 +48,7 @@ def test_collect_statements(flask):
         visitor = kaskara.python.statements.CollectStatementsVisitor(container)
         visitor.collect(filename)
         statements = ProgramStatements.build(
-            container.project,
+            container.project.directory,
             visitor.statements,
         )
 
@@ -64,7 +64,7 @@ def test_collect_functions(flask):
         visitor = kaskara.python.functions.CollectFunctionsVisitor(container)
         visitor.collect(filename)
         functions = ProgramFunctions.from_functions(
-            project=container.project,
+            project_directory=container.project.directory,
             functions=visitor.functions,
         )
 
@@ -83,7 +83,7 @@ def test_collect_loops(flask):
         visitor = kaskara.python.loops.CollectLoopsVisitor(container)
         visitor.collect(filename)
         loops = ProgramLoops.from_body_location_ranges(
-            container.project,
+            container.project.directory,
             visitor.locations,
         )
         body_locations = list(loops._covered_by_loop_bodies)

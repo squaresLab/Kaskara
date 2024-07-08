@@ -16,13 +16,11 @@ from .core import (
 if t.TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from kaskara.project import Project
-
 
 @dataclass(frozen=True, slots=True)
 class ProgramLoops:
     """Maintains information about all loops within a program."""
-    project: Project
+    _project_directory: str
     _covered_by_loop_bodies: FileLocationRangeSet
 
     def to_dict(self) -> dict[str, t.Any]:
@@ -35,11 +33,11 @@ class ProgramLoops:
     @classmethod
     def from_body_location_ranges(
         cls,
-        project: Project,
+        project_directory: str,
         bodies: Iterable[FileLocationRange],
     ) -> ProgramLoops:
         return ProgramLoops(
-            project,
+            project_directory,
             FileLocationRangeSet(bodies),
         )
 
@@ -49,15 +47,15 @@ class ProgramLoops:
             base,
         )
         return ProgramLoops(
-            project=self.project,
             _covered_by_loop_bodies=covered_by_loop_bodies,
+            _project_directory=self._project_directory,
         )
 
     def is_within_loop(self, file_location: FileLocation) -> bool:
         """Checks whether a given location is enclosed within a loop."""
         filename = file_location.filename
         if os.path.isabs(filename):
-            start = self.project.directory
+            start = self._project_directory
             filename = os.path.relpath(filename, start=start)
             location = Location(
                 line=file_location.line,

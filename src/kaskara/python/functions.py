@@ -21,7 +21,7 @@ def collect_functions(container: ProjectContainer) -> ProgramFunctions:
     for filename in container.project.files:
         visitor.collect(filename)
     return ProgramFunctions.from_functions(
-        project=container.project,
+        project_directory=container.project.directory,
         functions=visitor.functions,
     )
 

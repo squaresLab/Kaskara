@@ -37,7 +37,6 @@ class PythonAnalyser(Analyser):
         loops = collect_loops(self._container)
         insertions = statements.insertions()
         return Analysis(
-            project=self._project,
             functions=functions,
             statements=statements,
             insertions=insertions,

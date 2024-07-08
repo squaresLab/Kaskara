@@ -107,7 +107,6 @@ class SpoonAnalyser(Analyser):
         insertions = statements.insertions()
 
         return Analysis(
-            project=container.project,
             loops=loops,
             functions=functions,
             statements=statements,
@@ -122,7 +121,7 @@ class SpoonAnalyser(Analyser):
         """Loads the statement database from a given dictionary."""
         logger.debug("parsing statements database")
         statements = ProgramStatements.build(
-            container.project,
+            container.project.directory,
             (SpoonStatement.from_dict(d) for d in dict_),
         )
         logger.debug(f"parsed {len(statements)} statements")
@@ -136,7 +135,7 @@ class SpoonAnalyser(Analyser):
         """Loads the function database from a given dictionary."""
         logger.debug("parsing function database")
         functions = ProgramFunctions.from_functions(
-            container.project,
+            container.project.directory,
             (SpoonFunction.from_dict(d) for d in dict_),
         )
         logger.debug(f"parsed {len(functions)} functions")
@@ -154,7 +153,7 @@ class SpoonAnalyser(Analyser):
             loc = FileLocationRange.from_string(loop_info["body"])
             loop_bodies.append(loc)
         loops = ProgramLoops.from_body_location_ranges(
-            container.project,
+            container.project.directory,
             loop_bodies,
         )
         logger.debug("parsed loops")

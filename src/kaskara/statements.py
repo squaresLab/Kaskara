@@ -15,7 +15,6 @@ from .insertions import InsertionPoint, ProgramInsertionPoints
 if t.TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from kaskara.project import Project
 
 class Statement(abc.ABC):
     """Provides a description of a program statement.
@@ -71,7 +70,7 @@ class Statement(abc.ABC):
 
 @dataclass
 class ProgramStatements:
-    _project: Project
+    _project_directory: str
     _statements: t.Sequence[Statement]
     _file_to_statements: t.Mapping[
         str,
@@ -101,7 +100,7 @@ class ProgramStatements:
     def with_relative_locations(self, base: str) -> ProgramStatements:
         """Creates a new instance with relative file locations."""
         return self.build(
-            project=self._project,
+            project_directory=self._project_directory,
             statements=(stmt.with_relative_locations(base) for stmt in self),
         )
 
@@ -113,10 +112,10 @@ class ProgramStatements:
     @classmethod
     def build(
         cls,
-        project: Project,
+        project_directory: str,
         statements: Iterable[Statement],
     ) -> ProgramStatements:
-        return cls(project, list(statements))
+        return cls(project_directory, list(statements))
 
     def __len__(self) -> int:
         """Returns the number of statements in this collection."""
@@ -128,7 +127,7 @@ class ProgramStatements:
     def in_file(self, filename: str) -> Iterator[Statement]:
         """Returns an iterator over the statements belonging to a file."""
         if os.path.isabs(filename):
-            start = self._project.directory
+            start = self._project_directory
             filename = os.path.relpath(filename, start=start)
 
         yield from self._file_to_statements.get(filename, [])

@@ -51,7 +51,6 @@ class ClangAnalyser(Analyser):
         statements = self._find_statements()
         insertions = statements.insertions()
         return Analysis(
-            project=self._project,
             loops=loops,
             functions=functions,
             statements=statements,
@@ -122,7 +121,7 @@ class ClangAnalyser(Analyser):
             output_filename=output_filename,
         )
         statements = ProgramStatements.build(
-            project,
+            project.directory,
             (ClangStatement.from_dict(project, d) for d in output_jsn),
         )
         logger.debug("finished reading results")
@@ -153,7 +152,7 @@ class ClangAnalyser(Analyser):
             loop_bodies.append(loc)
         logger.debug("finished reading loop analysis results")
         return ProgramLoops.from_body_location_ranges(
-            project,
+            project.directory,
             loop_bodies,
         )
 
@@ -169,6 +168,6 @@ class ClangAnalyser(Analyser):
         )
 
         return ProgramFunctions.from_functions(
-            project=project,
+            project_directory=project.directory,
             functions=(ClangFunction.from_dict(project, d) for d in output_jsn),
         )

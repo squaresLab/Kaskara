@@ -15,7 +15,6 @@ if t.TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from kaskara.core import FileLocation, FileLocationRange
-    from kaskara.project import Project
 
 
 class Function(abc.ABC):
@@ -74,7 +73,7 @@ class Function(abc.ABC):
 @dataclass(frozen=True)
 class ProgramFunctions:
     """Represents the set of functions within an associated program."""
-    _project: Project
+    _project_directory: str
     _filename_to_functions: dict[str, list[Function]]
     _num_functions: int
 
@@ -86,14 +85,14 @@ class ProgramFunctions:
     def with_relative_locations(self, base: str) -> ProgramFunctions:
         """Creates a new instance with relative file locations."""
         functions = [f.with_relative_locations(base) for f in self]
-        result = self.from_functions(self._project, functions)
+        result = self.from_functions(self._project_directory, functions)
         assert len(result) == len(self)
         return result
 
     @classmethod
     def from_functions(
         cls,
-        project: Project,
+        project_directory: str,
         functions: Iterable[Function],
     ) -> ProgramFunctions:
         num_functions = 0
@@ -106,7 +105,7 @@ class ProgramFunctions:
             num_functions += 1
 
         return cls(
-            _project=project,
+            _project_directory=project_directory,
             _filename_to_functions=filename_to_functions,
             _num_functions=num_functions,
         )
@@ -121,7 +120,7 @@ class ProgramFunctions:
     def in_file(self, filename: str) -> Iterator[Function]:
         """Returns an iterator over the functions defined in a given file."""
         if os.path.isabs(filename):
-            start = self._project.directory
+            start = self._project_directory
             filename = os.path.relpath(filename, start=start)
         yield from self._filename_to_functions.get(filename, [])
 

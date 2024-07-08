@@ -12,7 +12,6 @@ if t.TYPE_CHECKING:
     from kaskara.functions import ProgramFunctions
     from kaskara.insertions import ProgramInsertionPoints
     from kaskara.loops import ProgramLoops
-    from kaskara.project import Project
     from kaskara.statements import ProgramStatements
 
 
@@ -22,8 +21,6 @@ class Analysis:
 
     Attributes
     ----------
-    project: Project
-        A description of the project that was analysed.
     loops: ProgramLoops
         The set of loop control-flow statements within the program.
     functions: ProgramFunctions
@@ -31,7 +28,6 @@ class Analysis:
     statements: ProgramStatements
         The set of statements within the program.
     """
-    project: Project
     loops: ProgramLoops
     functions: ProgramFunctions
     statements: ProgramStatements
@@ -58,7 +54,6 @@ class Analysis:
 
     def to_dict(self) -> dict[str, t.Any]:
         return {
-            "project": self.project.to_dict(),
             "loops": self.loops.to_dict(),
             "functions": self.functions.to_dict(),
             "statements": self.statements.to_dict(),

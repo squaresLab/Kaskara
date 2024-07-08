@@ -22,7 +22,7 @@ def collect_loops(container: ProjectContainer) -> ProgramLoops:
     for filename in container.project.files:
         visitor.collect(filename)
     return ProgramLoops.from_body_location_ranges(
-        container.project,
+        container.project.directory,
         visitor.locations,
     )
 

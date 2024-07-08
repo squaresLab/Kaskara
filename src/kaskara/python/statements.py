@@ -53,7 +53,7 @@ def collect_statements(container: ProjectContainer) -> ProgramStatements:
     for filename in container.project.files:
         visitor.collect(filename)
     return ProgramStatements(
-        container.project,
+        container.project.directory,
         visitor.statements,
     )
 
