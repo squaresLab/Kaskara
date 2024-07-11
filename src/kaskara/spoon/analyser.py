@@ -20,7 +20,10 @@ from kaskara.functions import ProgramFunctions
 from kaskara.loops import ProgramLoops
 from kaskara.project import Project
 from kaskara.spoon.analysis import SpoonFunction, SpoonStatement
-from kaskara.spoon.common import BINARY_PATH
+from kaskara.spoon.common import (
+    JAR_PATH,
+    JAVA_PATH,
+)
 from kaskara.statements import ProgramStatements
 
 
@@ -63,7 +66,9 @@ class SpoonAnalyser(Analyser):
 
         paths_to_index_arg = " ".join(str(path) for path in paths_to_index)
         command_args = [
-            BINARY_PATH,
+            JAVA_PATH,
+            "-jar",
+            JAR_PATH,
             paths_to_index_arg,
             "-o",
             container_output_dir,

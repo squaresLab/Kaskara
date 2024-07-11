@@ -1,7 +1,7 @@
 __all__ = (
-    "BINARY_PATH",
     "IMAGE_ID_LABEL",
     "IMAGE_NAME",
+    "JAVA_PATH",
     "PLUGIN_LABEL",
     "PLUGIN_LABEL_VALUE",
     "VERSION_LABEL",
@@ -9,9 +9,10 @@ __all__ = (
     "VOLUME_NAME",
 )
 
-BINARY_PATH: str = "/opt/kaskara-spoon/bin/kaskara-spoon"
 IMAGE_ID_LABEL: str = "kaskara.built-from-image-id"
 IMAGE_NAME: str = "christimperley/kaskara:spoon"
+JAR_PATH: str = "/opt/kaskara-spoon/kaskara-spoon.jar"
+JAVA_PATH: str = "java"
 PLUGIN_LABEL: str = "kaskara.plugin"
 PLUGIN_LABEL_VALUE: str = "spoon"
 VERSION_LABEL: str = "kaskara.version"
