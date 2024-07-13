@@ -6,7 +6,7 @@ import contextlib
 import json
 import os
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import dockerblade as _dockerblade
@@ -36,6 +36,7 @@ PATH_KASKARA_CLANG = "/opt/kaskara/scripts/kaskara-clang"
 class ClangAnalyser(Analyser):
     _project: Project
     _container: ProjectContainer
+    _workdir: str | None = field(default=None)
 
     @classmethod
     @contextlib.contextmanager

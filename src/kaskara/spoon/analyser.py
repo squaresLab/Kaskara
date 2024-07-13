@@ -5,7 +5,7 @@ import json
 import os
 import typing as t
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import dockerblade
@@ -31,6 +31,7 @@ from kaskara.statements import ProgramStatements
 class SpoonAnalyser(Analyser):
     _project: Project
     _container: ProjectContainer
+    _workdir: str | None = field(default=None)
 
     @classmethod
     @contextlib.contextmanager
@@ -64,6 +65,7 @@ class SpoonAnalyser(Analyser):
         else:
             paths_to_index = [dir_source]
 
+        workdir = self._workdir or "/"
         paths_to_index_arg = " ".join(str(path) for path in paths_to_index)
         command_args = [
             JAVA_PATH,
@@ -80,6 +82,7 @@ class SpoonAnalyser(Analyser):
             output = container.shell.check_output(
                 command,
                 text=True,
+                cwd=workdir,
             )
             logger.debug(f"kaskara-spoon output: {output}")
         except dockerblade.exceptions.CalledProcessError as err:
