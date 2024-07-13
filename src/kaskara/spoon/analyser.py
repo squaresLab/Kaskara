@@ -77,12 +77,13 @@ class SpoonAnalyser(Analyser):
         command = " ".join(command_args)
         logger.info(f"running kaskara-spoon: {command}")
         try:
-            container.shell.check_output(
+            output = container.shell.check_output(
                 command,
                 text=True,
             )
+            logger.debug(f"kaskara-spoon output: {output}")
         except dockerblade.exceptions.CalledProcessError as err:
-            print(err.output)
+            logger.error(f"kaskara-spoon failed:\n{err.output}")
             raise
 
         # load statements
