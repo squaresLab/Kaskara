@@ -112,6 +112,7 @@ class SpoonAnalyser(Analyser):
         insertions = statements.insertions()
 
         return Analysis(
+            files=self._project.files,
             loops=loops,
             functions=functions,
             statements=statements,

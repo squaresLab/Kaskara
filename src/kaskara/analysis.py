@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ("Analysis",)
 
 import json
+import os
 import typing as t
 
 import attr
@@ -21,6 +22,8 @@ class Analysis:
 
     Attributes
     ----------
+    files: t.FrozenSet[str]
+        The set of files that were analyzed within the program.
     loops: ProgramLoops
         The set of loop control-flow statements within the program.
     functions: ProgramFunctions
@@ -28,14 +31,22 @@ class Analysis:
     statements: ProgramStatements
         The set of statements within the program.
     """
+    files: frozenset[str]
     loops: ProgramLoops
     functions: ProgramFunctions
     statements: ProgramStatements
     insertions: ProgramInsertionPoints
 
     def with_relative_locations(self, base: str) -> Analysis:
+        files: set[str] = set()
+        for filename in self.files:
+            if os.path.isabs(filename):
+                filename = os.path.relpath(filename, base)  # noqa: PLW2901
+            files.add(filename)
+
         return attr.evolve(
             self,
+            files=frozenset(files),
             loops=self.loops.with_relative_locations(base),
             functions=self.functions.with_relative_locations(base),
             statements=self.statements.with_relative_locations(base),

@@ -51,6 +51,7 @@ class ClangAnalyser(Analyser):
         statements = self._find_statements()
         insertions = statements.insertions()
         return Analysis(
+            files=self._project.files,
             loops=loops,
             functions=functions,
             statements=statements,
