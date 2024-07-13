@@ -72,11 +72,19 @@ class Function(abc.ABC):
 
 
 @dataclass(frozen=True)
-class ProgramFunctions:
+class ProgramFunctions(t.Iterable[Function]):
     """Represents the set of functions within an associated program."""
     _project_directory: str
     _filename_to_functions: dict[str, list[Function]]
     _num_functions: int
+
+    @classmethod
+    def empty(cls, project_directory: str) -> ProgramFunctions:
+        return cls(
+            _project_directory=project_directory,
+            _filename_to_functions={},
+            _num_functions=0,
+        )
 
     def to_dict(self) -> dict[str, t.Any]:
         return {
@@ -125,12 +133,21 @@ class ProgramFunctions:
                 return func
         return None
 
-    def in_file(self, filename: str) -> Iterator[Function]:
-        """Returns an iterator over the functions defined in a given file."""
+    def in_file(self, filename: str) -> ProgramFunctions:
+        """Returns all of the functions defined in a given file."""
         if os.path.isabs(filename):
             start = self._project_directory
             filename = os.path.relpath(filename, start=start)
-        yield from self._filename_to_functions.get(filename, [])
+
+        if filename not in self._filename_to_functions:
+            return ProgramFunctions.empty(self._project_directory)
+
+        functions = self._filename_to_functions[filename]
+        return ProgramFunctions(
+            _project_directory=self._project_directory,
+            _filename_to_functions={filename: functions},
+            _num_functions=len(functions),
+        )
 
     def __len__(self) -> int:
         """Returns a count of the number of functions in the program."""
