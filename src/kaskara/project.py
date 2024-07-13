@@ -38,7 +38,7 @@ class Project:
         errors. If set to :code:`True`, the analysis will return partial
         results; if set to :code:`False`, an exception will be thrown instead.
     """
-    _dockerblade: _dockerblade.DockerDaemon
+    _dockerblade: _dockerblade.DockerDaemon = attr.ib(repr=False)
     image: str
     directory: str
     files: frozenset[str]
