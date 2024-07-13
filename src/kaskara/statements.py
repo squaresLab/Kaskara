@@ -70,7 +70,7 @@ class Statement(abc.ABC):
 
 
 @dataclass
-class ProgramStatements:
+class ProgramStatements(t.Iterable[Statement]):
     _project_directory: str
     _statements: t.Sequence[Statement]
     _file_to_statements: t.Mapping[
@@ -131,13 +131,16 @@ class ProgramStatements:
     def __iter__(self) -> Iterator[Statement]:
         yield from self._statements
 
-    def in_file(self, filename: str) -> Iterator[Statement]:
-        """Returns an iterator over the statements belonging to a file."""
+    def in_file(self, filename: str) -> ProgramStatements:
+        """Returns the statements belonging to a file."""
         if os.path.isabs(filename):
             start = self._project_directory
             filename = os.path.relpath(filename, start=start)
 
-        yield from self._file_to_statements.get(filename, [])
+        return self.build(
+            project_directory=self._project_directory,
+            statements=self._file_to_statements.get(filename, []),
+        )
 
     def at_line(self, line: FileLine) -> Iterator[Statement]:
         """Returns an iterator over the statements located at a given line."""
