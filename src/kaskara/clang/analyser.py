@@ -78,7 +78,7 @@ class ClangAnalyser(Analyser):
 
         # determine the type of the analysis from the first argument
         analysis_name = command_args[0]
-        command_args = [driver, *command_args, "2>1"]
+        command_args = [driver, *command_args, "2>&1"]
         command = " ".join(command_args)
 
         logger.debug(f"executing {analysis_name} [{workdir}]: {command}")

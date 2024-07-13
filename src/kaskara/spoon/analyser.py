@@ -72,6 +72,7 @@ class SpoonAnalyser(Analyser):
             paths_to_index_arg,
             "-o",
             container_output_dir,
+            "2>&1",
         ]
         command = " ".join(command_args)
         logger.info(f"running kaskara-spoon: {command}")
