@@ -36,6 +36,9 @@ class ProgramInsertionPoints(Iterable[InsertionPoint]):
                 self.__file_insertions[filename] = []
             self.__file_insertions[filename].append(ins)
 
+    def merge(self, other: ProgramInsertionPoints) -> ProgramInsertionPoints:
+        return ProgramInsertionPoints(list(self) + list(other))
+
     def with_relative_locations(self, base: str) -> ProgramInsertionPoints:
         return ProgramInsertionPoints([
             insertion_point.with_relative_location(base)

@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ("Statement", "ProgramStatements")
 
 import abc
+import itertools
 import os
 import typing as t
 from dataclasses import dataclass, field
@@ -96,6 +97,12 @@ class ProgramStatements:
             in self._file_to_statements.items()
         )
         logger.debug(f"indexed statements by file:\n{summary}")
+
+    def merge(self, other: ProgramStatements) -> ProgramStatements:
+        return self.build(
+            project_directory=self._project_directory,
+            statements=itertools.chain(self, other),
+        )
 
     def with_relative_locations(self, base: str) -> ProgramStatements:
         """Creates a new instance with relative file locations."""

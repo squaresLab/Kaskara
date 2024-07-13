@@ -41,6 +41,15 @@ class ProgramLoops:
             FileLocationRangeSet(bodies),
         )
 
+    def merge(self, other: ProgramLoops) -> ProgramLoops:
+        covered_by_loop_bodies = self._covered_by_loop_bodies.union(
+            other._covered_by_loop_bodies,
+        )
+        return ProgramLoops(
+            _covered_by_loop_bodies=covered_by_loop_bodies,
+            _project_directory=self._project_directory,
+        )
+
     def with_relative_locations(self, base: str) -> ProgramLoops:
         """Creates a new instance with relative file locations."""
         covered_by_loop_bodies = self._covered_by_loop_bodies.with_relative_locations(

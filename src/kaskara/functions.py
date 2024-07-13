@@ -4,6 +4,7 @@ from __future__ import annotations
 __all__ = ("Function", "ProgramFunctions")
 
 import abc
+import itertools
 import os
 import typing as t
 from dataclasses import dataclass
@@ -81,6 +82,13 @@ class ProgramFunctions:
         return {
             "functions": [f.to_dict() for f in self],
         }
+
+    def merge(self, other: ProgramFunctions) -> ProgramFunctions:
+        """Merges the results of this analysis and another analysis together."""
+        return self.from_functions(
+            project_directory=self._project_directory,
+            functions=itertools.chain(self, other),
+        )
 
     def with_relative_locations(self, base: str) -> ProgramFunctions:
         """Creates a new instance with relative file locations."""

@@ -53,6 +53,16 @@ class Analysis:
             insertions=self.insertions.with_relative_locations(base),
         )
 
+    def merge(self, other: Analysis) -> Analysis:
+        """Merges the results of this analysis and another analysis together."""
+        return Analysis(
+            files=self.files.union(other.files),
+            loops=self.loops.merge(other.loops),
+            functions=self.functions.merge(other.functions),
+            statements=self.statements.merge(other.statements),
+            insertions=self.insertions.merge(other.insertions),
+        )
+
     def is_inside_loop(self, location: FileLocation) -> bool:
         return self.loops.is_within_loop(location)
 
