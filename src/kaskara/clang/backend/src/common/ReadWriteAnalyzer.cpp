@@ -20,9 +20,9 @@ std::optional<std::string> resolve_member_expr(clang::MemberExpr const *e, clang
     abort();
   }
 
-  llvm::outs() << "[DEBUG] resolving member expression: ";
-  e->dump();
-  llvm::outs() << "\n";
+  // llvm::outs() << "[DEBUG] resolving member expression: ";
+  // e->dump();
+  // llvm::outs() << "\n";
 
   clang::MemberExpr const *parent = e;
   clang::Expr const *child = e->getBase();

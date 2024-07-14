@@ -47,16 +47,16 @@ public:
     }
 
     // TODO get scope info
-    llvm::outs() << "SCOPE: ";
+    // llvm::outs() << "SCOPE: ";
     std::vector<std::string> visible;
     for (auto d : decl->getDeclContext()->lookups()) {
       for (auto dd : d) {
         std::string name = dd->getNameAsString();
         visible.push_back(name);
-        llvm::outs() << " " << name;
+        // llvm::outs() << " " << name;
       }
     }
-    llvm::outs() << "\n";
+    // llvm::outs() << "\n";
 
     // dump
 

@@ -104,7 +104,7 @@ void StatementDB::add(clang::ASTContext const *ctx,
                       clang::LiveVariables *liveness,
                       clang::AnalysisDeclContext *analysis_decl_ctx)
 {
-  llvm::outs() << "DEBUG: StatementDatabase: adding statement...\n";
+  // llvm::outs() << "DEBUG: StatementDatabase: adding statement...\n";
 
   if (analysis_decl_ctx == nullptr) {
     llvm::errs() << "WARNING: not adding statement to database (no analysis decl context)\n";
@@ -113,29 +113,29 @@ void StatementDB::add(clang::ASTContext const *ctx,
 
   clang::SourceRange source_range = stmt_to_range(*ctx, stmt);
   std::string loc_str = build_loc_str(source_range, ctx);
-  llvm::outs() << "DEBUG: obtained statement location: " << loc_str << "\n";
+  // llvm::outs() << "DEBUG: obtained statement location: " << loc_str << "\n";
   if (source_range.isInvalid() || source_range.getEnd() < source_range.getBegin()) {
     llvm::outs() << "WARNING: skipping statement with invalid location: " << loc_str << "\n";
     return;
   }
 
   std::string txt = read_source(*ctx, source_range);
-  llvm::outs() << "DEBUG: obtained source for statement: " << txt << "\n";
+  // llvm::outs() << "DEBUG: obtained source for statement: " << txt << "\n";
 
   auto *stmtMap = analysis_decl_ctx->getCFGStmtMap();
   if (stmtMap == nullptr) {
     llvm::outs() << "WARNING: failed to obtain stmt map -- skipping statement\n";
     return;
   }
-  llvm::outs() << "DEBUG: fetched stmt map\n";
+  // llvm::outs() << "DEBUG: fetched stmt map\n";
 
   // compute read and write information
   std::unordered_set<std::string> reads;
   std::unordered_set<std::string> writes;
   std::unordered_set<std::string> decls;
-  llvm::outs() << "DEBUG: computing read-write information...\n";
+  // llvm::outs() << "DEBUG: computing read-write information...\n";
   ReadWriteAnalyzer::analyze(ctx, stmt, reads, writes, decls);
-  llvm::outs() << "DEBUG: computed read-write information\n";
+  // llvm::outs() << "DEBUG: computed read-write information\n";
 
   // compute the names of all visible variables
   std::unordered_set<std::string> visible_names;
@@ -146,23 +146,23 @@ void StatementDB::add(clang::ASTContext const *ctx,
   // compute liveness information
   // FIXME LiveVariables seems to ignore properties, therefore we assume that
   //  all properties are live (for now).
-  llvm::outs() << "DEBUG: computing liveness information...\n";
+  // llvm::outs() << "DEBUG: computing liveness information...\n";
   std::unordered_set<std::string> live_before;
   for (auto decl : visible) {
-    llvm::outs() << "DEBUG: checking decl...\n";
+    // llvm::outs() << "DEBUG: checking decl...\n";
     if (auto *vd = clang::dyn_cast<clang::VarDecl>(decl)) {
-      llvm::outs() << "DEBUG: checking decl liveness...\n";
+      // llvm::outs() << "DEBUG: checking decl liveness...\n";
       if (!liveness->isLive(stmt, vd))
         continue;
-      llvm::outs() << "DEBUG: checked decl liveness\n";
+      // llvm::outs() << "DEBUG: checked decl liveness\n";
     }
     live_before.emplace(decl->getNameAsString());
   }
-  llvm::outs() << "DEBUG: computed live before\n";
+  // llvm::outs() << "DEBUG: computed live before\n";
 
   // find variables that are live after the statement
   clang::CFGBlock const *block = stmtMap->getBlock(stmt);
-  llvm::outs() << "DEBUG: fetched CFG block...\n";
+  // llvm::outs() << "DEBUG: fetched CFG block...\n";
   std::unordered_set<std::string> live_after;
   for (auto decl : visible) {
     if (auto *vd = clang::dyn_cast<clang::VarDecl>(decl)) {
@@ -171,13 +171,13 @@ void StatementDB::add(clang::ASTContext const *ctx,
     }
     live_after.emplace(decl->getNameAsString());
   }
-  llvm::outs() << "DEBUG: computed liveness information\n";
+  // llvm::outs() << "DEBUG: computed liveness information\n";
 
   // compute syntax scope analysis
   StatementSyntaxScope syntax_scope = SyntaxScopeAnalyzer::analyze(ctx, stmt);
 
   // compute canonical form
-  llvm::outs() << "DEBUG: computing canonical form...\n";
+  // llvm::outs() << "DEBUG: computing canonical form...\n";
   std::string canonical;
   llvm::raw_string_ostream ss(canonical);
 
@@ -194,12 +194,12 @@ void StatementDB::add(clang::ASTContext const *ctx,
   char last = canonical.back();
   if (last != '\n' && last != '}' && last != ';')
     canonical.push_back(';');
-  llvm::outs() << "DEBUG: computed canonical form\n";
+  // llvm::outs() << "DEBUG: computed canonical form\n";
 
   // determine statement kind
   std::string kind = stmt->getStmtClassName();
 
-  llvm::outs() << "DEBUG: adding statement info...\n";
+  // llvm::outs() << "DEBUG: adding statement info...\n";
   contents.emplace_back(
     loc_str,
     txt,
@@ -212,7 +212,7 @@ void StatementDB::add(clang::ASTContext const *ctx,
     live_before,
     live_after,
     syntax_scope);
-  llvm::outs() << "DEBUG: added statement info\n";
+  // llvm::outs() << "DEBUG: added statement info\n";
 }
 
 json StatementDB::to_json() const
