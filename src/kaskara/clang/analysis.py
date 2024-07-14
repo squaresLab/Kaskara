@@ -129,5 +129,5 @@ class ClangStatement(Statement):
             live_after=frozenset(d.get("live_after", [])),
             requires_syntax=frozenset(d.get("requires_syntax", [])),
         )
-        logger.debug(f"loaded statement: {statement}")
+        logger.trace(f"loaded statement: {statement}")
         return statement

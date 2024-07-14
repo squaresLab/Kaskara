@@ -93,7 +93,7 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
   // stmt->dumpPretty(*ctx);
   // llvm::outs() << "\n";
   // stmt->dump(llvm::outs());
-  llvm::outs() << "[DEBUG] visiting generic stmt...\n";
+  // llvm::outs() << "[DEBUG] visiting generic stmt...\n";
   for (clang::Stmt const *c : stmt->children()) {
     if (!c)
       continue;
@@ -103,7 +103,7 @@ void ReadWriteAnalyzer::VisitStmt(clang::Stmt const *stmt)
 
 void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 {
-  llvm::outs() << "[DEBUG] visiting binary operator...\n";
+  // llvm::outs() << "[DEBUG] visiting binary operator...\n";
   VisitStmt(op);
   if (!op || !op->isAssignmentOp())
     return;
@@ -121,7 +121,7 @@ void ReadWriteAnalyzer::VisitBinaryOperator(clang::BinaryOperator const *op)
 
 void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 {
-  llvm::outs() << "[DEBUG] visiting decl stmt...\n";
+  // llvm::outs() << "[DEBUG] visiting decl stmt...\n";
   VisitStmt(stmt);
   for (auto const d : stmt->decls()) {
     if (!d)
@@ -139,14 +139,14 @@ void ReadWriteAnalyzer::VisitDeclStmt(clang::DeclStmt const *stmt)
 
 void ReadWriteAnalyzer::VisitMemberExpr(clang::MemberExpr const *expr)
 {
-  llvm::outs() << "[DEBUG] visiting member expr...\n";
+  // llvm::outs() << "[DEBUG] visiting member expr...\n";
   if (auto resolved = resolve_member_expr(expr, ctx))
     reads.emplace(*resolved);
 }
 
 void ReadWriteAnalyzer::VisitDeclRefExpr(clang::DeclRefExpr const *expr)
 {
-  llvm::outs() << "[DEBUG] visiting decl ref expr...\n";
+  // llvm::outs() << "[DEBUG] visiting decl ref expr...\n";
   // NOTE we do not record enum values
   if (auto const *var = clang::DynTypedNode::create(*expr->getDecl()).get<clang::VarDecl>())
     reads.emplace(var->getNameAsString());
