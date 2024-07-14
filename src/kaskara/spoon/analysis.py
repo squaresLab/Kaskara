@@ -57,7 +57,7 @@ class SpoonFunction(Function):
 class SpoonStatement(Statement):
     kind: str
     content: str
-    canonical: str
+    canonical: str = attr.ib(repr=False)
     location: FileLocationRange
 
     @overrides

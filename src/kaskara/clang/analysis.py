@@ -74,16 +74,16 @@ class ClangFunction(Function):
 @attr.s(frozen=True, slots=True, auto_attribs=True)
 class ClangStatement(Statement):
     content: str
-    canonical: str
-    kind: str
+    canonical: str = attr.ib(repr=False)
+    kind: str = attr.ib(repr=False)
     location: FileLocationRange
-    reads: frozenset[str]
-    writes: frozenset[str]
-    visible: frozenset[str]
-    declares: frozenset[str]
-    live_before: frozenset[str]
-    live_after: frozenset[str]
-    requires_syntax: frozenset[str]
+    reads: frozenset[str] = attr.ib(repr=False)
+    writes: frozenset[str] = attr.ib(repr=False)
+    visible: frozenset[str] = attr.ib(repr=False)
+    declares: frozenset[str] = attr.ib(repr=False)
+    live_before: frozenset[str] = attr.ib(repr=False)
+    live_after: frozenset[str] = attr.ib(repr=False)
+    requires_syntax: frozenset[str] = attr.ib(repr=False)
 
     @overrides
     def with_relative_locations(self, base: str) -> t.Self:
